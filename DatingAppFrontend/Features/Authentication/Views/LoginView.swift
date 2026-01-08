@@ -9,14 +9,14 @@ import SwiftUI
 
 struct LoginView: View {
     
-    @State private var nameComponents = PersonNameComponents()
+//    @State private var nameComponents = PersonNameComponents()
     
     
     
     var body: some View {
         VStack(spacing: 30) {
             
-            Header()
+            AuthHeader()
             
             InputFieldSection()
             
@@ -36,6 +36,8 @@ struct LoginView: View {
 
 #Preview {
     LoginView()
+    // Preview in dark mode as well
+//    LoginView().environment(\.colorScheme, .dark)
 }
 
 
@@ -55,29 +57,15 @@ struct NextButton: View {
     }
 }
 
-struct Header: View {
-    var body: some View {
-        VStack(spacing: 8) {
-            
-            Image(systemName:"heart.circle.fill")
-                .resizable()
-                .frame(width: 60, height: 60)
-
-            
-            Text("Welcome Back!")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-
-            Text("Please enter your phone number")
-                .font(.callout)
-                .foregroundColor(.secondary)
-        }.padding(.bottom, 20)
-        
-    }
-}
-
 
 struct InputFieldSection : View {
+    
+    @State private var phoneNumber: String = ""
+    
+    var isphoneNumberValid : Bool {
+        phoneNumber.count == 10 && phoneNumber.allSatisfy(\.isNumber)
+    }
+    
     var body: some View {
         VStack(spacing: 30) {
             HStack(spacing: 12) {
@@ -95,24 +83,30 @@ struct InputFieldSection : View {
                     .padding()
                     .frame(width: 110)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.gray.opacity(0.4))
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(.primary.opacity(0.5), lineWidth: 1)
                     )
                 }
+                
                 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Phone Number")
                         .font(.caption)
                         .foregroundColor(.gray)
                     
-                    TextField("", text: .constant(""))
+                    TextField("", text: $phoneNumber)
                         .keyboardType(.numberPad)
                         .padding()
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.gray.opacity(0.4))
+                                .stroke(
+                                    isphoneNumberValid || phoneNumber.isEmpty ? Color.primary.opacity(0.5) : Color.red
+                                )
                         )
+                    
+                                       
                 }
+                
                 
                 
                 
@@ -120,10 +114,29 @@ struct InputFieldSection : View {
             }
             .frame(height: 48)
             
-            Text("We are about to send a one time password to your contact information for secure login. Ensure your details are correct before proceeding")
-                .font(.footnote)
-                    .foregroundColor(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+            
+            VStack{
+                
+                HStack{
+                    
+                    Spacer()
+                    
+                    if !isphoneNumberValid && !phoneNumber.isEmpty {
+                        Text("Phone Number must be exactly 10 digits")
+                            .font(.caption2)
+                            .foregroundColor(.red)
+                    }
+                }
+                
+                
+                Text("We are about to send a one time password to your contact information for secure login. Ensure your details are correct before proceeding")
+                    .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+            }
+            
+            
             
             
         }

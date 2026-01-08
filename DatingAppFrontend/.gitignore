@@ -1,0 +1,88 @@
+# ===============================
+# Xcode
+# ===============================
+
+# User-specific Xcode data
+xcuserdata/
+*.xcuserdatad/
+
+# Breakpoints, UI state, debugger data
+*.xcbkptlist
+*.xccheckout
+*.xcscmblueprint
+
+# Derived data (build artifacts)
+DerivedData/
+.build/
+
+# Xcode build products
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# ===============================
+# Swift Package Manager
+# ===============================
+
+# SPM build artifacts
+.build/
+Packages/
+Package.resolved
+
+# (Optional: keep Package.resolved if you want reproducible builds)
+# !Package.resolved
+
+# ===============================
+# CocoaPods
+# ===============================
+
+Pods/
+Podfile.lock
+
+# ===============================
+# Carthage
+# ===============================
+
+Carthage/Build/
+
+# ===============================
+# Fastlane
+# ===============================
+
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# ===============================
+# IDE / OS noise
+# ===============================
+
+.DS_Store
+.idea/
+.vscode/
+
+# ===============================
+# Logs & temp files
+# ===============================
+
+*.log
+*.tmp
+*.swp
+
+# ===============================
+# Environment / Secrets
+# ===============================
+
+.env
+.env.*
+*.secret
+Secrets.plist
+
+# ===============================
+# Crash reports
+# ===============================
+
+crashlytics-build.properties
+

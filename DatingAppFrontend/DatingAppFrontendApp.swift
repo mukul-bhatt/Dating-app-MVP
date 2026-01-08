@@ -11,9 +11,7 @@ import SwiftUI
 struct DatingAppFrontendApp: App {
     var body: some Scene {
         WindowGroup {
-//            ContentView()
-            LoginView()
-//            WelcomeBackView()
+            DebugRootView()
         }
     }
 }

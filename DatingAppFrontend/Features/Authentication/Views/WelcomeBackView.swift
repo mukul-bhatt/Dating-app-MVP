@@ -39,7 +39,7 @@ struct WelcomeBackView: View {
                 
                 // 2. Logo / Icon Section
                 // Using a system symbol to mimic the heart cluster
-                Image(systemName: "heart.circle.fill")
+                Image("appIcon")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 80, height: 80)
