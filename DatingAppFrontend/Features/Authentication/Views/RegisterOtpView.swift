@@ -9,7 +9,7 @@ import SwiftUI
 
 struct RegisterOtpView: View {
     var body: some View {
-            OTPVerificationView(screenType: "Register with Us!")
+        OTPVerificationView(screenType: "Register with Us!")
     }
 }
 

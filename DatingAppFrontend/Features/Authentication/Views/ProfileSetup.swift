@@ -31,8 +31,11 @@ struct ProfileSetup: View {
                 .frame(height: 5)
             
             // Add your Pictures section
-            AddPictures(columns: columns, selectedImages: $selectedImage, photoPickerItems: $photosPickerItems)
             
+                AddPictures(columns: columns, selectedImages: $selectedImage, photoPickerItems: $photosPickerItems)
+                
+                
+         
             
             Spacer()
             
@@ -58,7 +61,7 @@ struct ProfileSetup: View {
     struct AddPictures: View {
         let columns: [GridItem]
         @Binding var selectedImages: [UIImage]
-        @Binding var photoPickerItems: [PhotosPickerItem]  // Add this binding
+        @Binding var photoPickerItems: [PhotosPickerItem]
         
         var body: some View {
             AddPicturesHeader()
@@ -94,7 +97,7 @@ struct ProfileSetup: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.horizontal, 24)
-            .padding(.top, 40)
+            .padding(.top, 30)
         }
     }
     

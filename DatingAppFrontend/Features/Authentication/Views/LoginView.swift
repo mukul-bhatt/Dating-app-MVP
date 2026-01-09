@@ -14,21 +14,24 @@ struct LoginView: View {
     
     
     var body: some View {
-        VStack(spacing: 30) {
-            
-            AuthHeader()
-            
-            InputFieldSection()
-            
-            Spacer()
-            
-            NextButton()
-            
+        NavigationStack{
+            VStack(spacing: 30) {
+                
+                AuthHeader()
+                
+                InputFieldSection()
+                
+                Spacer()
+                
+                NavigationLink(destination: LoginOtpVerificationView()){
+                    PrimaryButton()
+                }
+                
+            }
+            .padding(.top, 30)
+            .padding(.horizontal)
+            .background(Color("BrandColor"))
         }
-        .padding(.top, 30)
-        .padding(.horizontal)
-        .background(Color.pink.opacity(0.1))
-        
     }
 }
 
@@ -38,23 +41,6 @@ struct LoginView: View {
     LoginView()
     // Preview in dark mode as well
 //    LoginView().environment(\.colorScheme, .dark)
-}
-
-
-struct NextButton: View {
-    var body: some View {
-        Button(action: {}) {
-            Text("Next")
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.pink)
-                .cornerRadius(30)
-        }
-        .padding(.bottom, 20)
-
-    }
 }
 
 

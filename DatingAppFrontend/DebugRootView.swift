@@ -27,9 +27,13 @@ struct DebugRootView: View {
                     RegisterWithUsView()
                 }
 
-                NavigationLink("WelcomeBack") {
-                    WelcomeBackView()
+                NavigationLink("ProfileSetup") {
+                    ProfileSetup()
                 }
+                NavigationLink("Splash Screen") {
+                    LandingScreenView()
+                }
+        
             }
             .navigationTitle("Screens")
         }
