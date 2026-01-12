@@ -8,7 +8,26 @@
 
 import SwiftUI
 
+struct Country {
+    let name: String
+    let code: String
+    let dialCode: String
+    let flag: String
+}
+
+
 struct PhoneInputFieldSection: View {
+    
+    @State private var selectedCountry = Country(name: "India", code: "IN", dialCode: "+91", flag: "🇮🇳")
+    @State private var hasSelectedCountry = false
+    
+    let countries = [
+        Country(name: "India", code: "IN", dialCode: "+91", flag: "🇮🇳"),
+           Country(name: "Russia", code: "RU", dialCode: "+7", flag: "🇷🇺"),
+           Country(name: "United Kingdom", code: "UK", dialCode: "+44", flag: "🇬🇧"),
+           Country(name: "United States", code: "US", dialCode: "+1", flag: "🇺🇸")
+    ]
+    
     // Flag to switch layouts
     var isSingleLabel: Bool = false
     
@@ -69,21 +88,34 @@ struct PhoneInputFieldSection: View {
     }
     
     // Reusable Country Picker UI
+
+    
     private var countryPicker: some View {
-        HStack {
-            Text("IN +91")
-                .foregroundColor(.secondary)
-            Spacer()
-            Image(systemName: "arrowtriangle.down.fill")
-                .font(.system(size: 10))
-                .foregroundColor(.secondary)
+        Menu {
+            ForEach(countries, id: \.code) { country in
+                Button(action: {
+                    selectedCountry = country
+                    hasSelectedCountry = true 
+                }) {
+                    Text("\(country.flag) \(country.name) \(country.dialCode)")
+                }
+            }
+        } label: {
+            HStack {
+                Text("\(selectedCountry.code) \(selectedCountry.dialCode)")
+                    .foregroundColor(hasSelectedCountry ? .primary : .secondary)
+                Spacer()
+                Image(systemName: "arrowtriangle.down.fill")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+            .frame(width: 100, height: 55)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(borderColor, lineWidth: 1)
+            )
         }
-        .padding()
-        .frame(width: 100, height: 55)
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(borderColor, lineWidth: 1)
-        )
     }
     
     // Reusable Phone Text Field UI
@@ -102,6 +134,9 @@ struct PhoneInputFieldSection: View {
             .focused(isFocusedPhone)
     }
 }
+
+
+
 
 //#Preview {
 //    VStack(spacing: 40) {

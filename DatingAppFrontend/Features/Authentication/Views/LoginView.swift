@@ -9,9 +9,6 @@ import SwiftUI
 
 struct LoginView: View {
     
-//    @State private var nameComponents = PersonNameComponents()
-    
-    
     
     var body: some View {
         NavigationStack{
