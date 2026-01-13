@@ -20,12 +20,17 @@ class ProfileViewModel: ObservableObject{
         @Published var pronouns: String = ""
         @Published var bio: String = ""
     
-    // MARK: - Dropdown Selections
+    // MARK: - Dropdown Selections for Religion
+ 
         // These are Optional Strings (String?) because they might be nil initially
         @Published var sexuality: String? = nil
         @Published var selectedReligion: String? = nil
-        @Published var selectedPartnerReligion: String? = nil
+        @Published var selectedPartnerReligions: Set<String> = []
+//        @Published var selectedPartnerReligion: String? = nil
+    // MARK: - Dropdown Selections for Sexuality
+        
         @Published var partnerSexuality: String? = nil
+        @Published var selectedPartnerSexuality: Set<String> = []
     
     // MARK: - Work, Education & Intentions
         // These were previously trapped inside WorkEducationView
@@ -75,23 +80,17 @@ class ProfileViewModel: ObservableObject{
         // We will build this logic in the next steps
         var isFormValid: Bool {
             
-//            let hasEnoughImages = selectedImage.count >= 2 && selectedImage.count < 4
             
-            
-            return !bio.isEmpty &&
-            !location.isEmpty &&
-            !selectedImage.isEmpty &&
-            !pronouns.isEmpty &&
-            !lookingFor.isEmpty &&
-            !height.isEmpty &&
-            !relationshipStatus.isEmpty &&
-            !education.isEmpty &&
-            hasStartedTypingInLocationField == true
-            
-            
-            
-            
-            
+            return !selectedImage.isEmpty &&
+                    (!location.isEmpty && isValidLocation) &&
+                    !pronouns.isEmpty &&
+                    !bio.isEmpty &&
+                    !jobTitle.isEmpty &&
+                    !education.isEmpty &&
+                    !height.isEmpty &&
+                    !lookingFor.isEmpty &&
+                    !relationshipStatus.isEmpty &&
+                    !height.isEmpty
         }
 }
 

@@ -32,14 +32,13 @@ struct ProfileSetup: View {
             // Add your Pictures section
             ScrollView(showsIndicators: false){
                 VStack(spacing: 20){
-//                     Add Profiles Section
-                       AddPictures(columns: columns, selectedImages: $viewModel.selectedImage, photoPickerItems: $viewModel.photosPickerItems)
+                    // Add Profiles Section
+                    AddPictures(columns: columns, selectedImages: $viewModel.selectedImage, photoPickerItems: $viewModel.photosPickerItems)
                     
-//                     Your Location
-                       YourLocation(viewModel: viewModel)
-                       YourLocation(viewModel: viewModel)
+                    // Your Location
+                    YourLocation(viewModel: viewModel)
                     
-//                     Distance Slider
+                    // Distance Slider
                     DistanceSlider()
                     
                     AddPicturesHeader(title: "About You", subTitle: "Help us know you better")
@@ -48,13 +47,13 @@ struct ProfileSetup: View {
                     YourPronouns(viewModel: viewModel)
                     
                     // Sexuality Section
-                    SexualitySection(selectedSexuality: $viewModel.sexuality)
+                    SexualitySection(viewModel: viewModel)
                     
                     // Bio Section
                     BioSection(bio: $viewModel.bio)
                     
                     // Your Religion Section
-                    YourReligion(title:"YourReligion", selectedReligion: $viewModel.selectedReligion)
+                    YourReligion(viewModel: viewModel, title:"YourReligion", isMultiSelect: false)
                     
                     // Work Education Section
                     WorkEducationView(viewModel: viewModel)
@@ -66,17 +65,23 @@ struct ProfileSetup: View {
                     DistanceSlider()
                     
                     // Partner's Religion
-                    YourReligion(title:"Partner's Religion",selectedReligion: $viewModel.selectedPartnerReligion)
+                    YourReligion(viewModel: viewModel, title:"Partner's Religion", isMultiSelect: true)
+                    
                     
                     // Partner's Sexuality
-                    SexualitySection(selectedSexuality: $viewModel.partnerSexuality)
+                    SexualitySection(viewModel: viewModel, isMultiSelect: true)
                 }
             }
             
-            PrimaryButton().onTapGesture {
-                if viewModel.isFormValid{
-                    
-                }
+            PrimaryButton(buttonText: "Next"){
+                // Before doing anything else, see the data in the console
+                print("Button was tapped")
+                    viewModel.printDataSnapshot()
+                
+//                    if viewModel.isFormValid {
+//                        // proceed to network call
+//                       
+//                    }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -103,25 +108,3 @@ struct ProfileSetup: View {
 }
 
 
-
-
-//    @State private var selectedImage: [UIImage] = []
-//    @State private var photosPickerItems: [PhotosPickerItem] = []
-//
-//    // Location state
-//    @State private var location: String = "New Delhi"
-//
-//    // Pronouns State
-//    @State private var pronouns: String = ""
-//
-//    // Sexuality
-//    @State private var sexuality: String? = nil
-//
-//    // bio state
-//    @State private var bio: String = ""
-//
-//    // Religion State
-//    @State private var selectedReligion: String? = nil
-//
-//    // Partner Religion State
-//    @State private var selectedPartnerReligion: String? = nil

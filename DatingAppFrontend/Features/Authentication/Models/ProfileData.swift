@@ -7,28 +7,99 @@
 
 import Foundation
 
-struct RegisterProfileRequest: Codable {
-    let name: String
-    let phoneNumber: String
-    let countryCode: String
+struct UserProfileDTO: Codable {
+    let lastName: String
+    let user: UserBlock
+    let Settings: SettingsBlock
+    let Preferences: PreferencesBlock
+    let interests: InterestsBlock
+}
+
+struct UserBlock: Codable {
+    let pronouns: String
     let gender: String
-    let age: Int
-    let location: String
-    let interests: [String]
+    let dateOfBirth: String
+    let sexuality: String
+    let bio: String
+    let religion: String
+    let job: String
+    let education: String
+    let height: String
+    let relationshipStatus: String
+    let hope: String
+}
+
+struct SettingsBlock: Codable {
+    let Location: String
+    let PreferredRange: String
+    let Latitude: Double
+    let Longitude: Double
+}
+
+struct PreferencesBlock: Codable {
+    let PreferredAge: String
+//    let PreferredReligion: String
+    let PreferredSexuality: String
+}
+
+struct InterestsBlock: Codable {
+    let InterestsName: String
 }
 
 
-//extension ProfileViewModel {
-//
-//    func toRegisterRequest() -> RegisterProfileRequest {
-//        return RegisterProfileRequest(
-//            name: name,
-//            phoneNumber: phone,
-//            countryCode: countryCode,
-//            gender: gender,
-//            age: Int(age) ?? 0,
-//            location: location,
-//            interests: selectedInterests
-//        )
-//    }
-//}
+
+extension ProfileViewModel {
+    func printDataSnapshot() {
+        // 1. Create the DTO
+        let snapshot = UserProfileDTO(
+            lastName: "Kapoor", // or from UI later
+
+            user: UserBlock(
+                pronouns: pronouns,
+                gender: "Male",
+                dateOfBirth: "2000-07-05",   // yyyy-MM-dd
+                sexuality: sexuality ?? "",
+                bio: bio,
+                religion: selectedReligion ?? "",
+                job: jobTitle,
+                education: education,
+                height: height,
+                relationshipStatus: relationshipStatus,
+                hope: lookingFor
+            ),
+
+            Settings: SettingsBlock(
+                Location: location,
+                PreferredRange: "11km-20km",
+                Latitude: 15.67995,
+                Longitude: 80.72211
+            ),
+
+            Preferences: PreferencesBlock(
+                PreferredAge: "18-25",
+//                PreferredReligion: selectedPartnerReligion ?? "",
+                PreferredSexuality: partnerSexuality ?? ""
+            ),
+
+            interests: InterestsBlock(
+                InterestsName: "Horse Riding,Tennis"
+//                InterestsName: selectedInterests.joined(separator: ",")
+            )
+        )
+        
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        
+        // 2. Use do-catch to see errors
+        do {
+            let data = try encoder.encode(snapshot) // Removed '?'
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("🚀 BACKEND DATA PREVIEW:")
+                print(jsonString)
+            }
+        } catch {
+            print("❌ ENCODING ERROR: \(error.localizedDescription)")
+            print("Details: \(error)") // This gives the exact field causing trouble
+        }
+    }
+}

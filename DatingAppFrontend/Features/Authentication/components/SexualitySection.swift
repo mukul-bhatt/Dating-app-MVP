@@ -15,8 +15,36 @@ import SwiftUI
             "Pansexual", "Asexual", "Demisexual",
             "Queer", "Open to all"
         ]
-        
-        @Binding var selectedSexuality: String?
+      
+      @ObservedObject var viewModel: ProfileViewModel
+     
+      var isMultiSelect: Bool = false
+      
+      // Dynamic helper to check selection state
+          private var isSelected: (String) -> Bool {
+              { name in
+                  if isMultiSelect {
+                      return viewModel.selectedPartnerSexuality.contains(name)
+                  } else {
+                      return viewModel.sexuality == name
+                  }
+              }
+          }
+      
+      
+      private func handleSelection(for name: String) {
+              if isMultiSelect {
+                  // Logic for Multi-Select (Partner Preferences)
+                  if viewModel.selectedPartnerSexuality.contains(name) {
+                      viewModel.selectedPartnerSexuality.remove(name)
+                  } else {
+                      viewModel.selectedPartnerSexuality.insert(name)
+                  }
+              } else {
+                  // Logic for Single-Select (User's Own Sexuality)
+                  viewModel.sexuality = name
+              }
+          }
         
         var body: some View {
             VStack(alignment: .leading, spacing: 10) {
@@ -26,19 +54,21 @@ import SwiftUI
                 
                 // Custom Flow Layout Container
                 FlowLayout(items: sexualityOptions) { item in
+                    
                     Button(action: {
-                        selectedSexuality = item
+//                        viewModel.sexuality = item
+                        handleSelection(for: item)
                     }) {
                         Text(item)
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(selectedSexuality == item ? Color.white : Color.primary)
+                            .foregroundColor(isSelected(item) ? Color.white : Color.primary)
                             .padding(.vertical, 12)
                             .padding(.horizontal, 16)
-                            .background(selectedSexuality == item ? Color("ButtonColor") : Color.clear)
+                            .background(isSelected(item) ? Color("ButtonColor") : Color.clear)
                             .cornerRadius(10)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 10)
-                                    .stroke(selectedSexuality == item ? Color("ButtonColor") : .secondary, lineWidth: selectedSexuality == item ? 2 : 1)
+                                    .stroke(isSelected(item) ? Color("ButtonColor") : .secondary, lineWidth: isSelected(item) ? 2 : 1)
                             )
                     }
                 }
@@ -106,3 +136,4 @@ struct FlowLayout<Data: RandomAccessCollection, Content: View>: View where Data.
         }
     }
 }
+
