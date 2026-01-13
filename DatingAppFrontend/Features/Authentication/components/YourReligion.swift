@@ -18,43 +18,42 @@ import SwiftUI
         
         var isMultiSelect: Bool = false // Flag to switch modes
         
-//        @Binding var selectedReligion: String?
-        
-        private func handleSelection(for name: String) {
+        // 1. Update to accept ID (Int) instead of Name (String)
+            private func handleSelection(for id: Int) {
                 if isMultiSelect {
-                    if viewModel.selectedPartnerReligions.contains(name) {
-                        viewModel.selectedPartnerReligions.remove(name)
+                    // Modify the Set of IDs
+                    if viewModel.selectedPartnerReligionsIds.contains(id) {
+                        viewModel.selectedPartnerReligionsIds.remove(id)
                     } else {
-                        viewModel.selectedPartnerReligions.insert(name)
+                        viewModel.selectedPartnerReligionsIds.insert(id)
                     }
                 } else {
-                    // Single select: clear everything else and just keep this one
-                    viewModel.selectedReligion = name
+                    // Set the single ID
+                    viewModel.selectedReligionId = id
                 }
             }
-        
-        // 2. Helper function to check selection state
-            func checkSelection(_ name: String) -> Bool {
+
+            // 2. This function is now consistent with handleSelection
+            func checkSelection(_ id: Int) -> Bool {
                 if isMultiSelect {
-                    return viewModel.selectedPartnerReligions.contains(name)
+                    return viewModel.selectedPartnerReligionsIds.contains(id)
                 } else {
-                    return viewModel.selectedReligion == name
+                    return viewModel.selectedReligionId == id
                 }
             }
         
-        
-        let religionOptions: [(String, String, Bool)] = [
-            ("Hinduism", "🕉️", false),   // text emoji
-            ("Buddhist", "☸️", false),   // text emoji
-            ("Islam", "☪️", false),       // text emoji
-            ("Jainism", "hand.raised.fill", true), // SF Symbol
-            ("Christianity", "✝️", false), // text emoji
-            ("Sikhism", "☬", false),     // text emoji
-            ("Atheist", "atom", true),    // SF Symbol
-            ("Judaism", "starofdavid", true), // SF Symbol (might
-//            2need fallback if iOS <17, used generic)
-            ("Open to all", "checkmark", true) // SF Symbol
-        ]
+//        let religionOptions: [(String, String, Bool)] = [
+//            ("Hinduism", "🕉️", false),   // text emoji
+//            ("Buddhist", "☸️", false),   // text emoji
+//            ("Islam", "☪️", false),       // text emoji
+//            ("Jainism", "hand.raised.fill", true), // SF Symbol
+//            ("Christianity", "✝️", false), // text emoji
+//            ("Sikhism", "☬", false),     // text emoji
+//            ("Atheist", "atom", true),    // SF Symbol
+//            ("Judaism", "starofdavid", true), // SF Symbol (might
+////            2need fallback if iOS <17, used generic)
+//            ("Open to all", "checkmark", true) // SF Symbol
+//        ]
         
         var body: some View {
             // 4. Religion Section (Grid Layout)
@@ -64,14 +63,15 @@ import SwiftUI
                     .foregroundColor(.primary)
                 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
-                    ForEach(religionOptions, id: \.0) { option in
-                        let name = option.0
-                        let isSelected = checkSelection(name)
+                    ForEach(viewModel.religionOptions) { option in
+                        let name = option.name
+                        let isSelected = checkSelection(option.id)
                         
                         
                         Button(action: {
 //                            viewModel.selectedReligion = name
-                            handleSelection(for: name)
+//                            handleSelection(for: name)
+                            handleSelection(for: option.id)
                         }) {
                             HStack {
         
@@ -95,6 +95,12 @@ import SwiftUI
                             )
                         }
                     }
+                }
+            }
+            .onAppear {
+                // Trigger the fetch if the list is empty
+                if viewModel.religionOptions.isEmpty {
+                    Task { await viewModel.fetchMasterOptionsForReligion() }
                 }
             }
         }

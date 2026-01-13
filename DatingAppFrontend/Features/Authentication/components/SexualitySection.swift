@@ -21,28 +21,25 @@ import SwiftUI
       var isMultiSelect: Bool = false
       
       // Dynamic helper to check selection state
-          private var isSelected: (String) -> Bool {
-              { name in
+      private func isSelected(optionId : Int) -> Bool {
                   if isMultiSelect {
-                      return viewModel.selectedPartnerSexuality.contains(name)
+                      return viewModel.selectedPartnerSexualityIds.contains(optionId)
                   } else {
-                      return viewModel.sexuality == name
+                      return viewModel.sexualityId == optionId
                   }
               }
-          }
       
-      
-      private func handleSelection(for name: String) {
+      private func handleSelection(for id: Int) {
               if isMultiSelect {
                   // Logic for Multi-Select (Partner Preferences)
-                  if viewModel.selectedPartnerSexuality.contains(name) {
-                      viewModel.selectedPartnerSexuality.remove(name)
+                  if viewModel.selectedPartnerSexualityIds.contains(id) {
+                      viewModel.selectedPartnerSexualityIds.remove(id)
                   } else {
-                      viewModel.selectedPartnerSexuality.insert(name)
+                      viewModel.selectedPartnerSexualityIds.insert(id)
                   }
               } else {
                   // Logic for Single-Select (User's Own Sexuality)
-                  viewModel.sexuality = name
+                  viewModel.sexualityId = id
               }
           }
         
@@ -53,24 +50,28 @@ import SwiftUI
                     .foregroundColor(.primary)
                 
                 // Custom Flow Layout Container
-                FlowLayout(items: sexualityOptions) { item in
-                    
+                FlowLayout(items: viewModel.sexualityOptions) { option in
                     Button(action: {
-//                        viewModel.sexuality = item
-                        handleSelection(for: item)
+                        handleSelection(for: option.id)
                     }) {
-                        Text(item)
+                        Text(option.name)
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(isSelected(item) ? Color.white : Color.primary)
+                            .foregroundColor(isSelected(optionId: option.id) ? Color.white : Color.primary)
                             .padding(.vertical, 12)
                             .padding(.horizontal, 16)
-                            .background(isSelected(item) ? Color("ButtonColor") : Color.clear)
+                            .background(isSelected(optionId: option.id) ? Color("ButtonColor") : Color.clear)
                             .cornerRadius(10)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 10)
-                                    .stroke(isSelected(item) ? Color("ButtonColor") : .secondary, lineWidth: isSelected(item) ? 2 : 1)
+                                    .stroke(isSelected(optionId: option.id) ? Color("ButtonColor") : .secondary, lineWidth: isSelected(optionId: option.id) ? 2 : 1)
                             )
                     }
+                }
+            }
+            .onAppear {
+                // Trigger the fetch if the list is empty
+                if viewModel.sexualityOptions.isEmpty {
+                    Task { await viewModel.fetchMastersOptionsForSexuality() }
                 }
             }
         }
@@ -107,16 +108,18 @@ struct FlowLayout<Data: RandomAccessCollection, Content: View>: View where Data.
                             height -= d.height
                         }
                         let result = width
-                        if item == self.items.last! {
+                        
+                        // ✅ SAFE CHECK: Instead of force unwrapping last!
+                        if let lastItem = self.items.last, item == lastItem {
                             width = 0 // last item
                         } else {
                             width -= d.width
                         }
                         return result
                     })
-                    .alignmentGuide(.top, computeValue: {d in
+                    .alignmentGuide(.top, computeValue: { d in
                         let result = height
-                        if item == self.items.last! {
+                        if let lastItem = self.items.last, item == lastItem {
                             height = 0 // last item
                         }
                         return result
@@ -124,6 +127,7 @@ struct FlowLayout<Data: RandomAccessCollection, Content: View>: View where Data.
             }
         }
         .background(viewHeightReader($totalHeight))
+    
     }
     
     private func viewHeightReader(_ binding: Binding<CGFloat>) -> some View {

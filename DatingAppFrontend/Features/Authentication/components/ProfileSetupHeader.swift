@@ -22,6 +22,6 @@ import SwiftUI
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.horizontal, 24)
-            .padding(.top, 30)
+//            .padding(.top, 30)
         }
     }

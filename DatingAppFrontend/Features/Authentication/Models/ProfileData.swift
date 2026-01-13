@@ -38,7 +38,7 @@ struct SettingsBlock: Codable {
 
 struct PreferencesBlock: Codable {
     let PreferredAge: String
-//    let PreferredReligion: String
+    let PreferredReligion: String
     let PreferredSexuality: String
 }
 
@@ -58,9 +58,9 @@ extension ProfileViewModel {
                 pronouns: pronouns,
                 gender: "Male",
                 dateOfBirth: "2000-07-05",   // yyyy-MM-dd
-                sexuality: sexuality ?? "",
+                sexuality: sexualityId.map(String.init) ?? "",
                 bio: bio,
-                religion: selectedReligion ?? "",
+                religion: selectedReligionId.map(String.init) ?? "",
                 job: jobTitle,
                 education: education,
                 height: height,
@@ -77,8 +77,8 @@ extension ProfileViewModel {
 
             Preferences: PreferencesBlock(
                 PreferredAge: "18-25",
-//                PreferredReligion: selectedPartnerReligion ?? "",
-                PreferredSexuality: partnerSexuality ?? ""
+                PreferredReligion: selectedPartnerReligionsIds.map(String.init).joined(separator: ","),
+                PreferredSexuality: selectedPartnerSexualityIds.map(String.init).joined(separator: ","),
             ),
 
             interests: InterestsBlock(
