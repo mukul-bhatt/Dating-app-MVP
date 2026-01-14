@@ -64,8 +64,8 @@ extension ProfileViewModel {
                 job: jobTitle,
                 education: education,
                 height: height,
-                relationshipStatus: relationshipStatus,
-                hope: lookingFor
+                relationshipStatus: relationshipStatusId.map(String.init) ?? "",
+                hope: lookingForId.map(String.init) ?? ""
             ),
 
             Settings: SettingsBlock(
@@ -103,3 +103,4 @@ extension ProfileViewModel {
         }
     }
 }
+

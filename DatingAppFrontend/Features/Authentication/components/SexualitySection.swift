@@ -10,11 +10,11 @@ import SwiftUI
   struct SexualitySection: View {
         
         // MARK: - Data Models
-        let sexualityOptions = [
-            "Straight", "Bisexual", "Gay", "Lesbian",
-            "Pansexual", "Asexual", "Demisexual",
-            "Queer", "Open to all"
-        ]
+//        let sexualityOptions = [
+//            "Straight", "Bisexual", "Gay", "Lesbian",
+//            "Pansexual", "Asexual", "Demisexual",
+//            "Queer", "Open to all"
+//        ]
       
       @ObservedObject var viewModel: ProfileViewModel
      
@@ -71,7 +71,8 @@ import SwiftUI
             .onAppear {
                 // Trigger the fetch if the list is empty
                 if viewModel.sexualityOptions.isEmpty {
-                    Task { await viewModel.fetchMastersOptionsForSexuality() }
+//                    Task { await viewModel.fetchMastersOptionsForSexuality() }
+                    Task { await viewModel.loadSexualityOptions() }
                 }
             }
         }

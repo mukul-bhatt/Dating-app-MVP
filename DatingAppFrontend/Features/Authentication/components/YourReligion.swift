@@ -100,7 +100,8 @@ import SwiftUI
             .onAppear {
                 // Trigger the fetch if the list is empty
                 if viewModel.religionOptions.isEmpty {
-                    Task { await viewModel.fetchMasterOptionsForReligion() }
+//                    Task { await viewModel.fetchMasterOptionsForReligion() }
+                    Task { await viewModel.loadReligionOptions() }
                 }
             }
         }

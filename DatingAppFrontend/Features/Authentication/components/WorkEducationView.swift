@@ -12,12 +12,6 @@ struct WorkEducationView: View {
     
     // MARK: - State Variables
     @ObservedObject var viewModel: ProfileViewModel
-//    @State private var jobTitle: String = ""
-//    @State private var education: String = ""
-//    @State private var height: String = ""
-//    
-//    @State private var relationshipStatus: String = ""
-//    @State private var lookingFor: String = ""
     
     // MARK: - Data Sources
     let relationshipOptions = [
@@ -70,15 +64,16 @@ struct WorkEducationView: View {
                     // 4. Relationship Status Dropdown
                     CustomDropdown(
                         label: "Your current relationship status",
-                        selection: $viewModel.relationshipStatus,
-                        options: relationshipOptions
+                        selection: $viewModel.relationshipStatusId,
+                        options: viewModel.relationshipStatusOptions
+//                        options: relationshipOptions
                     )
                     
                     // 5. Intent Dropdown
                     CustomDropdown(
                         label: "What are you hoping to find here?",
-                        selection: $viewModel.lookingFor,
-                        options: lookingForOptions
+                        selection: $viewModel.lookingForId,
+                        options: viewModel.lookingForOptions
                     )
                     
                     Spacer()
@@ -89,6 +84,12 @@ struct WorkEducationView: View {
         // Dismiss keyboard on tap
         .onTapGesture {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
+        .onAppear {
+            Task {
+                await viewModel.loadRelationshipStatusOptions()
+                await viewModel.loadLookingForOptions()
+            }
         }
     }
 }
@@ -122,8 +123,8 @@ struct CustomTextField: View {
 // B. Standard Dropdown Style
 struct CustomDropdown: View {
     let label: String
-    @Binding var selection: String
-    let options: [String]
+    @Binding var selection: Int?
+    let options: [LookUpOption]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -132,17 +133,24 @@ struct CustomDropdown: View {
                 .foregroundColor(.black)
             
             Menu {
-                ForEach(options, id: \.self) { option in
+                ForEach(options) { option in
                     Button(action: {
-                        selection = option
+                        selection = option.id
                     }) {
-                        Text(option)
+                        Text(option.name)
                     }
                 }
             } label: {
                 HStack {
-                    Text(selection.isEmpty ? "Select option" : selection)
-                        .foregroundColor(selection.isEmpty ? .clear : .black)
+                    let selectedName: String = {
+                        if let id = selection, let match = options.first(where: { $0.id == id }) {
+                            return match.name
+                        } else {
+                            return "Select option"
+                        }
+                    }()
+                    Text(selectedName)
+                        .foregroundColor((selection == nil) ? .secondary : .black)
                     Spacer()
                     Image(systemName: "arrowtriangle.down.fill")
                         .font(.caption)
