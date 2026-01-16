@@ -10,15 +10,23 @@ import PhotosUI
 import Combine
 
 class ProfileViewModel: ObservableObject{
+    // MARK: - States of Register Form
+        @Published  var name = ""
+        @Published  var phone = ""
+        @Published  var selectedGender = ""
+        @Published  var dateOfBirth = Date()
     
     // MARK: - Profile Images
-        @Published var selectedImage: [UIImage] = []
+        @Published var selectedImages: [UIImage] = []
         @Published var photosPickerItems: [PhotosPickerItem] = []
     
     // MARK: - Basic Details
         @Published var location: String = "New Delhi"
         @Published var hasStartedTypingInLocationField: Bool = false
-        @Published var pronouns: String = ""
+    
+        // Options for Your Pronouns
+        @Published var pronounId: Int?
+        @Published var pronounOptions: [LookUpOption] = []
         @Published var bio: String = ""
     
     // MARK: - Dropdown Selections for Religion
@@ -45,13 +53,78 @@ class ProfileViewModel: ObservableObject{
         @Published var jobTitle: String = ""
         @Published var education: String = ""
         @Published var height: String = ""
-//        @Published var relationshipStatus: String = ""
+
+        // Relationship Status
         @Published var relationshipStatusId: Int? = nil
         @Published var relationshipStatusOptions: [LookUpOption] = []
     
+        // Looking for
         @Published var lookingForId: Int? = nil
         @Published var lookingForOptions: [LookUpOption] = []
         
+    // MARK: - Selected Interests
+        @Published var selectedInterestIds: Set<Int> = []
+        @Published var OptionsForInterests: [InterestOption] = []
+    
+    // MARK: - VALIDATION FOR YOUR HEIGHT
+    @Published var errorMessagesForHeight: String?
+    
+    var isValidHeight: Bool {
+        if height.isEmpty {
+            errorMessagesForHeight = "This field cannot be empty. Please enter your height in centimetres"
+            return false
+        }
+        
+        guard let heightInNumbers = Int(height) else{
+            errorMessagesForHeight = "Height must be Whole number"
+            return false
+        }
+        if heightInNumbers >= 140 && heightInNumbers <= 240{
+            errorMessagesForHeight = nil
+            return true
+        }else{
+            errorMessagesForHeight = "Height should be greater than 140cm and less than 240 cm"
+            return false
+        }
+        
+    }
+    
+    
+    // MARK: - VALIDATION FOR JOB TITLE
+    @Published var errorMessageForJobTitleField: String?
+    
+    func isValidJobTitle() -> Bool {
+        if jobTitle.isEmpty {
+            errorMessageForJobTitleField = "Job title cannot be empty"
+            return false
+        }
+        
+        if jobTitle.count >= 3 && jobTitle.count <= 50 {
+            errorMessageForJobTitleField = nil
+            return true
+        }else{
+            errorMessageForJobTitleField = "Job title should be more than 3 characters and less than 50 characters"
+            return false
+        }
+    }
+    
+    // MARK: - VALIDATION FOR EDUCATION FIELD
+    @Published var errorMessageForEducationField: String?
+    
+    func isValidEducation() -> Bool {
+        if education.isEmpty {
+            errorMessageForEducationField = "Education cannot be empty"
+            return false
+        }
+        
+        if education.count >= 3 && education.count <= 100 {
+            errorMessageForEducationField = nil
+            return true
+        }else{
+            errorMessageForEducationField = "Education should be more than 3 characters and less than 100 characters"
+            return false
+        }
+    }
     
     // MARK: - Validation for Your Location
     
@@ -79,23 +152,14 @@ class ProfileViewModel: ObservableObject{
             }
         }
     
-    
-    // MARK: - Validation for Your Pronouns
-    var isValidPronouns: Bool {
-        !pronouns.isEmpty && !pronouns.contains(where: { $0.isNumber })
-    }
-    
-    
-    
-    
         // MARK: - Validation
         // We will build this logic in the next steps
         var isFormValid: Bool {
             
             
-            return !selectedImage.isEmpty &&
+            return !selectedImages.isEmpty &&
                     (!location.isEmpty && isValidLocation) &&
-                    !pronouns.isEmpty &&
+//                    !pronounId.isEmpty &&
                     !bio.isEmpty &&
                     !jobTitle.isEmpty &&
                     !education.isEmpty &&
@@ -107,7 +171,7 @@ class ProfileViewModel: ObservableObject{
 
     // MARK: - Master options functions
     let masterService = MasterOptionsService()
-    let authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZWE0MDYwMS1jZjgwLTQ1MWYtYTJhZS1mODM3MDM3NmU5N2UiLCJqdGkiOiIwZmMyMWI0Yy03MmM3LTQ2MGQtYTkwNS1kODRjYjUwYzlmODkiLCJ1bmlxdWVfbmFtZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjYwMTciLCJwcm9maWxlX2lkIjoiNjAxNyIsImFwcGxpY2F0aW9uX3VzZXJJZCI6ImNlYTQwNjAxLWNmODAtNDUxZi1hMmFlLWY4MzcwMzc2ZTk3ZSIsImV4cCI6MTc2ODQ2MzQ4NywiaXNzIjoiRGF0aW5nQXBwIiwiYXVkIjoiYWxsX3VzZXJzIn0.E5LsX04XCV2O823TdobdpkySptd0z71JYX-FnK3ofM0"
+    let authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZWE0MDYwMS1jZjgwLTQ1MWYtYTJhZS1mODM3MDM3NmU5N2UiLCJqdGkiOiI0MTMwMDM4YS00OGIyLTQwNDctODBhZS1hN2JkMjEwODdiZjIiLCJ1bmlxdWVfbmFtZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjYwMTciLCJwcm9maWxlX2lkIjoiNjAxNyIsImFwcGxpY2F0aW9uX3VzZXJJZCI6ImNlYTQwNjAxLWNmODAtNDUxZi1hMmFlLWY4MzcwMzc2ZTk3ZSIsImV4cCI6MTc2ODU1NDgwNiwiaXNzIjoiRGF0aW5nQXBwIiwiYXVkIjoiYWxsX3VzZXJzIn0.jWvLNv4TUox2Lcyg1DBmjZTTKt2RyfidAjax5flbdsU"
 
     func loadReligionOptions() async {
         do {
@@ -164,87 +228,78 @@ class ProfileViewModel: ObservableObject{
             print(error)
         }
     }
-}
+    
+    func loadOptionsForPronouns() async {
+        do {
+            let options = try await masterService.fetchOptions(
+                endpoint: "/profile/get-master-options/your_pronouns",
+                token: authToken
+            )
+            await MainActor.run {
+                self.pronounOptions = options
+            }
+        } catch {
+            print(error)
+        }
+    }
+    
+    func loadOptionsForInterests() async {
+        let fetchInterest = FetchInterestsService()
+        do {
+            let interests = try await fetchInterest.fetchOptionsForInterests(
+                endpoint: "/profile/get-interests",
+                token: authToken
+            )
+            await MainActor.run {
+                self.OptionsForInterests = interests
+            }
+        } catch {
+            print(error)
+        }
+    }
+    
+    func uploadImageToServer() async throws {
+        
+        let boundary = UUID().uuidString
+        let baseUrl = masterService.baseUrl
+        let endpoint = "/profile/upload-picture"
+        guard let url = URL(string: baseUrl+endpoint) else{
+            throw URLError(.badURL)
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+
+        var body = Data()
+
+        for (index, image) in selectedImages.enumerated() {
+            guard let data = image.jpegData(compressionQuality: 0.8) else { continue }
+
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            let fieldName = index == 0 ? "File" : "File\(index)"
+            body.append("Content-Disposition: form-data; name=\"\(fieldName)\"; filename=\"photo\(index).jpg\"\r\n".data(using: .utf8)!)
+
+            body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+            body.append(data)
+            body.append("\r\n".data(using: .utf8)!)
+        }
+
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        if let http = response as? HTTPURLResponse {
+                print("📡 STATUS:", http.statusCode)
+            }
+
+            print("📦 RESPONSE:", String(data: data, encoding: .utf8) ?? "nil")
+
+
+    }
+ }
 
 
 
-
-
-//let apiUrl = "https://datolitic-unprejudiced-lawson.ngrok-free.dev/api"
-
-
-// func fetchMasterOptionsForReligion() async {
-//        guard let url = URL(string: apiUrl + "/profile/get-master-options/partner_religion") else { return }
-//
-//        // 1. Create a Request object
-//        var request = URLRequest(url: url)
-//        request.httpMethod = "GET"
-//
-//        // 2. Add the Authorization Header
-//        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
-//
-//        // Optional: It's good practice to tell the server you want JSON
-//        request.setValue("application/json", forHTTPHeaderField: "Accept")
-//
-//        do {
-//            // 3. Use .data(for: request) instead of .data(from: url)
-//            let (data, response) = try await URLSession.shared.data(for: request)
-//
-//            // 🔍 DEBUG: Check if the token worked (Expect status code 200)
-//            if let httpResponse = response as? HTTPURLResponse {
-//                print("📡 STATUS CODE: \(httpResponse.statusCode)") // Should be 200
-//            }
-//
-//            // 🔍 DEBUG: Print the raw JSON to see if we got data or an error
-//            if let jsonString = String(data: data, encoding: .utf8) {
-//                print("🚀 RAW RESPONSE: \(jsonString)")
-//            }
-//
-//            // 4. Decode
-//            let decodedResponse = try JSONDecoder().decode(MasterOptionsResponse.self, from: data)
-//
-//            DispatchQueue.main.async {
-//                self.religionOptions = decodedResponse.options
-//            }
-//
-//        } catch {
-//            print("❌ FETCH ERROR: \(error)")
-//        }
-//    }
-
-
-
-//    func fetchMastersOptionsForSexuality() async {
-//        guard let url = URL(string: apiUrl + "/profile/get-master-options/partner_sexuality") else { return }
-//        var request = URLRequest(url: url)
-//        request.httpMethod = "GET"
-//
-//        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
-//
-//        // Optional: It's good practice to tell the server you want JSON
-//        request.setValue("application/json", forHTTPHeaderField: "Accept")
-//
-//        do{
-//            let (data, response) = try await URLSession.shared.data(for: request)
-//
-//            // 🔍 DEBUG: Check if the token worked (Expect status code 200)
-//            if let httpResponse = response as? HTTPURLResponse {
-//                print("📡 STATUS CODE: \(httpResponse.statusCode)") // Should be 200
-//            }
-//
-//            // 🔍 DEBUG: Print the raw JSON to see if we got data or an error
-//            if let jsonString = String(data: data, encoding: .utf8) {
-//                print("🚀 RAW RESPONSE: \(jsonString)")
-//            }
-//
-//            // 4. Decode
-//            let decodedResponse = try JSONDecoder().decode(MasterOptionsResponse.self, from: data)
-//
-//            DispatchQueue.main.async {
-//                self.sexualityOptions = decodedResponse.options
-//            }
-//        }catch {
-//            print("❌ FETCH ERROR: \(error)")
-//        }
-//    }
-//

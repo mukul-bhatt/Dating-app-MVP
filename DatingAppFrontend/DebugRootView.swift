@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct DebugRootView: View {
+    
+    @StateObject private var viewModel = ProfileViewModel()
+    
     var body: some View {
         NavigationStack {
             List {
@@ -20,18 +23,24 @@ struct DebugRootView: View {
                 }
 
                 NavigationLink("RegisterOTP") {
-                    RegisterOtpView()
+                    RegisterOtpVerificationView()
                 }
 
                 NavigationLink("Register") {
-                    RegisterWithUsView()
+                    RegisterWithUsView(viewModel: viewModel)
                 }
 
                 NavigationLink("ProfileSetup") {
-                    ProfileSetup()
+                    ProfileSetup(viewModel: viewModel)
                 }
                 NavigationLink("Splash Screen") {
                     LandingScreenView()
+                }
+                NavigationLink("Image Upload") {
+                    imageSubmitTest()
+                }
+                NavigationLink("Interest") {
+                    InterestsView(viewModel: viewModel)
                 }
         
             }

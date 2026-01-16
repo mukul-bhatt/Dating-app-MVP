@@ -31,13 +31,13 @@ struct GenderPickerView: View {
             } label: {
                 HStack {
                     Text(selectedGender.isEmpty ? "Select one option" : selectedGender)
-                        .foregroundColor(selectedGender.isEmpty ? .secondary : .black)
+                        .foregroundColor(selectedGender.isEmpty ? .secondary : .primary)
                         .font(.system(size: 16))
                     
                     Spacer()
                     
                     Image(systemName: "chevron.down")
-                        .foregroundColor(.black)
+                        .foregroundColor(.primary)
                         .font(.system(size: 14, weight: .medium))
                 }
                 .padding(.horizontal, 16)

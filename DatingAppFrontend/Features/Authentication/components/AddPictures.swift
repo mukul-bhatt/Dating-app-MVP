@@ -11,8 +11,8 @@ import PhotosUI
 // Add your Pictures Section
     struct AddPictures: View {
         let columns: [GridItem]
-        @Binding var selectedImages: [UIImage]
-        @Binding var photoPickerItems: [PhotosPickerItem]
+        
+        @ObservedObject var viewModel: ProfileViewModel
         
         var body: some View {
             AddPicturesHeader(title: "Add your pictures", subTitle: "Add a photo so people can see the real you!")
@@ -20,15 +20,15 @@ import PhotosUI
                 
                 LazyVGrid(columns: columns, spacing: 16) {
                     // Wrap button in PhotosPicker
-                    PhotosPicker(selection: $photoPickerItems, maxSelectionCount: 6, matching: .images) {
+                    PhotosPicker(selection: $viewModel.photosPickerItems, maxSelectionCount: 6, matching: .images) {
                         AddPictureButton()
                     }
                     
-                    ForEach(selectedImages.indices, id: \.self) { index in
-                        ImageCell(image: selectedImages[index])
+                    ForEach(viewModel.selectedImages.indices, id: \.self) { index in
+                        ImageCell(image: viewModel.selectedImages[index])
                     }
                 }
-                .padding(.horizontal, 24)
+//                .padding(.horizontal, 24)
             }
         }
     }
@@ -46,9 +46,9 @@ struct AddPictureButton: View {
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.primary)
         }
-        .frame(height: 200)
+        .frame(height: 180)
         .frame(maxWidth: .infinity)
-        .background(Color.white.opacity(0.5))
+//        .background(Color.white.opacity(0.5))
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
@@ -65,8 +65,8 @@ struct ImageCell: View {
         Image(uiImage: image)
             .resizable()
             .scaledToFill()
-        //                .frame(maxWidth: .infinity)
-            .frame(width: 150, height: 200)
+            .frame(width:180,height: 180)
+            .frame(maxWidth: .infinity)
             .clipped()
             .cornerRadius(12)
     }

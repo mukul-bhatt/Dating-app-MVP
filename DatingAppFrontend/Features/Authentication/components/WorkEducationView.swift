@@ -14,16 +14,16 @@ struct WorkEducationView: View {
     @ObservedObject var viewModel: ProfileViewModel
     
     // MARK: - Data Sources
-    let relationshipOptions = [
-        "Single", "Divorced", "Widowed", 
-        "Separated", "It's Complicated"
-    ]
-    
-    let lookingForOptions = [
-        "Long-term partner", "New friends", 
-        "Casual dating", "Not sure yet", 
-        "Chat and see"
-    ]
+//    let relationshipOptions = [
+//        "Single", "Divorced", "Widowed", 
+//        "Separated", "It's Complicated"
+//    ]
+//    
+//    let lookingForOptions = [
+//        "Long-term partner", "New friends", 
+//        "Casual dating", "Not sure yet", 
+//        "Chat and see"
+//    ]
     
     // MARK: - Design Constants
     let backgroundColor = Color("BrandColor") // Brand Background
@@ -41,32 +41,42 @@ struct WorkEducationView: View {
                     CustomTextField(
                         label: "Job",
                         placeholder: "What’s your 9-to-5... or passion project?",
-                        text: $viewModel.jobTitle
-                    )
+                        text: $viewModel.jobTitle,
+                        errorMessage: viewModel.errorMessageForJobTitleField
+                    ).onSubmit {
+                        _ = viewModel.isValidJobTitle()
+                    }
                     
                     // 2. Education Field
                     CustomTextField(
                         label: "Education",
                         placeholder: "Where did you study or learn something cool?",
-                        text: $viewModel.education
-                    )
+                        text: $viewModel.education,
+                        errorMessage: viewModel.errorMessageForEducationField
+                        
+                    ).onSubmit {
+                        _ = viewModel.isValidEducation()
+                    }
                     
                     // 3. Height Field
-                    // Note: In a real app, this might be a scroll picker. 
-                    // Visually, it's a text box in the design.
                     CustomTextField(
                         label: "Height",
                         placeholder: "", // Empty in screenshot
-                        text: $viewModel.height
+                        text: $viewModel.height,
+                        subScriptForHeight: true,
+                        isNumericOnly: true,
+                        errorMessage: viewModel.errorMessagesForHeight
                     )
                     .keyboardType(.numbersAndPunctuation)
+                    .onSubmit {
+                       let _ = viewModel.isValidHeight
+                    }
                     
                     // 4. Relationship Status Dropdown
                     CustomDropdown(
                         label: "Your current relationship status",
                         selection: $viewModel.relationshipStatusId,
                         options: viewModel.relationshipStatusOptions
-//                        options: relationshipOptions
                     )
                     
                     // 5. Intent Dropdown
@@ -101,14 +111,22 @@ struct CustomTextField: View {
     let label: String
     let placeholder: String
     @Binding var text: String
+    var subScriptForHeight: Bool = false
+    var isNumericOnly: Bool = false
+    var errorMessage: String?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.headline)
-                .foregroundColor(.black)
+                .foregroundColor(.primary)
             
-            TextField(placeholder, text: $text)
+            HStack{
+                TextField(placeholder, text: $text)
+                if subScriptForHeight {
+                    Text("Cm").foregroundStyle(Color.white)
+                }
+            }
                 .padding()
                 .frame(height: 50)
                 .cornerRadius(10)
@@ -116,6 +134,24 @@ struct CustomTextField: View {
                     RoundedRectangle(cornerRadius: 10)
                         .stroke(Color.secondary, lineWidth: 1)
                 )
+                .onChange(of: text){ oldValue, newValue in
+                    if isNumericOnly{
+                        text = newValue.filter{$0.isWholeNumber}
+                    }
+                    
+                  
+                }
+            
+            if let errorMessage = errorMessage {
+                HStack(spacing: 4) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                    Text(errorMessage)
+                }
+                .font(.caption)
+                .foregroundColor(.red)
+                
+            }
+            
         }
     }
 }
@@ -130,7 +166,7 @@ struct CustomDropdown: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.headline)
-                .foregroundColor(.black)
+                .foregroundColor(.primary)
             
             Menu {
                 ForEach(options) { option in
@@ -150,11 +186,11 @@ struct CustomDropdown: View {
                         }
                     }()
                     Text(selectedName)
-                        .foregroundColor((selection == nil) ? .secondary : .black)
+                        .foregroundColor((selection == nil) ? .secondary : .primary)
                     Spacer()
                     Image(systemName: "arrowtriangle.down.fill")
                         .font(.caption)
-                        .foregroundColor(.black)
+                        .foregroundColor(.primary)
                 }
                 .padding()
                 .frame(height: 50)

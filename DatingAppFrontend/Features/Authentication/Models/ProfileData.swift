@@ -8,6 +8,7 @@
 import Foundation
 
 struct UserProfileDTO: Codable {
+    let firstName: String
     let lastName: String
     let user: UserBlock
     let Settings: SettingsBlock
@@ -52,12 +53,13 @@ extension ProfileViewModel {
     func printDataSnapshot() {
         // 1. Create the DTO
         let snapshot = UserProfileDTO(
-            lastName: "Kapoor", // or from UI later
+            firstName: name,
+            lastName: "",
 
             user: UserBlock(
-                pronouns: pronouns,
-                gender: "Male",
-                dateOfBirth: "2000-07-05",   // yyyy-MM-dd
+                pronouns: pronounId.map(String.init) ?? "",
+                gender: selectedGender,
+                dateOfBirth: Self.formatDOB(dateOfBirth),   // yyyy-MM-dd
                 sexuality: sexualityId.map(String.init) ?? "",
                 bio: bio,
                 religion: selectedReligionId.map(String.init) ?? "",
@@ -82,8 +84,7 @@ extension ProfileViewModel {
             ),
 
             interests: InterestsBlock(
-                InterestsName: "Horse Riding,Tennis"
-//                InterestsName: selectedInterests.joined(separator: ",")
+                InterestsName: selectedInterestIds.map(String.init).joined(separator: ",")
             )
         )
         
@@ -92,7 +93,7 @@ extension ProfileViewModel {
         
         // 2. Use do-catch to see errors
         do {
-            let data = try encoder.encode(snapshot) // Removed '?'
+            let data = try encoder.encode(snapshot)
             if let jsonString = String(data: data, encoding: .utf8) {
                 print("🚀 BACKEND DATA PREVIEW:")
                 print(jsonString)
@@ -104,3 +105,13 @@ extension ProfileViewModel {
     }
 }
 
+extension ProfileViewModel {
+    static func formatDOB(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .iso8601)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+}

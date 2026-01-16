@@ -17,7 +17,7 @@ struct ProfileSetup: View {
         GridItem(.flexible(), spacing: 16)
     ]
     
-    @StateObject private var viewModel = ProfileViewModel()
+    @ObservedObject var viewModel: ProfileViewModel
     
     var body: some View {
         VStack(spacing: 20){
@@ -33,7 +33,7 @@ struct ProfileSetup: View {
             ScrollView(showsIndicators: false){
                 VStack(spacing: 20){
                     // Add Profiles Section
-                    AddPictures(columns: columns, selectedImages: $viewModel.selectedImage, photoPickerItems: $viewModel.photosPickerItems)
+                    AddPictures(columns: columns, viewModel: viewModel)
                     
                     // Your Location
                     YourLocation(viewModel: viewModel)
@@ -89,12 +89,12 @@ struct ProfileSetup: View {
         .background(Color("BrandColor"))
         .onChange(of: viewModel.photosPickerItems) { oldValue, newValue in
             Task{
-                viewModel.selectedImage.removeAll()
+                viewModel.selectedImages.removeAll()
                 
                 for item in newValue{
                     if let data = try? await item.loadTransferable(type: Data.self),
                        let image = UIImage(data: data) {
-                        viewModel.selectedImage.append(image)
+                        viewModel.selectedImages.append(image)
                     }
                 }
             }
@@ -103,8 +103,8 @@ struct ProfileSetup: View {
     
 }
 
-#Preview {
-    ProfileSetup()
-}
+//#Preview {
+//    ProfileSetup()
+//}
 
 

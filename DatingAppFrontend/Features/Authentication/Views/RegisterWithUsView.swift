@@ -9,10 +9,7 @@ import SwiftUI
 
 struct RegisterWithUsView: View {
     
-    @State private var name = ""
-    @State private var phone = ""
-    @State private var selectedGender = ""  
-    @State private var dateOfBirth = Date()
+    @ObservedObject var viewModel: ProfileViewModel
     
     @FocusState private var isFocused: Bool
     @FocusState private var isFocusedPhone: Bool
@@ -32,14 +29,14 @@ struct RegisterWithUsView: View {
                     LabeledTextField(
                         label: "Name",
                         placeholder: "",
-                        text: $name,
+                        text: $viewModel.name,
                         isFocused: $isFocused
                     )
                     
                     
                     PhoneInputFieldSection(isSingleLabel: true, isFocusedPhone: $isFocusedPhone)
-                    GenderPickerView(selectedGender: $selectedGender)
-                    DatePickerView(date: $dateOfBirth )
+                    GenderPickerView(selectedGender: $viewModel.selectedGender)
+                    DatePickerView(date: $viewModel.dateOfBirth )
                 }
                 
                 Text("We're about to send a One-Time Password to your contact information for secure login. Ensure your details are correct before proceeding")
@@ -47,7 +44,7 @@ struct RegisterWithUsView: View {
                 
                 Spacer()
                 
-                NavigationLink(destination: RegisterOtpView()){
+                NavigationLink(destination: RegisterOtpVerificationView()){
                     PrimaryButton()
                 }
             }
@@ -64,6 +61,6 @@ struct RegisterWithUsView: View {
  
 }
 
-#Preview {
-    RegisterWithUsView()
-}
+//#Preview {
+//    RegisterWithUsView(viewModel: <#ProfileViewModel#>)
+//}

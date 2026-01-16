@@ -6,10 +6,8 @@ struct OTPVerificationView: View {
     
     // Custom Colors
     // Keep background consistent with LoginView
-    let backgroundColor = Color.pink.opacity(0.1)
+    let backgroundColor = Color("BrandColor")
     let accentPink = Color(red: 0.9, green: 0.28, blue: 0.48)
-    
-    // REMOVED: let textColor = ... (This was the problem)
     
     var body: some View {
         NavigationStack{

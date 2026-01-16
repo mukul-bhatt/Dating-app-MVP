@@ -9,6 +9,7 @@
 import SwiftUI
 
 struct LandingScreenView: View {
+    @StateObject private var viewModel = ProfileViewModel()
     
     // MARK: - Properties
     // Using the colors derived from your previous files/images
@@ -71,7 +72,7 @@ struct LandingScreenView: View {
                         
                         // Create Account Button
                         
-                        NavigationLink(destination: RegisterWithUsView()) {
+                        NavigationLink(destination: RegisterWithUsView(viewModel: viewModel)) {
                             Text("Create Account")
                                 .font(.headline)
                                 .fontWeight(.bold)

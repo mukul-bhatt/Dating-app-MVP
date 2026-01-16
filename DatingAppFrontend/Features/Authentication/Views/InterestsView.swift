@@ -11,8 +11,8 @@ import SwiftUI
 struct InterestsView: View {
     
     // MARK: - State & Data
-    // In a real app, you might move `selectedInterests` to your ProfileViewModel
-    @State private var selectedInterests: Set<String> = []
+//    @State private var selectedInterests: Set<String> = []
+    @ObservedObject var viewModel: ProfileViewModel
     
     // Mock Data based on the image
     let interestsList = [
@@ -23,14 +23,6 @@ struct InterestsView: View {
         "Karaoke", "Horse Riding", "Diving", "Pottery",
         "Foodie", "Art", "Design", "Politics",
         "Gardening", "Gym", "Running", "Writing"
-    ]
-    
-    // Grid Layout: 4 columns as seen in the screenshot
-    let columns = [
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10)
     ]
     
     // Custom Colors (Matching your theme)
@@ -48,29 +40,29 @@ struct InterestsView: View {
                 VStack(spacing: 12) {
                     Text("Choose your Interests")
                         .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.black)
+                        .foregroundColor(.primary)
                     
                     Text("Choose any 5 interests to get started")
                         .font(.subheadline)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.secondary)
                 }
                 .padding(.top, 20)
                 .padding(.bottom, 30)
                 
                 // 3. Grid of Interests
                 ScrollView(showsIndicators: false) {
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(interestsList, id: \.self) { interest in
+                    FlowLayout(items: viewModel.OptionsForInterests) { interest in
+
                             InterestTag(
-                                text: interest,
-                                isSelected: selectedInterests.contains(interest)
+                                text: interest.interestsName,
+                                isSelected: viewModel.selectedInterestIds.contains(interest.id)
                             ) {
                                 toggleSelection(for: interest)
                             }
-                        }
+
                     }
                     .padding(.horizontal, 20)
-                    .padding(.bottom, 100) // Space for the Done button
+//                    .padding(.bottom, 100) // Space for the Done button
                     .padding(.top, 10)
                 }
                 
@@ -81,7 +73,7 @@ struct InterestsView: View {
             VStack {
                 Spacer()
                 Button(action: {
-                    print("Selected: \(selectedInterests)")
+                    print("Selected: \(viewModel.selectedInterestIds)")
                 }) {
                     Text("Done")
                         .font(.headline)
@@ -95,18 +87,22 @@ struct InterestsView: View {
                 .padding(.horizontal, 25)
                 .padding(.bottom, 30)
             }
+        }.onAppear{
+            Task{
+                await viewModel.loadOptionsForInterests()
+            }
         }
     }
     
     // MARK: - Logic
     
-    func toggleSelection(for interest: String) {
-        if selectedInterests.contains(interest) {
-            selectedInterests.remove(interest)
+    func toggleSelection(for interest: InterestOption) {
+        if viewModel.selectedInterestIds.contains(interest.id) {
+            viewModel.selectedInterestIds.remove(interest.id)
         } else {
             // Optional: Enforce limit of 5
-            if selectedInterests.count < 5 {
-                selectedInterests.insert(interest)
+            if viewModel.selectedInterestIds.count < 5 {
+                viewModel.selectedInterestIds.insert(interest.id)
             }
         }
     }
@@ -120,27 +116,28 @@ struct InterestTag: View {
     let action: () -> Void
     
     // Colors
-    let brandPink = Color(red: 0.9, green: 0.28, blue: 0.48)
+    let brandPink = Color("BrandColor")
     let unselectedBg = Color.clear // Very light pink
     
     var body: some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(isSelected ? .white : .black)
-                .padding(.horizontal, 10)
-                .frame(maxWidth: .infinity)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(isSelected ? .white : .primary)
+                .padding(.vertical, 12)
+                .padding(.horizontal, 16)
+//                .frame(maxWidth: .infinity)
                 .frame(height: 45) // Fixed height to match uniform grid
-                .background(isSelected ? brandPink : unselectedBg)
+                .background(isSelected ? Color("ButtonColor") : unselectedBg)
                 .cornerRadius(10)
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(isSelected ? brandPink : Color.black, lineWidth: isSelected ? 0 : 1)
+                        .stroke(isSelected ? brandPink : Color.primary, lineWidth: isSelected ? 0 : 1)
                 )
         }
     }
 }
 
-#Preview {
-    InterestsView()
-}
+//#Preview {
+//    InterestsView(viewModel: <#ProfileViewModel#>)
+//}
