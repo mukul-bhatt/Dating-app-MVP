@@ -30,6 +30,7 @@ import SwiftUI
 struct PrimaryButton: View {
     var buttonText: String = "Next"
     var action: (() -> Void)? = nil  // Optional action
+    var isDiabled: Bool = false
     
     var body: some View {
         if let action = action {
@@ -38,6 +39,7 @@ struct PrimaryButton: View {
                 buttonContent
             }
             .padding(.bottom, 20)
+            
         } else {
             // If no action, just return the styled view (for NavigationLink)
             buttonContent

@@ -34,7 +34,7 @@ struct RegisterWithUsView: View {
                     )
                     
                     
-                    PhoneInputFieldSection(isSingleLabel: true, isFocusedPhone: $isFocusedPhone)
+                    PhoneInputFieldSection(viewModel:viewModel, isSingleLabel: true, isFocusedPhone: $isFocusedPhone)
                     GenderPickerView(selectedGender: $viewModel.selectedGender)
                     DatePickerView(date: $viewModel.dateOfBirth )
                 }
@@ -44,7 +44,7 @@ struct RegisterWithUsView: View {
                 
                 Spacer()
                 
-                NavigationLink(destination: RegisterOtpVerificationView()){
+                NavigationLink(destination: RegisterOtpVerificationView(viewModel: viewModel)){
                     PrimaryButton()
                 }
             }

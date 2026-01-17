@@ -10,23 +10,29 @@ import PhotosUI
 import Combine
 
 class ProfileViewModel: ObservableObject{
+        @Published var hasAttemptedSubmit: Bool = false
     // MARK: - States of Register Form
         @Published  var name = ""
-        @Published  var phone = ""
+        @Published  var phoneNumber: String = ""
         @Published  var selectedGender = ""
         @Published  var dateOfBirth = Date()
+//        @Published  var selectedCountry = Country(name: "India", code: "IN", dialCode: "+91", flag: "🇮🇳")
+        @Published  var selectedCountryDialCode: String = ""
+        @Published  var profileId: String = ""
     
     // MARK: - Profile Images
         @Published var selectedImages: [UIImage] = []
         @Published var photosPickerItems: [PhotosPickerItem] = []
     
     // MARK: - Basic Details
-        @Published var location: String = "New Delhi"
+        @Published var location: String = ""
         @Published var hasStartedTypingInLocationField: Bool = false
     
         // Options for Your Pronouns
         @Published var pronounId: Int?
         @Published var pronounOptions: [LookUpOption] = []
+    
+        // Bio
         @Published var bio: String = ""
     
     // MARK: - Dropdown Selections for Religion
@@ -67,106 +73,228 @@ class ProfileViewModel: ObservableObject{
         @Published var OptionsForInterests: [InterestOption] = []
     
     // MARK: - VALIDATION FOR YOUR HEIGHT
-    @Published var errorMessagesForHeight: String?
-    
+    // 1. A property just for the Boolean check
     var isValidHeight: Bool {
+        guard let heightInNumbers = Int(height) else { return false }
+        return heightInNumbers >= 140 && heightInNumbers <= 240
+    }
+
+    // 2. A separate property that CALCULATES the message on the fly
+    var heightValidationMessage: String? {
         if height.isEmpty {
-            errorMessagesForHeight = "This field cannot be empty. Please enter your height in centimetres"
-            return false
+            return "This field cannot be empty. Please enter your height in centimetres"
         }
         
-        guard let heightInNumbers = Int(height) else{
-            errorMessagesForHeight = "Height must be Whole number"
-            return false
-        }
-        if heightInNumbers >= 140 && heightInNumbers <= 240{
-            errorMessagesForHeight = nil
-            return true
-        }else{
-            errorMessagesForHeight = "Height should be greater than 140cm and less than 240 cm"
-            return false
+        guard let heightInNumbers = Int(height) else {
+            return "Height must be Whole number"
         }
         
+        if heightInNumbers < 140 || heightInNumbers > 240 {
+            return "Height should be greater than 140cm and less than 240 cm"
+        }
+        
+        return nil // No error
     }
     
     
     // MARK: - VALIDATION FOR JOB TITLE
-    @Published var errorMessageForJobTitleField: String?
     
-    func isValidJobTitle() -> Bool {
+    var isValidJobTitle: Bool{
+        return !jobTitle.isEmpty && (jobTitle.count >= 3 && jobTitle.count <= 50)
+    }
+    
+    var errorMessageForJobTitleField: String?{
+    
         if jobTitle.isEmpty {
-            errorMessageForJobTitleField = "Job title cannot be empty"
-            return false
+            return "Job title cannot be empty"
         }
         
-        if jobTitle.count >= 3 && jobTitle.count <= 50 {
-            errorMessageForJobTitleField = nil
-            return true
-        }else{
-            errorMessageForJobTitleField = "Job title should be more than 3 characters and less than 50 characters"
-            return false
+        if jobTitle.count < 3 || jobTitle.count > 50 {
+            return "Job title should be more than 3 characters and less than 50 characters"
         }
+        
+        return nil
     }
     
     // MARK: - VALIDATION FOR EDUCATION FIELD
-    @Published var errorMessageForEducationField: String?
     
-    func isValidEducation() -> Bool {
+    var isValidEducation: Bool {
+        return !education.isEmpty && (education.count >= 3 && education.count <= 100)
+    }
+    
+    var errorMessageForEducationField: String? {
         if education.isEmpty {
-            errorMessageForEducationField = "Education cannot be empty"
-            return false
+            return "Education cannot be empty"
         }
         
-        if education.count >= 3 && education.count <= 100 {
-            errorMessageForEducationField = nil
-            return true
-        }else{
-            errorMessageForEducationField = "Education should be more than 3 characters and less than 100 characters"
-            return false
+        if education.count < 3 || education.count > 100 {
+            return "Education should be more than 3 characters and less than 100 characters"
         }
+        return nil
     }
     
     // MARK: - Validation for Your Location
     
     var isValidLocation: Bool {
-           let trimmed = location.trimmingCharacters(in: .whitespaces)
-           return !trimmed.isEmpty &&
-                  trimmed.count >= 3 &&
-                  trimmed.count <= 50 &&
-                  !trimmed.contains(where: { $0.isNumber }) &&
-                  trimmed.contains(where: { $0.isLetter })
+        let trimmed = location.trimmingCharacters(in: .whitespaces)
+        
+        return  !trimmed.isEmpty &&
+                (trimmed.count >= 3 || trimmed.count <= 50) &&
+                !trimmed.contains(where: { $0.isNumber }) &&
+                !trimmed.contains(where: { $0.isLetter })
+
        }
     
-    // Helper to provide specific error message
-    var validationMessageForLocation: String {
-            let trimmed = location.trimmingCharacters(in: .whitespaces)
-            
-            if trimmed.isEmpty {
-                return "Location cannot be empty"
-            } else if trimmed.count < 3 {
-                return "Location must be at least 3 characters"
-            } else if !trimmed.contains(where: { $0.isLetter }) {
-                return "Location must contain letters"
-            } else {
-                return "Please enter a valid location"
-            }
+    var errorMessageForLocation: String?{
+        let trimmed = location.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
+            return "Location cannot be empty"
         }
+        if trimmed.count < 3 || trimmed.count > 50{
+            return "Location must be at least 3 characters and less than or equal to 50 characters"
+        }
+        if trimmed.contains(where: { $0.isNumber }){
+            return "Location cannot contain numbers"
+        }
+        if !trimmed.contains(where: { $0.isLetter }){
+            return "Location must contain letters"
+        }
+        return nil
+    }
+
+    // MARK: - Validation for Current RelationshipStatus
+ 
+    var isRelationshipStatusValid: Bool {
+        return relationshipStatusId != nil
+    }
     
-        // MARK: - Validation
+    var errorMessageForRelationshipStatus: String? {
+        if relationshipStatusId == nil {
+            return "Please select your current relationship status"
+        }
+        return nil
+    }
+
+    // MARK: - Validation for What are you hoping to find here
+
+    var isLookingForFieldValid: Bool {
+        return lookingForId != nil
+    }
+    
+    var errorMessageForLookingForField: String? {
+        if lookingForId == nil {
+            return "Please select one of the above options"
+        }
+        return nil
+    }
+    // MARK: - Validation for What are you hoping to find here
+
+    var isPronounValid: Bool {
+        return pronounId != nil
+    }
+    
+    var errorMessageForPronounField: String? {
+        if pronounId == nil {
+            return "Please select one of the above options"
+        }
+        return nil
+    }
+    
+    // MARK: - Validation for BIO Section
+    var isBioValid: Bool {
+        return !bio.isEmpty
+    }
+    
+    var errorMessageForBioField: String? {
+        if bio.isEmpty {
+            return "Bio cannot be empty"
+        }
+        return nil
+    }
+    
+    // MARK: - Validation for Image Selection
+    @Published var errorMessageForImageSelection: String?
+    
+    var isImageSelectionValid: Bool{
+        if !selectedImages.isEmpty{
+            errorMessageForImageSelection = nil
+            return true
+        }else{
+            errorMessageForImageSelection = "You must select at least one image"
+            return false
+        }
+        
+    }
+    // MARK: - Validation for Selected Religion
+    
+    // A property that only checks the logic
+    var isSelectedReligionValid: Bool {
+        selectedReligionId != nil
+    }
+
+    // A property that only returns the message
+    var errorMessageForSelectedReligionField: String? {
+        if selectedReligionId == nil {
+            return "You must select your Religion"
+        }
+        return nil
+    }
+    
+    var isPreferredPartnerReligionValid: Bool{
+        !selectedPartnerReligions.isEmpty
+    }
+    
+    var errorMessageForPreferredPartnerReligionField: String? {
+        if selectedPartnerReligions.isEmpty{
+            return "Please select Preferences for Partner's Religion"
+        }else{
+            return nil
+        }
+    }
+    
+    // MARK: - Validation for Selected Sexuality
+    
+    var isSelectedSexualityValid: Bool {
+        sexualityId != nil
+    }
+    
+    var errorMessageForSelectedSexualityField: String? {
+        if sexualityId == nil{
+            return "You must select your Sexuality"
+        }else{
+            return nil
+        }
+    }
+    
+    var isPreferredPartnerSexualityValid: Bool{
+       !selectedPartnerSexualityIds.isEmpty
+    }
+    
+    var errorMessageForPreferredPartnerSexualityField: String? {
+        if selectedPartnerSexualityIds.isEmpty{
+            return "Please select Preferences for Partner's Sexuality"
+        }else{
+            return nil
+        }
+    }
+    
+        // MARK: - Profile Form Validation
         // We will build this logic in the next steps
         var isFormValid: Bool {
             
-            
-            return !selectedImages.isEmpty &&
-                    (!location.isEmpty && isValidLocation) &&
-//                    !pronounId.isEmpty &&
-                    !bio.isEmpty &&
-                    !jobTitle.isEmpty &&
-                    !education.isEmpty &&
-                    !height.isEmpty &&
-//                    !lookingFor.isEmpty &&
-//                    !relationshipStatus.isEmpty &&
-                    !height.isEmpty
+            return  isValidHeight &&
+                    isValidJobTitle &&
+                    isValidEducation &&
+                    isValidLocation &&
+                    isRelationshipStatusValid &&
+                    isLookingForFieldValid &&
+                    isPronounValid &&
+                    isBioValid &&
+                    isImageSelectionValid &&
+                    isSelectedReligionValid &&
+                    isPreferredPartnerReligionValid &&
+                    isSelectedSexualityValid &&
+                    isPreferredPartnerSexualityValid
         }
 
     // MARK: - Master options functions
@@ -298,6 +426,43 @@ class ProfileViewModel: ObservableObject{
             print("📦 RESPONSE:", String(data: data, encoding: .utf8) ?? "nil")
 
 
+    }
+    
+    // MARK: - Call Verify API
+    
+    struct OTPVerifyBody: Codable {
+        let Mobile: String
+        let countryCode: String
+        let ProfileId: String
+        let Otp: String
+    }
+    
+    func callBackendWithVerifyEndpoint(otp: String) async throws {
+        let baseUrl = masterService.baseUrl
+        let endpoint = "/auth/verify-otp"
+        guard let url = URL(string: baseUrl+endpoint) else{
+            throw URLError(.badURL)
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let bodyData = OTPVerifyBody(
+                Mobile: phoneNumber,
+                countryCode: selectedCountryDialCode,
+                ProfileId: profileId,
+                Otp: otp
+            )
+        request.httpBody = try JSONEncoder().encode(bodyData)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        if let http = response as? HTTPURLResponse {
+                print("📡 STATUS:", http.statusCode)
+            }
+        
+        print("📦 RESPONSE:", String(data: data, encoding: .utf8) ?? "nil")
     }
  }
 

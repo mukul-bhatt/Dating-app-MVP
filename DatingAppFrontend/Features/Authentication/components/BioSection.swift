@@ -11,7 +11,8 @@ import SwiftUI
     
     struct BioSection: View {
         
-        @Binding var bio: String
+//        @Binding var bio: String
+        @ObservedObject var viewModel: ProfileViewModel
         
         var body: some View {
             // 3. Bio Section
@@ -21,7 +22,7 @@ import SwiftUI
                     .foregroundColor(.primary)
                 
                 VStack(alignment: .trailing, spacing: 5) {
-                    TextEditor(text: $bio)
+                    TextEditor(text: $viewModel.bio)
                         .frame(height: 100)
                         .padding(10)
                         .scrollContentBackground(.hidden) // Required to change TextEditor bg
@@ -31,15 +32,25 @@ import SwiftUI
                             RoundedRectangle(cornerRadius: 10)
                                 .stroke(.secondary, lineWidth: 1)
                         )
-                        .onChange(of: bio) { oldValue, newValue in
+                        .onChange(of: viewModel.bio) { oldValue, newValue in
                             if newValue.count > 100 {
-                                bio = String(newValue.prefix(100))
+                                viewModel.bio = String(newValue.prefix(100))
                             }
                         }
                     
-                    Text("\(bio.count)/100")
+                    Text("\(viewModel.bio.count)/100")
                         .font(.caption)
                         .foregroundColor(.primary)
+                }
+                
+                if viewModel.hasAttemptedSubmit, let errorMessage =  viewModel.errorMessageForBioField{
+                    HStack(spacing: 4) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                        Text(errorMessage)
+                    }
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .transition(.opacity)
                 }
             }
         }

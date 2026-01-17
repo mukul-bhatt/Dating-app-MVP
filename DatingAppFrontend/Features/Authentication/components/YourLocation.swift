@@ -30,10 +30,10 @@ import SwiftUI
                          viewModel.location = newValue.filter{ !$0.isNumber }
                      }
                  
-                 if !viewModel.isValidLocation {
+                 if viewModel.hasAttemptedSubmit, let errorMessage = viewModel.errorMessageForLocation {
                      HStack(spacing: 4) {
                          Image(systemName: "exclamationmark.circle.fill")
-                         Text(viewModel.validationMessageForLocation)
+                         Text(errorMessage)
                      }
                      .font(.caption)
                      .foregroundColor(.red)

@@ -90,7 +90,7 @@ struct LandingScreenView: View {
                             Text("Already have an account?")
                                 .foregroundColor(.white.opacity(0.8))
                             
-                            NavigationLink(destination: LoginView()){
+                            NavigationLink(destination: LoginView(viewModel: viewModel)){
                                 Text("LOGIN")
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)

@@ -15,15 +15,15 @@ struct DebugRootView: View {
         NavigationStack {
             List {
                 NavigationLink("Login") {
-                    LoginView()
+                    LoginView(viewModel: viewModel)
                 }
 
                 NavigationLink("LoginOTP") {
-                    LoginOtpVerificationView()
+                    LoginOtpVerificationView(viewModel: viewModel)
                 }
 
                 NavigationLink("RegisterOTP") {
-                    RegisterOtpVerificationView()
+                    RegisterOtpVerificationView(viewModel: viewModel)
                 }
 
                 NavigationLink("Register") {
@@ -37,7 +37,7 @@ struct DebugRootView: View {
                     LandingScreenView()
                 }
                 NavigationLink("Image Upload") {
-                    imageSubmitTest()
+                    ImageSelectionView()
                 }
                 NavigationLink("Interest") {
                     InterestsView(viewModel: viewModel)

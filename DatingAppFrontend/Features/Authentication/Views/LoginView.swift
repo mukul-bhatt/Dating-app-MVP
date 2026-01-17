@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct LoginView: View {
+    @ObservedObject var viewModel: ProfileViewModel
+    @FocusState private var isFocused: Bool
+    @FocusState private var isFocusedPhone: Bool
     
     
     var body: some View {
@@ -16,11 +19,11 @@ struct LoginView: View {
                 
                 AuthHeader()
                 
-                InputFieldSection()
+                PhoneInputFieldSection(viewModel: viewModel, isSingleLabel: true, isFocusedPhone: $isFocusedPhone)
                 
                 Spacer()
                 
-                NavigationLink(destination: LoginOtpVerificationView()){
+                NavigationLink(destination: LoginOtpVerificationView(viewModel: viewModel)){
                     PrimaryButton()
                 }
                 
@@ -34,11 +37,11 @@ struct LoginView: View {
 
 
 
-#Preview {
-    LoginView()
+//#Preview {
+//    LoginView()
     // Preview in dark mode as well
 //    LoginView().environment(\.colorScheme, .dark)
-}
+//}
 
 
 struct InputFieldSection : View {

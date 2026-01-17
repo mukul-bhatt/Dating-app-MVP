@@ -1,16 +1,26 @@
 import SwiftUI
 
 struct OTPVerificationView: View {
+
+    
+    @Binding var otpText : [String]
+    
     
     var screenType : String = "WelcomeBack!"
+    var actionForPrimaryButton : () -> Void = { }
     
     // Custom Colors
     // Keep background consistent with LoginView
     let backgroundColor = Color("BrandColor")
     let accentPink = Color(red: 0.9, green: 0.28, blue: 0.48)
+    var isDisabled: Bool{
+       return otpText.count < 4 || otpText.contains(where: { $0.isEmpty })
+    }
+    
+
     
     var body: some View {
-        NavigationStack{
+        NavigationStack {
             ZStack {
                 // Background Layer
                 backgroundColor
@@ -19,6 +29,7 @@ struct OTPVerificationView: View {
                 VStack {
                     
                     // Logo Section
+                    
                     ZStack {
                         Image("appIcon")
                             .resizable()
@@ -28,23 +39,24 @@ struct OTPVerificationView: View {
                     .foregroundStyle(accentPink)
                     .padding(.top, 50)
                     .padding(.bottom, 10)
-                    
-                    // Title Section
+
+//                     Title Section
                     VStack(spacing: 8) {
                         Text(screenType)
                             .font(.system(size: 26, weight: .bold))
                             .foregroundColor(.primary) // CHANGE: Adapts to Dark Mode
-                        
+                    
                         Text("Please enter the OTP sent on ********50")
                             .font(.footnote)
                             .foregroundColor(.secondary) // CHANGE: Adapts automatically
                     }
                     .padding(.bottom, 30)
                     
+                    
                     // OTP Input Boxes
                     VStack(alignment: .trailing) {
                         
-                        LoginOtpView()
+                        LoginOtpView(otp: $otpText)
                         
                         // Timer Text
                         Text("Resend OTP in 1:09")
@@ -57,19 +69,24 @@ struct OTPVerificationView: View {
                     Spacer()
                     
                     
-                    PrimaryButton(buttonText: "Verify OTP")
+                    PrimaryButton(buttonText: "Verify OTP", action: actionForPrimaryButton, isDiabled: isDisabled)
                         .padding(.horizontal)
+                        
                 }
             }
             .onTapGesture {
                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
             }
         }
+        
+        
     }
 }
 
-struct OTPVerificationView_Previews: PreviewProvider {
-    static var previews: some View {
-        OTPVerificationView()
-    }
-}
+
+
+//struct OTPVerificationView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        OTPVerificationView()
+//    }
+//}

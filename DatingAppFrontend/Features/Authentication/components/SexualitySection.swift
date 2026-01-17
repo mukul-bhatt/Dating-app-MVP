@@ -67,6 +67,24 @@ import SwiftUI
                             )
                     }
                 }
+                
+                if viewModel.hasAttemptedSubmit, !isMultiSelect, let errorMessage = viewModel.errorMessageForSelectedSexualityField {
+                    HStack(spacing: 4) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                        Text(errorMessage)
+                    }
+                    .font(.caption)
+                    .foregroundColor(.red)
+                }
+                
+                if viewModel.hasAttemptedSubmit, isMultiSelect, let errorMessage = viewModel.errorMessageForPreferredPartnerSexualityField {
+                    HStack(spacing: 4) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                        Text(errorMessage)
+                    }
+                    .font(.caption)
+                    .foregroundColor(.red)
+                }
             }
             .onAppear {
                 // Trigger the fetch if the list is empty

@@ -74,6 +74,7 @@ struct InterestsView: View {
                 Spacer()
                 Button(action: {
                     print("Selected: \(viewModel.selectedInterestIds)")
+                    // Call function to post all profile data to backend data to the backend
                 }) {
                     Text("Done")
                         .font(.headline)

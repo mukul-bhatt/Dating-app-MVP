@@ -18,6 +18,7 @@ struct Country {
 
 struct PhoneInputFieldSection: View {
     
+    @ObservedObject var viewModel: ProfileViewModel
     @State private var selectedCountry = Country(name: "India", code: "IN", dialCode: "+91", flag: "🇮🇳")
     @State private var hasSelectedCountry = false
     
@@ -31,7 +32,7 @@ struct PhoneInputFieldSection: View {
     // Flag to switch layouts
     var isSingleLabel: Bool = false
     
-    @State private var phoneNumber: String = ""
+//    @State private var phoneNumber: String = ""
     var isFocusedPhone: FocusState<Bool>.Binding
     
     // Style constants to match Figma
@@ -39,7 +40,7 @@ struct PhoneInputFieldSection: View {
     let borderColor = Color.primary.opacity(0.6)
     
     var isPhoneNumberValid: Bool {
-        phoneNumber.count == 10 && phoneNumber.allSatisfy(\.isNumber)
+        viewModel.phoneNumber.count == 10 && viewModel.phoneNumber.allSatisfy(\.isNumber)
     }
     
     var body: some View {
@@ -76,7 +77,7 @@ struct PhoneInputFieldSection: View {
             }
             
             // Error Message
-            if !isPhoneNumberValid && !phoneNumber.isEmpty {
+            if !isPhoneNumberValid && !viewModel.phoneNumber.isEmpty {
                 HStack(spacing: 4) {
                     Image(systemName: "exclamationmark.circle.fill")
                     Text("Phone Number must be exactly 10 digits")
@@ -95,7 +96,8 @@ struct PhoneInputFieldSection: View {
             ForEach(countries, id: \.code) { country in
                 Button(action: {
                     selectedCountry = country
-                    hasSelectedCountry = true 
+                    viewModel.selectedCountryDialCode = country.dialCode
+                    hasSelectedCountry = true
                 }) {
                     Text("\(country.flag) \(country.name) \(country.dialCode)")
                 }
@@ -120,14 +122,14 @@ struct PhoneInputFieldSection: View {
     
     // Reusable Phone Text Field UI
     private var phoneTextField: some View {
-        TextField("", text: $phoneNumber)
+        TextField("", text: $viewModel.phoneNumber)
             .keyboardType(.numberPad)
             .padding()
             .frame(height: 55)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(
-                        isPhoneNumberValid || phoneNumber.isEmpty ? borderColor : Color.red,
+                        isPhoneNumberValid || viewModel.phoneNumber.isEmpty ? borderColor : Color.red,
                         lineWidth: 1
                     )
             )

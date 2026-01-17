@@ -9,7 +9,7 @@ import SwiftUI
 
 struct LoginOtpView: View {
 
-        @State private var otp: [String] = Array(repeating: "", count: 6)
+        @Binding var otp: [String]
         @FocusState private var focusedIndex: Int?
 
     let backgroundColor = Color(red: 1.0, green: 0.92, blue: 0.95)
@@ -61,6 +61,6 @@ struct LoginOtpView: View {
 
 }
 
-#Preview {
-    LoginOtpView()
-}
+//#Preview {
+//    LoginOtpView()
+//}

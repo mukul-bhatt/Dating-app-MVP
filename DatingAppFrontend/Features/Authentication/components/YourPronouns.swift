@@ -19,11 +19,14 @@ import SwiftUI
         var body: some View {
             VStack(alignment: .leading, spacing: 10) {
                 
+                
                 // 4. Your Pronouns Dropdown
                 CustomDropdown(
                     label: "Your Pronouns",
                     selection: $viewModel.pronounId,
-                    options: viewModel.pronounOptions
+                    options: viewModel.pronounOptions,
+                    errorMessage: viewModel.errorMessageForPronounField,
+                    viewModel: viewModel
                 )
                 
                 

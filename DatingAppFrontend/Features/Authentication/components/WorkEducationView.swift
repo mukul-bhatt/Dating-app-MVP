@@ -42,9 +42,11 @@ struct WorkEducationView: View {
                         label: "Job",
                         placeholder: "What’s your 9-to-5... or passion project?",
                         text: $viewModel.jobTitle,
-                        errorMessage: viewModel.errorMessageForJobTitleField
+                        errorMessage: viewModel.errorMessageForJobTitleField,
+                        viewModel: viewModel
+
                     ).onSubmit {
-                        _ = viewModel.isValidJobTitle()
+                        _ = viewModel.isValidJobTitle
                     }
                     
                     // 2. Education Field
@@ -52,10 +54,12 @@ struct WorkEducationView: View {
                         label: "Education",
                         placeholder: "Where did you study or learn something cool?",
                         text: $viewModel.education,
-                        errorMessage: viewModel.errorMessageForEducationField
+                        errorMessage: viewModel.errorMessageForEducationField,
+                        viewModel: viewModel
+
                         
                     ).onSubmit {
-                        _ = viewModel.isValidEducation()
+                        _ = viewModel.isValidEducation
                     }
                     
                     // 3. Height Field
@@ -65,25 +69,33 @@ struct WorkEducationView: View {
                         text: $viewModel.height,
                         subScriptForHeight: true,
                         isNumericOnly: true,
-                        errorMessage: viewModel.errorMessagesForHeight
+                        errorMessage: viewModel.heightValidationMessage,
+                        viewModel: viewModel
                     )
                     .keyboardType(.numbersAndPunctuation)
                     .onSubmit {
                        let _ = viewModel.isValidHeight
                     }
                     
+                    
                     // 4. Relationship Status Dropdown
                     CustomDropdown(
                         label: "Your current relationship status",
                         selection: $viewModel.relationshipStatusId,
-                        options: viewModel.relationshipStatusOptions
+                        options: viewModel.relationshipStatusOptions,
+                        errorMessage: viewModel.errorMessageForRelationshipStatus,
+                        viewModel: viewModel
+                        
                     )
                     
                     // 5. Intent Dropdown
                     CustomDropdown(
                         label: "What are you hoping to find here?",
                         selection: $viewModel.lookingForId,
-                        options: viewModel.lookingForOptions
+                        options: viewModel.lookingForOptions,
+                        errorMessage: viewModel.errorMessageForLookingForField,
+                        viewModel: viewModel
+                        
                     )
                     
                     Spacer()
@@ -114,6 +126,7 @@ struct CustomTextField: View {
     var subScriptForHeight: Bool = false
     var isNumericOnly: Bool = false
     var errorMessage: String?
+    var viewModel: ProfileViewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -142,7 +155,8 @@ struct CustomTextField: View {
                   
                 }
             
-            if let errorMessage = errorMessage {
+            
+            if viewModel.hasAttemptedSubmit, let errorMessage = errorMessage {
                 HStack(spacing: 4) {
                     Image(systemName: "exclamationmark.circle.fill")
                     Text(errorMessage)
@@ -161,6 +175,8 @@ struct CustomDropdown: View {
     let label: String
     @Binding var selection: Int?
     let options: [LookUpOption]
+    var errorMessage: String?
+    var viewModel: ProfileViewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -199,6 +215,15 @@ struct CustomDropdown: View {
                     RoundedRectangle(cornerRadius: 10)
                         .stroke(Color.secondary, lineWidth: 1)
                 )
+            }
+            
+            if viewModel.hasAttemptedSubmit, let errorMessage = errorMessage {
+                HStack(spacing: 4) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                    Text(errorMessage)
+                }
+                .font(.caption)
+                .foregroundColor(.red)
             }
         }
     }
