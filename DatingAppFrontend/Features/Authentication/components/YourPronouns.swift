@@ -25,7 +25,7 @@ import SwiftUI
                     label: "Your Pronouns",
                     selection: $viewModel.pronounId,
                     options: viewModel.pronounOptions,
-                    errorMessage: viewModel.errorMessageForPronounField,
+                    errorMessage: {viewModel.errorMessageForPronounField},
                     viewModel: viewModel
                 )
                 

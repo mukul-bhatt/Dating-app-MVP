@@ -19,7 +19,7 @@ struct DatePickerView: View {
     
     @Binding var date: Date
     @State private var showDatePicker: Bool = false
-    @State private var hasSelectedDate: Bool = false
+    @Binding var hasSelectedDate: Bool
     
     
 
@@ -47,40 +47,41 @@ struct DatePickerView: View {
                showDatePicker = true
             }
             .sheet(isPresented: $showDatePicker){
-                VStack{
-                    HStack {
+                NavigationStack{
+                    VStack{
+                        HStack {
                             Text("Please select your Date of Birth")
                                 .font(.headline)
                             Spacer()
                         }
                         .padding()
-                    
-                    DatePicker(
-                        "Today",
-                        selection: $date,
-                        in: ...Date(),
-                        displayedComponents: [.date]
-                    )
-                    .datePickerStyle(.graphical)
-                    .padding()
-                    .onChange(of: date){
-                        showDatePicker = false
-                        hasSelectedDate = true
-                    }
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") {
-                                showDatePicker = false
-                                hasSelectedDate = true
+                        
+                        DatePicker(
+                            "Today",
+                            selection: $date,
+                            in: ...Date(),
+                            displayedComponents: [.date]
+                        )
+                        .datePickerStyle(.graphical)
+                        .padding()
+//                        .onChange(of: date){
+//                            showDatePicker = false
+//                            hasSelectedDate = true
+//                        }
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") {
+                                    showDatePicker = false
+                                    hasSelectedDate = true
+                                }
                             }
                         }
+                        
+                        
                     }
-                    
-                    
+                    .frame(maxWidth : .infinity, maxHeight: .infinity)
+                    .background(Color("BrandColor"))
                 }
-                .frame(maxWidth : .infinity, maxHeight: .infinity)
-                .background(Color("BrandColor"))
-                
             }
             
             

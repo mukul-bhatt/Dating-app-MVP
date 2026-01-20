@@ -11,8 +11,13 @@ struct LoginView: View {
     @ObservedObject var viewModel: ProfileViewModel
     @FocusState private var isFocused: Bool
     @FocusState private var isFocusedPhone: Bool
+    @State private var navigateToNextScreen: Bool = false
+    @State private var hasClickedNextButton: Bool = false
+    var isPhoneNumberValid: Bool {
+        viewModel.phoneNumber.count == 10 && !viewModel.phoneNumber.isEmpty
+    }
     
-    
+
     var body: some View {
         NavigationStack{
             VStack(spacing: 30) {
@@ -23,14 +28,45 @@ struct LoginView: View {
                 
                 Spacer()
                 
-                NavigationLink(destination: LoginOtpVerificationView(viewModel: viewModel)){
-                    PrimaryButton()
+                if hasClickedNextButton && !isPhoneNumberValid{
+                    withAnimation {
+                        HStack(spacing: 4) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                            Text("Please fill the phone number field")
+                        }
+                        .font(.caption)
+                        .foregroundColor(.red)
+                    }
+                    
+                }
+                
+                PrimaryButton(){
+                    
+                    if isPhoneNumberValid{
+                        // Call register otp endpoint
+//                        Task{
+//                            do{
+//                                try await viewModel.callBackendWithRegisterEndpoint()
+//                                
+//                                await MainActor.run {
+//                                    navigateToNextScreen = true
+//                                }
+//                            }catch{
+//                                print("Error is : \(error)")
+//                            }
+//                        }
+                        navigateToNextScreen = true
+                    }else{
+                        hasClickedNextButton = true
+                    }
                 }
                 
             }
             .padding(.top, 30)
             .padding(.horizontal)
             .background(Color("BrandColor"))
+        }.navigationDestination(isPresented: $navigateToNextScreen) {
+            LoginOtpVerificationView(viewModel: viewModel)
         }
     }
 }

@@ -19,14 +19,14 @@ struct Country {
 struct PhoneInputFieldSection: View {
     
     @ObservedObject var viewModel: ProfileViewModel
-    @State private var selectedCountry = Country(name: "India", code: "IN", dialCode: "+91", flag: "🇮🇳")
+    @State private var selectedCountry = Country(name: "India", code: "IN", dialCode: "91", flag: "🇮🇳")
     @State private var hasSelectedCountry = false
     
     let countries = [
-        Country(name: "India", code: "IN", dialCode: "+91", flag: "🇮🇳"),
-           Country(name: "Russia", code: "RU", dialCode: "+7", flag: "🇷🇺"),
-           Country(name: "United Kingdom", code: "UK", dialCode: "+44", flag: "🇬🇧"),
-           Country(name: "United States", code: "US", dialCode: "+1", flag: "🇺🇸")
+        Country(name: "India", code: "IN", dialCode: "91", flag: "🇮🇳"),
+           Country(name: "Russia", code: "RU", dialCode: "7", flag: "🇷🇺"),
+           Country(name: "United Kingdom", code: "UK", dialCode: "44", flag: "🇬🇧"),
+           Country(name: "United States", code: "US", dialCode: "1", flag: "🇺🇸")
     ]
     
     // Flag to switch layouts
@@ -99,12 +99,12 @@ struct PhoneInputFieldSection: View {
                     viewModel.selectedCountryDialCode = country.dialCode
                     hasSelectedCountry = true
                 }) {
-                    Text("\(country.flag) \(country.name) \(country.dialCode)")
+                    Text("\(country.flag) \(country.name) +\(country.dialCode)")
                 }
             }
         } label: {
             HStack {
-                Text("\(selectedCountry.code) \(selectedCountry.dialCode)")
+                Text("\(selectedCountry.code) +\(selectedCountry.dialCode)")
                     .foregroundColor(hasSelectedCountry ? .primary : .secondary)
                 Spacer()
                 Image(systemName: "arrowtriangle.down.fill")

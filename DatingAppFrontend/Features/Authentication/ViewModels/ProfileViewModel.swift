@@ -11,14 +11,19 @@ import Combine
 
 class ProfileViewModel: ObservableObject{
         @Published var hasAttemptedSubmit: Bool = false
+    
+    // Auth token is needed for the entire app - then why am i storing it here
+        @Published var authenticationToken: String = ""
+        @Published var refreshToken: String = ""
+        @Published var applicationUserId: String = ""
     // MARK: - States of Register Form
         @Published  var name = ""
         @Published  var phoneNumber: String = ""
         @Published  var selectedGender = ""
         @Published  var dateOfBirth = Date()
-//        @Published  var selectedCountry = Country(name: "India", code: "IN", dialCode: "+91", flag: "🇮🇳")
-        @Published  var selectedCountryDialCode: String = ""
-        @Published  var profileId: String = ""
+        @Published  var hasSelectedDate = false
+        @Published  var selectedCountryDialCode: String = "91"
+        @Published  var profileId: Int = 1009
     
     // MARK: - Profile Images
         @Published var selectedImages: [UIImage] = []
@@ -71,6 +76,21 @@ class ProfileViewModel: ObservableObject{
     // MARK: - Selected Interests
         @Published var selectedInterestIds: Set<Int> = []
         @Published var OptionsForInterests: [InterestOption] = []
+    
+    // MARK: - Range values
+        @Published var minValue: Double = 3
+        @Published var maxValue: Double = 60
+        @Published var minValueForAge: Double = 18
+        @Published var maxValueForAge: Double = 60
+    
+    // MARK: - VALIDATION FOR REGISTER FORM
+    
+    var isRegisterFormValid: Bool {
+        return !name.isEmpty &&
+        !phoneNumber.isEmpty &&
+        !selectedGender.isEmpty &&
+        hasSelectedDate == true
+    }
     
     // MARK: - VALIDATION FOR YOUR HEIGHT
     // 1. A property just for the Boolean check
@@ -141,7 +161,7 @@ class ProfileViewModel: ObservableObject{
         return  !trimmed.isEmpty &&
                 (trimmed.count >= 3 || trimmed.count <= 50) &&
                 !trimmed.contains(where: { $0.isNumber }) &&
-                !trimmed.contains(where: { $0.isLetter })
+                trimmed.contains(where: { $0.isLetter })
 
        }
     
@@ -241,11 +261,11 @@ class ProfileViewModel: ObservableObject{
     }
     
     var isPreferredPartnerReligionValid: Bool{
-        !selectedPartnerReligions.isEmpty
+        !selectedPartnerReligionsIds.isEmpty
     }
     
     var errorMessageForPreferredPartnerReligionField: String? {
-        if selectedPartnerReligions.isEmpty{
+        if selectedPartnerReligionsIds.isEmpty{
             return "Please select Preferences for Partner's Religion"
         }else{
             return nil
@@ -278,28 +298,47 @@ class ProfileViewModel: ObservableObject{
         }
     }
     
+        // MARK: - VALIDATIONS FOR SELECTED INTERESTS
+    var isInterestSelectionValid: Bool{
+        !selectedInterestIds.isEmpty && selectedInterestIds.count == 5
+    }
+    
+    var errorMessageForInterestSelectionScreen: String? {
+        if selectedInterestIds.isEmpty{
+            return "Please select some interests"
+        }else if selectedInterestIds.count < 5{
+            return "Please select 5 interests to continue"
+        }else{
+            return nil
+        }
+        
+    }
+    
         // MARK: - Profile Form Validation
         // We will build this logic in the next steps
         var isFormValid: Bool {
             
-            return  isValidHeight &&
-                    isValidJobTitle &&
-                    isValidEducation &&
-                    isValidLocation &&
-                    isRelationshipStatusValid &&
-                    isLookingForFieldValid &&
-                    isPronounValid &&
-                    isBioValid &&
-                    isImageSelectionValid &&
-                    isSelectedReligionValid &&
-                    isPreferredPartnerReligionValid &&
-                    isSelectedSexualityValid &&
-                    isPreferredPartnerSexualityValid
+            return isPronounValid &&
+             isBioValid &&
+            isSelectedReligionValid  &&
+            isPreferredPartnerReligionValid &&
+                                isSelectedSexualityValid &&
+                                isPreferredPartnerSexualityValid &&
+            isValidHeight &&
+            isValidJobTitle &&
+            isValidEducation &&
+            isValidLocation &&
+            isRelationshipStatusValid &&
+                                isLookingForFieldValid
+            
         }
 
     // MARK: - Master options functions
     let masterService = MasterOptionsService()
-    let authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZWE0MDYwMS1jZjgwLTQ1MWYtYTJhZS1mODM3MDM3NmU5N2UiLCJqdGkiOiI0MTMwMDM4YS00OGIyLTQwNDctODBhZS1hN2JkMjEwODdiZjIiLCJ1bmlxdWVfbmFtZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjYwMTciLCJwcm9maWxlX2lkIjoiNjAxNyIsImFwcGxpY2F0aW9uX3VzZXJJZCI6ImNlYTQwNjAxLWNmODAtNDUxZi1hMmFlLWY4MzcwMzc2ZTk3ZSIsImV4cCI6MTc2ODU1NDgwNiwiaXNzIjoiRGF0aW5nQXBwIiwiYXVkIjoiYWxsX3VzZXJzIn0.jWvLNv4TUox2Lcyg1DBmjZTTKt2RyfidAjax5flbdsU"
+    
+    let authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZWE0MDYwMS1jZjgwLTQ1MWYtYTJhZS1mODM3MDM3NmU5N2UiLCJqdGkiOiIwYzk2ZTQ1MC03NzgxLTQ5NzItOTA0ZC1hNDA5ZDViNmM3M2QiLCJ1bmlxdWVfbmFtZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjYwMTciLCJwcm9maWxlX2lkIjoiNjAxNyIsImFwcGxpY2F0aW9uX3VzZXJJZCI6ImNlYTQwNjAxLWNmODAtNDUxZi1hMmFlLWY4MzcwMzc2ZTk3ZSIsImV4cCI6MTc2ODg4OTczOCwiaXNzIjoiRGF0aW5nQXBwIiwiYXVkIjoiYWxsX3VzZXJzIn0.cK6eMDE_MUigVqDKDa_lVne8bHmxYVWVc5INNCVT3o4"
+    
+//    let authToken = authenticationToken
 
     func loadReligionOptions() async {
         do {
@@ -430,13 +469,6 @@ class ProfileViewModel: ObservableObject{
     
     // MARK: - Call Verify API
     
-    struct OTPVerifyBody: Codable {
-        let Mobile: String
-        let countryCode: String
-        let ProfileId: String
-        let Otp: String
-    }
-    
     func callBackendWithVerifyEndpoint(otp: String) async throws {
         let baseUrl = masterService.baseUrl
         let endpoint = "/auth/verify-otp"
@@ -458,13 +490,160 @@ class ProfileViewModel: ObservableObject{
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
-        if let http = response as? HTTPURLResponse {
-                print("📡 STATUS:", http.statusCode)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
             }
         
         print("📦 RESPONSE:", String(data: data, encoding: .utf8) ?? "nil")
+        
+        // Check if status is NOT 200-299
+            if !(200...299).contains(httpResponse.statusCode) {
+                // You can even decode the error message from the 'data' here if you want
+                throw NSError(domain: "AuthError", code: httpResponse.statusCode)
+            }
+        
+        // Decode response from the server
+        let decodedResponse = try JSONDecoder().decode(VerifyOtpResponse.self, from: data)
+        
+        if decodedResponse.success{
+            self.authenticationToken = decodedResponse.data.token
+            self.refreshToken = decodedResponse.data.refreshToken
+            self.applicationUserId = decodedResponse.data.applicationUserId
+            print("✅ authentication token saved:")
+        }else {
+            print("Error decoding Response")
+        }
     }
+    
+    //  MARK: - Call Register Api
+
+    struct Register: Codable {
+        let phoneNumber: String
+        let countryCode: String
+    }
+    
+    func callBackendWithRegisterEndpoint() async throws{
+        let baseUrl = masterService.baseUrl
+        let endpoint = "/auth/register"
+        
+        guard let url = URL(string: baseUrl+endpoint) else{
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let bodyData = Register(
+               phoneNumber: phoneNumber,
+               countryCode: selectedCountryDialCode
+            )
+        
+        request.httpBody = try JSONEncoder().encode(bodyData)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+            }
+        
+        
+        print("📦 RESPONSE:", String(data: data, encoding: .utf8) ?? "nil")
+        
+        // Check if status is NOT 200-299
+            if !(200...299).contains(httpResponse.statusCode) {
+                // You can even decode the error message from the 'data' here if you want
+                throw NSError(domain: "AuthError", code: httpResponse.statusCode)
+            }
+        
+        // Decode response from the server
+        let decodedResponse = try JSONDecoder().decode(SendOtpResponse.self, from: data)
+        
+        if decodedResponse.success{
+            self.profileId = decodedResponse.userId
+            print("✅ Profile ID saved: \(self.profileId)")
+        }else {
+            print("Error decoding Response")
+        }
+        
+        
+    }
+
+    func postFormDataToBackend() async throws {
+        let baseUrl = masterService.baseUrl
+        let endpoint = "/profile/set-update-profile"
+        
+        guard let url = URL(string: baseUrl+endpoint) else{
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        
+        let dataToSend = UserProfileDTO(
+            firstName: name,
+            lastName: "",
+
+            user: UserBlock(
+                pronouns: pronounId.map(String.init) ?? "",
+                gender: selectedGender,
+                dateOfBirth: Self.formatDOB(dateOfBirth),   // yyyy-MM-dd
+                sexuality: sexualityId.map(String.init) ?? "",
+                bio: bio,
+                religion: selectedReligionId.map(String.init) ?? "",
+                job: jobTitle,
+                education: education,
+                height: height,
+                relationshipStatus: relationshipStatusId.map(String.init) ?? "",
+                hope: lookingForId.map(String.init) ?? ""
+            ),
+
+            Settings: SettingsBlock(
+                Location: location,
+                PreferredRange: "\(Int(minValue))-\(Int(maxValue))",
+                Latitude: 15.67995,
+                Longitude: 80.72211
+            ),
+
+            Preferences: PreferencesBlock(
+                PreferredAge: "\(Int(minValueForAge))-\(Int(maxValueForAge))",
+                PreferredReligion: selectedPartnerReligionsIds.map(String.init).joined(separator: ","),
+                PreferredSexuality: selectedPartnerSexualityIds.map(String.init).joined(separator: ","),
+            ),
+
+            interests: InterestsBlock(
+                InterestsName: selectedInterestIds.map(String.init).joined(separator: ",")
+            )
+        )
+        
+        request.httpBody = try JSONEncoder().encode(dataToSend)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+            }
+        
+        
+        print("📦 RESPONSE:", String(data: data, encoding: .utf8) ?? "nil")
+        
+        // Check if status is NOT 200-299
+            if !(200...299).contains(httpResponse.statusCode) {
+                // You can even decode the error message from the 'data' here if you want
+                throw NSError(domain: "AuthError", code: httpResponse.statusCode)
+            }
+        
+        print("✅ Profile Updated Successfully")
+    }
+    
+    
  }
+
+
 
 
 

@@ -42,7 +42,9 @@ struct WorkEducationView: View {
                         label: "Job",
                         placeholder: "What’s your 9-to-5... or passion project?",
                         text: $viewModel.jobTitle,
-                        errorMessage: viewModel.errorMessageForJobTitleField,
+//                        errorMessage: viewModel.errorMessageForJobTitleField,
+                        errorMessage: { viewModel.errorMessageForEducationField },
+                        
                         viewModel: viewModel
 
                     ).onSubmit {
@@ -54,7 +56,8 @@ struct WorkEducationView: View {
                         label: "Education",
                         placeholder: "Where did you study or learn something cool?",
                         text: $viewModel.education,
-                        errorMessage: viewModel.errorMessageForEducationField,
+//                        errorMessage: viewModel.errorMessageForEducationField,
+                        errorMessage: {viewModel.errorMessageForEducationField},
                         viewModel: viewModel
 
                         
@@ -69,7 +72,8 @@ struct WorkEducationView: View {
                         text: $viewModel.height,
                         subScriptForHeight: true,
                         isNumericOnly: true,
-                        errorMessage: viewModel.heightValidationMessage,
+//                        errorMessage: viewModel.heightValidationMessage,
+                        errorMessage: {viewModel.heightValidationMessage},
                         viewModel: viewModel
                     )
                     .keyboardType(.numbersAndPunctuation)
@@ -83,7 +87,7 @@ struct WorkEducationView: View {
                         label: "Your current relationship status",
                         selection: $viewModel.relationshipStatusId,
                         options: viewModel.relationshipStatusOptions,
-                        errorMessage: viewModel.errorMessageForRelationshipStatus,
+                        errorMessage: {viewModel.errorMessageForRelationshipStatus},
                         viewModel: viewModel
                         
                     )
@@ -93,7 +97,7 @@ struct WorkEducationView: View {
                         label: "What are you hoping to find here?",
                         selection: $viewModel.lookingForId,
                         options: viewModel.lookingForOptions,
-                        errorMessage: viewModel.errorMessageForLookingForField,
+                        errorMessage: {viewModel.errorMessageForLookingForField},
                         viewModel: viewModel
                         
                     )
@@ -125,7 +129,8 @@ struct CustomTextField: View {
     @Binding var text: String
     var subScriptForHeight: Bool = false
     var isNumericOnly: Bool = false
-    var errorMessage: String?
+//    var errorMessage: String?
+    var errorMessage: () -> String?
     var viewModel: ProfileViewModel
     
     var body: some View {
@@ -156,7 +161,7 @@ struct CustomTextField: View {
                 }
             
             
-            if viewModel.hasAttemptedSubmit, let errorMessage = errorMessage {
+            if viewModel.hasAttemptedSubmit, let errorMessage = errorMessage() {
                 HStack(spacing: 4) {
                     Image(systemName: "exclamationmark.circle.fill")
                     Text(errorMessage)
@@ -175,7 +180,7 @@ struct CustomDropdown: View {
     let label: String
     @Binding var selection: Int?
     let options: [LookUpOption]
-    var errorMessage: String?
+    var errorMessage: () -> String?
     var viewModel: ProfileViewModel
     
     var body: some View {
@@ -217,7 +222,7 @@ struct CustomDropdown: View {
                 )
             }
             
-            if viewModel.hasAttemptedSubmit, let errorMessage = errorMessage {
+            if viewModel.hasAttemptedSubmit, let errorMessage = errorMessage() {
                 HStack(spacing: 4) {
                     Image(systemName: "exclamationmark.circle.fill")
                     Text(errorMessage)

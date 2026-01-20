@@ -72,13 +72,13 @@ extension ProfileViewModel {
 
             Settings: SettingsBlock(
                 Location: location,
-                PreferredRange: "11km-20km",
+                PreferredRange: "\(Int(minValue))-\(Int(maxValue))",
                 Latitude: 15.67995,
                 Longitude: 80.72211
             ),
 
             Preferences: PreferencesBlock(
-                PreferredAge: "18-25",
+                PreferredAge: "\(Int(minValueForAge))-\(Int(maxValueForAge))",
                 PreferredReligion: selectedPartnerReligionsIds.map(String.init).joined(separator: ","),
                 PreferredSexuality: selectedPartnerSexualityIds.map(String.init).joined(separator: ","),
             ),

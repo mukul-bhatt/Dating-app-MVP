@@ -2,7 +2,7 @@ import SwiftUI
 
 struct OTPVerificationView: View {
 
-    
+    @ObservedObject var viewModel: ProfileViewModel
     @Binding var otpText : [String]
     
     
@@ -12,12 +12,23 @@ struct OTPVerificationView: View {
     // Custom Colors
     // Keep background consistent with LoginView
     let backgroundColor = Color("BrandColor")
-    let accentPink = Color(red: 0.9, green: 0.28, blue: 0.48)
-    var isDisabled: Bool{
-       return otpText.count < 4 || otpText.contains(where: { $0.isEmpty })
+    let accentPink = Color("BrandColor")
+    var maskedPhoneNumber: String {
+        let phoneNumber = viewModel.phoneNumber
+        let lastTwo = phoneNumber.suffix(2)
+        let masked = "********" + lastTwo
+        return masked
     }
     
-
+    // State For Timer
+    @State private var timeRemaining = 69
+    @State private var isRunning = true
+    @State private var timerID = UUID()
+    func formatTime(_ seconds: Int) -> String {
+           let minutes = seconds / 60
+           let seconds = seconds % 60
+           return String(format: "%d:%02d", minutes, seconds)
+       }
     
     var body: some View {
         NavigationStack {
@@ -26,53 +37,60 @@ struct OTPVerificationView: View {
                 backgroundColor
                     .ignoresSafeArea()
                 
-                VStack {
+                VStack(spacing: 10) {
                     
                     // Logo Section
                     
-                    ZStack {
-                        Image("appIcon")
-                            .resizable()
-                            .frame(width: 60, height: 60)
-                            .offset(y: 8)
-                    }
-                    .foregroundStyle(accentPink)
-                    .padding(.top, 50)
-                    .padding(.bottom, 10)
-
-//                     Title Section
-                    VStack(spacing: 8) {
-                        Text(screenType)
-                            .font(.system(size: 26, weight: .bold))
-                            .foregroundColor(.primary) // CHANGE: Adapts to Dark Mode
-                    
-                        Text("Please enter the OTP sent on ********50")
-                            .font(.footnote)
-                            .foregroundColor(.secondary) // CHANGE: Adapts automatically
-                    }
-                    .padding(.bottom, 30)
+                    AuthHeader(
+                        title: screenType,
+                        subtitle: "Please enter the OTP sent on \(maskedPhoneNumber)"
+                    )
                     
                     
-                    // OTP Input Boxes
+                    // OTP View
                     VStack(alignment: .trailing) {
                         
                         LoginOtpView(otp: $otpText)
-                        
-                        // Timer Text
-                        Text("Resend OTP in 1:09")
+
+                        if timeRemaining > 0 {
+                            Text("Resend OTP in \(formatTime(timeRemaining))")
+                                .font(.caption)
+                                .foregroundColor(.primary)
+                                .padding(.top, 10)
+                        } else {
+                            Button("Resend OTP") {
+                                timeRemaining = 60
+                                isRunning = true
+                                timerID = UUID()
+                            }
                             .font(.caption)
-                            .foregroundColor(.primary) // CHANGE: Adapts to Dark Mode
+                            .foregroundColor(.primary)
                             .padding(.top, 10)
+                        }
+                                
                     }
                     .padding(.horizontal)
-                    
+                    .task(id: timerID) {
+                                while isRunning && timeRemaining > 0 {
+                                    try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+                                    if isRunning {
+                                        timeRemaining -= 1
+                                    }
+                                }
+                            }
+                    .onDisappear {
+                            isRunning = false // Stop timer when leaving screen
+                        }
+                        .onAppear {
+                            isRunning = true // Restart if coming back
+                        }
                     Spacer()
                     
                     
-                    PrimaryButton(buttonText: "Verify OTP", action: actionForPrimaryButton, isDiabled: isDisabled)
+                    PrimaryButton(buttonText: "Verify OTP", action: actionForPrimaryButton)
                         .padding(.horizontal)
                         
-                }
+                }.padding(.top, 30)
             }
             .onTapGesture {
                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -87,6 +105,6 @@ struct OTPVerificationView: View {
 
 //struct OTPVerificationView_Previews: PreviewProvider {
 //    static var previews: some View {
-//        OTPVerificationView()
+//        OTPVerificationView(viewModel: <#ProfileViewModel#>, otpText: <#Binding<[String]>#>)
 //    }
 //}

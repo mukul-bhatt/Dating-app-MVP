@@ -37,10 +37,20 @@ struct DebugRootView: View {
                     LandingScreenView()
                 }
                 NavigationLink("Image Upload") {
-                    ImageSelectionView()
+                    ImageSelectionView(viewModel: viewModel)
                 }
                 NavigationLink("Interest") {
                     InterestsView(viewModel: viewModel)
+                }
+                NavigationLink("Range Slider") {
+//                    RangeSlider(minValue: 18, maxValue: 65, range: 18...65)
+                    RangeSlider(minValue: $viewModel.minValue, maxValue: $viewModel.maxValue, range: 18...65)
+                    
+                }
+                NavigationLink("Discover View") {
+                    DiscoverView()
+                    
+                    
                 }
         
             }

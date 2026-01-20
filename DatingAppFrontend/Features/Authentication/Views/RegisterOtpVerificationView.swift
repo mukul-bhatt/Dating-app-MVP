@@ -23,6 +23,9 @@ struct RegisterOtpVerificationView: View {
                 // 1. Wait for the server response
                 try await viewModel.callBackendWithVerifyEndpoint(otp: combinedOtp)
                 
+                // Only if otp is correct, navigate to next screen
+                
+                
                 // 2. SUCCESS: Update UI on the main thread
                 await MainActor.run {
                     navigateToImageScreen = true
@@ -37,9 +40,9 @@ struct RegisterOtpVerificationView: View {
     
     var body: some View {
         
-        OTPVerificationView(otpText: $enteredOtp, screenType: "Register with Us!", actionForPrimaryButton: verifyOTPandNavigate)
+        OTPVerificationView(viewModel:viewModel, otpText: $enteredOtp, screenType: "Register with Us!", actionForPrimaryButton: verifyOTPandNavigate)
             .navigationDestination(isPresented: $navigateToImageScreen) {
-                ImageSelectionView() // The screen you want to go to next
+                ImageSelectionView(viewModel: viewModel) // The screen you want to go to next
             }
         
         

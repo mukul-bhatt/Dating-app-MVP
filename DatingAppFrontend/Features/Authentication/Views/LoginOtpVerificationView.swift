@@ -37,10 +37,11 @@ struct LoginOtpVerificationView: View {
     }
     
     
+    
     var body: some View {
-        OTPVerificationView(otpText: $enteredOtp, screenType: "Welcome Back!", actionForPrimaryButton: verifyLoginOtpAndNavigate )
+        OTPVerificationView(viewModel: viewModel, otpText: $enteredOtp, screenType: "Welcome Back!", actionForPrimaryButton: verifyLoginOtpAndNavigate )
             .navigationDestination(isPresented: $navigateToImageScreen) {
-                ImageSelectionView() // The screen you want to go to next
+                ImageSelectionView(viewModel: viewModel) // The screen you want to go to next
             }
     }
 }

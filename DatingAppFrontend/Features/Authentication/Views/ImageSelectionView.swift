@@ -16,8 +16,8 @@ struct ImageSelectionView: View {
         GridItem(.flexible(), spacing: 16)
     ]
     
-    
-    @StateObject private var viewModel = ProfileViewModel()
+    @ObservedObject var viewModel: ProfileViewModel
+//    @StateObject private var viewModel = ProfileViewModel()
     @State private var navigateToProfileSetup: Bool = false
     @State var showErrorMessage: Bool = false
     let errorMessageForFailedUpload: String = "Images could not be uploaded Please try again"
@@ -117,6 +117,6 @@ struct ImageSelectionView: View {
     }
 }
 
-#Preview {
-    ImageSelectionView()
-}
+//#Preview {
+//    ImageSelectionView()
+//}

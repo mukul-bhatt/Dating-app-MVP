@@ -116,35 +116,37 @@ struct MasonryPhotoGrid: View {
             
             // Column 1
             VStack(spacing: 12) {
-                MockImage(height: 200, color: .purple)
-                MockImage(height: 150, color: .orange)
-                MockImage(height: 180, color: .pink)
+                MockImage(height: 200, color: .purple, image:"Image1")
+                MockImage(height: 150, color: .orange, image:"Image3")
+                MockImage(height: 180, color: .pink, image:"Image9")
             }
             
             // Column 2
             VStack(spacing: 12) {
-                MockImage(height: 140, color: .yellow)
-                MockImage(height: 180, color: .green)
+                MockImage(height: 140, color: .yellow, image:"Image2")
+                MockImage(height: 180, color: .green, image: "Image4")
                 
                 // The Image with the Logo Overlay
                 ZStack {
-                    MockImage(height: 160, color: .blue)
+                    MockImage(height: 160, color: .blue, image:"Image8")
                     
                     // Heart Cluster Logo
-                    Image(systemName: "heart.circle.fill") // Replace with "appIcon"
+                    Image("appIcon")
+                        .renderingMode(.template)
                         .resizable()
                         .frame(width: 60, height: 60)
                         .foregroundColor(.white)
                         .shadow(radius: 5)
+                        .padding(.bottom, 250)
                 }
             }
             .padding(.top, 40) // Offset the middle column slightly
             
             // Column 3
             VStack(spacing: 12) {
-                MockImage(height: 180, color: .red)
-                MockImage(height: 220, color: .teal)
-                MockImage(height: 140, color: .indigo)
+                MockImage(height: 180, color: .red, image: "Image1")
+                MockImage(height: 220, color: .teal, image: "Image2")
+                MockImage(height: 140, color: .indigo, image: "Image7")
             }
         }
         .padding(.horizontal, 10)
@@ -157,16 +159,16 @@ struct MasonryPhotoGrid: View {
 struct MockImage: View {
     let height: CGFloat
     let color: Color
+    var image: String
     
     var body: some View {
-        // In a real app, replace Color with Image("assetName")
         Rectangle()
-            .fill(color.opacity(0.6)) // Opacity to mimic the faded photo look
+            .fill() // Opacity to mimic the faded photo look
             .overlay(
-                Image(systemName: "person.fill")
+                Image(image)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 40)
+//                    .frame(width: 40)
                     .foregroundColor(.white.opacity(0.4))
             )
             .frame(height: height)

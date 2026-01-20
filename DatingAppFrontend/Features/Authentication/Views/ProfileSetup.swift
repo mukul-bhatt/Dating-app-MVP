@@ -40,7 +40,7 @@ struct ProfileSetup: View {
                         YourLocation(viewModel: viewModel)
                         
                         // Distance Slider
-                        DistanceSlider()
+                        RangeSlider(minValue: $viewModel.minValue, maxValue: $viewModel.maxValue, range: 0...65)
                         
                         AddPicturesHeader(title: "About You", subTitle: "Help us know you better")
                         
@@ -62,8 +62,8 @@ struct ProfileSetup: View {
                         // Preferences
                         AddPicturesHeader(title: "Preferences", subTitle: "Let's customise your feed")
                         
-                        // Distance Slider
-                        DistanceSlider()
+                        // Age Slider
+                        RangeSlider(minValue: $viewModel.minValueForAge, maxValue: $viewModel.maxValueForAge, range: 18...65, title:"Preferred age Range")
                         
                         // Partner's Religion
                         YourReligion(viewModel: viewModel, title:"Partner's Religion", isMultiSelect: true)
@@ -77,10 +77,12 @@ struct ProfileSetup: View {
                 PrimaryButton(buttonText: "Next"){
                     // Before doing anything else, see the data in the console
                     viewModel.hasAttemptedSubmit = true
-                    print("Button was tapped")
-                    viewModel.printDataSnapshot()
+                    print("Next Button was tapped on profile screen")
                     
-                    navigateToInterestView = true
+                    if viewModel.isFormValid {
+                        navigateToInterestView = true
+                    }
+                    
 //                    if viewModel.isSelectedReligionValid {
 //                        print("✅ Success: Moving to next screen")
 //                        // navigate...

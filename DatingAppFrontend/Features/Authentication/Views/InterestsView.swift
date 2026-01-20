@@ -13,6 +13,8 @@ struct InterestsView: View {
     // MARK: - State & Data
 //    @State private var selectedInterests: Set<String> = []
     @ObservedObject var viewModel: ProfileViewModel
+    @State var navigateToSettingUpScreen = false
+    @State private var hasClickedDoneButton = false
     
     // Mock Data based on the image
     let interestsList = [
@@ -30,6 +32,7 @@ struct InterestsView: View {
     let brandPink = Color("ButtonColor")// The dark pink/magenta
     
     var body: some View {
+        NavigationStack{
         ZStack {
             // 1. Background
             backgroundColor.ignoresSafeArea()
@@ -67,14 +70,50 @@ struct InterestsView: View {
                 }
                 
                 Spacer()
+                
+               
             }
             
             // 4. "Done" Button (Floating at bottom)
             VStack {
                 Spacer()
+                if hasClickedDoneButton, let errorMessage = viewModel.errorMessageForInterestSelectionScreen {
+                    HStack(spacing: 4) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                        Text(errorMessage)
+                    }
+                    .font(.caption)
+                    .foregroundColor(.red)
+                }
+                
                 Button(action: {
                     print("Selected: \(viewModel.selectedInterestIds)")
-                    // Call function to post all profile data to backend data to the backend
+                    hasClickedDoneButton = true
+//                    navigateToSettingUpScreen = true
+                    viewModel.printDataSnapshot()
+                    if viewModel.isFormValid && viewModel.isInterestSelectionValid{
+                        // Call function to post all profile data to backend
+                        Task{
+                            do{
+                                try await viewModel.postFormDataToBackend()
+                                print("✅ Profile data uploded successfully")
+                                
+                                // 2. ONLY navigate if the line above succeeded
+                                            await MainActor.run {
+                                                print("✅ Profile data uploaded successfully")
+                                                navigateToSettingUpScreen = true
+                                            }
+                            }catch{
+                                print("❌ Upload failed: \(error)")
+                            }
+                            
+                        }
+                        
+                        // and only after data is posted - we navigate to next screen
+                        navigateToSettingUpScreen = true
+                    }else{
+                        print("Else block excecuted, form is not valid")
+                    }
                 }) {
                     Text("Done")
                         .font(.headline)
@@ -92,6 +131,9 @@ struct InterestsView: View {
             Task{
                 await viewModel.loadOptionsForInterests()
             }
+        }
+        }.navigationDestination(isPresented: $navigateToSettingUpScreen){
+            SettingUpScreen()
         }
     }
     
