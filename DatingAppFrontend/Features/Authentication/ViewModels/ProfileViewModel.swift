@@ -13,7 +13,13 @@ class ProfileViewModel: ObservableObject{
         @Published var hasAttemptedSubmit: Bool = false
     
     // Auth token is needed for the entire app - then why am i storing it here
-        @Published var authenticationToken: String = ""
+        @Published var authToken: String = ""
+    
+    func updateAuthToken(_ token: String) {
+            self.authToken = token
+            print("✅ ProfileViewModel token updated")
+        }
+    
         @Published var refreshToken: String = ""
         @Published var applicationUserId: String = ""
     // MARK: - States of Register Form
@@ -335,8 +341,8 @@ class ProfileViewModel: ObservableObject{
 
     // MARK: - Master options functions
     let masterService = MasterOptionsService()
-    
-    let authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZWE0MDYwMS1jZjgwLTQ1MWYtYTJhZS1mODM3MDM3NmU5N2UiLCJqdGkiOiIwYzk2ZTQ1MC03NzgxLTQ5NzItOTA0ZC1hNDA5ZDViNmM3M2QiLCJ1bmlxdWVfbmFtZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjYwMTciLCJwcm9maWxlX2lkIjoiNjAxNyIsImFwcGxpY2F0aW9uX3VzZXJJZCI6ImNlYTQwNjAxLWNmODAtNDUxZi1hMmFlLWY4MzcwMzc2ZTk3ZSIsImV4cCI6MTc2ODg4OTczOCwiaXNzIjoiRGF0aW5nQXBwIiwiYXVkIjoiYWxsX3VzZXJzIn0.cK6eMDE_MUigVqDKDa_lVne8bHmxYVWVc5INNCVT3o4"
+     
+//    let authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZWE0MDYwMS1jZjgwLTQ1MWYtYTJhZS1mODM3MDM3NmU5N2UiLCJqdGkiOiI0NWQ0MmE2ZS00YjRiLTQ4YTMtODQ3ZC0yYzI3ODk1YWEzZDciLCJ1bmlxdWVfbmFtZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjYwMTciLCJwcm9maWxlX2lkIjoiNjAxNyIsImFwcGxpY2F0aW9uX3VzZXJJZCI6ImNlYTQwNjAxLWNmODAtNDUxZi1hMmFlLWY4MzcwMzc2ZTk3ZSIsImV4cCI6MTc2ODk3Nzc0MywiaXNzIjoiRGF0aW5nQXBwIiwiYXVkIjoiYWxsX3VzZXJzIn0.YiLOLPwVzoH07IKT6y0zoAxB5ZMUJc_TcMBDEpJk7Kc"
     
 //    let authToken = authenticationToken
 
@@ -469,7 +475,15 @@ class ProfileViewModel: ObservableObject{
     
     // MARK: - Call Verify API
     
-    func callBackendWithVerifyEndpoint(otp: String) async throws {
+    // Auth error helper
+    enum AuthNetworkError: Error {
+        case unauthorized
+        case server(Int)
+        case unknown
+    }
+
+    
+    func callBackendWithVerifyEndpoint(otp: String) async throws -> VerifyOtpResponse{
         let baseUrl = masterService.baseUrl
         let endpoint = "/auth/verify-otp"
         guard let url = URL(string: baseUrl+endpoint) else{
@@ -498,7 +512,7 @@ class ProfileViewModel: ObservableObject{
         
         // Check if status is NOT 200-299
             if !(200...299).contains(httpResponse.statusCode) {
-                // You can even decode the error message from the 'data' here if you want
+                
                 throw NSError(domain: "AuthError", code: httpResponse.statusCode)
             }
         
@@ -506,23 +520,20 @@ class ProfileViewModel: ObservableObject{
         let decodedResponse = try JSONDecoder().decode(VerifyOtpResponse.self, from: data)
         
         if decodedResponse.success{
-            self.authenticationToken = decodedResponse.data.token
+            self.authToken = decodedResponse.data.token
             self.refreshToken = decodedResponse.data.refreshToken
             self.applicationUserId = decodedResponse.data.applicationUserId
             print("✅ authentication token saved:")
         }else {
             print("Error decoding Response")
         }
+        
+        return decodedResponse
     }
     
     //  MARK: - Call Register Api
-
-    struct Register: Codable {
-        let phoneNumber: String
-        let countryCode: String
-    }
-    
-    func callBackendWithRegisterEndpoint() async throws{
+   
+    func callBackendWithRegisterEndpoint() async throws -> SendOtpResponse{
         let baseUrl = masterService.baseUrl
         let endpoint = "/auth/register"
         
@@ -567,7 +578,7 @@ class ProfileViewModel: ObservableObject{
             print("Error decoding Response")
         }
         
-        
+        return decodedResponse
     }
 
     func postFormDataToBackend() async throws {

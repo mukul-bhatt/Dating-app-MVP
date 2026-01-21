@@ -12,6 +12,7 @@ struct LoginView: View {
     @FocusState private var isFocused: Bool
     @FocusState private var isFocusedPhone: Bool
     @State private var navigateToNextScreen: Bool = false
+    @State private var navigateToSplashScreen: Bool = false
     @State private var hasClickedNextButton: Bool = false
     var isPhoneNumberValid: Bool {
         viewModel.phoneNumber.count == 10 && !viewModel.phoneNumber.isEmpty
@@ -44,18 +45,23 @@ struct LoginView: View {
                     
                     if isPhoneNumberValid{
                         // Call register otp endpoint
-//                        Task{
-//                            do{
-//                                try await viewModel.callBackendWithRegisterEndpoint()
-//                                
-//                                await MainActor.run {
-//                                    navigateToNextScreen = true
-//                                }
-//                            }catch{
-//                                print("Error is : \(error)")
-//                            }
-//                        }
-                        navigateToNextScreen = true
+                        Task{
+                            do{
+                                let response = try await viewModel.callBackendWithRegisterEndpoint()
+                                
+                                // If the user is a registered User, only then login, otherwise send them to register
+                                if response.isNewUser == false{
+                                    await MainActor.run {
+                                        navigateToNextScreen = true
+                                    }
+                                }else{
+                                    // SHow an alert to this user that this is a first time user- so this user should Register first
+                                    navigateToSplashScreen = true
+                                }
+                            }catch{
+                                print("Error is : \(error)")
+                            }
+                        }
                     }else{
                         hasClickedNextButton = true
                     }
@@ -68,99 +74,9 @@ struct LoginView: View {
         }.navigationDestination(isPresented: $navigateToNextScreen) {
             LoginOtpVerificationView(viewModel: viewModel)
         }
-    }
-}
-
-
-
-//#Preview {
-//    LoginView()
-    // Preview in dark mode as well
-//    LoginView().environment(\.colorScheme, .dark)
-//}
-
-
-struct InputFieldSection : View {
-    
-    @State private var phoneNumber: String = ""
-    
-    var isphoneNumberValid : Bool {
-        phoneNumber.count == 10 && phoneNumber.allSatisfy(\.isNumber)
-    }
-    
-    var body: some View {
-        VStack(spacing: 30) {
-            HStack(spacing: 12) {
-                
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Country")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    
-                    HStack {
-                        Text("IN +91")
-                        Spacer()
-                        Image(systemName: "chevron.down")
-                    }
-                    .padding()
-                    .frame(width: 110)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(.primary.opacity(0.5), lineWidth: 1)
-                    )
-                }
-                
-                
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Phone Number")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    
-                    TextField("", text: $phoneNumber)
-                        .keyboardType(.numberPad)
-                        .padding()
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(
-                                    isphoneNumberValid || phoneNumber.isEmpty ? Color.primary.opacity(0.5) : Color.red
-                                )
-                        )
-                    
-                                       
-                }
-                
-                
-                
-                
-                
-            }
-            .frame(height: 48)
-            
-            
-            VStack{
-                
-                HStack{
-                    
-                    Spacer()
-                    
-                    if !isphoneNumberValid && !phoneNumber.isEmpty {
-                        Text("Phone Number must be exactly 10 digits")
-                            .font(.caption2)
-                            .foregroundColor(.red)
-                    }
-                }
-                
-                
-                Text("We are about to send a one time password to your contact information for secure login. Ensure your details are correct before proceeding")
-                    .font(.footnote)
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-            }
-            
-            
-            
-            
+        .navigationDestination(isPresented: $navigateToSplashScreen){
+            LandingScreenView()
         }
     }
 }
+

@@ -49,9 +49,8 @@ struct DebugRootView: View {
                 }
                 NavigationLink("Discover View") {
                     DiscoverView()
-                    
-                    
                 }
+               
         
             }
             .navigationTitle("Screens")

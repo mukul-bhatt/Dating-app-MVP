@@ -42,8 +42,7 @@ struct WorkEducationView: View {
                         label: "Job",
                         placeholder: "What’s your 9-to-5... or passion project?",
                         text: $viewModel.jobTitle,
-//                        errorMessage: viewModel.errorMessageForJobTitleField,
-                        errorMessage: { viewModel.errorMessageForEducationField },
+                        errorMessage: { viewModel.errorMessageForJobTitleField },
                         
                         viewModel: viewModel
 
@@ -56,7 +55,6 @@ struct WorkEducationView: View {
                         label: "Education",
                         placeholder: "Where did you study or learn something cool?",
                         text: $viewModel.education,
-//                        errorMessage: viewModel.errorMessageForEducationField,
                         errorMessage: {viewModel.errorMessageForEducationField},
                         viewModel: viewModel
 
@@ -72,7 +70,6 @@ struct WorkEducationView: View {
                         text: $viewModel.height,
                         subScriptForHeight: true,
                         isNumericOnly: true,
-//                        errorMessage: viewModel.heightValidationMessage,
                         errorMessage: {viewModel.heightValidationMessage},
                         viewModel: viewModel
                     )

@@ -8,10 +8,11 @@
 import SwiftUI
 
 struct RegisterOtpVerificationView: View {
-    
+    @EnvironmentObject var authViewModel: AuthViewModel
     @ObservedObject var viewModel: ProfileViewModel
     @State private var enteredOtp: [String] = Array(repeating: "", count: 4)
     @State var navigateToImageScreen : Bool = false
+    @State private var showInvalidOtpError = false
     
     var combinedOtp: String {
         enteredOtp.joined()
@@ -20,19 +21,30 @@ struct RegisterOtpVerificationView: View {
     func verifyOTPandNavigate() {
         Task {
             do {
+                
                 // 1. Wait for the server response
-                try await viewModel.callBackendWithVerifyEndpoint(otp: combinedOtp)
+                let response = try await viewModel.callBackendWithVerifyEndpoint(otp: combinedOtp)
                 
-                // Only if otp is correct, navigate to next screen
+                showInvalidOtpError = false
+                // Save the response into the USER DEFAULTS
                 
-                
-                // 2. SUCCESS: Update UI on the main thread
-                await MainActor.run {
-                    navigateToImageScreen = true
+                if response.success{
+                    authViewModel.saveTokenFromResponse(response, expiresInHours: 12)
+                    viewModel.updateAuthToken(authViewModel.authToken ?? "" )
+                    
+                    // Only if otp is correct, navigate to next screen
+                    await MainActor.run {
+                        navigateToImageScreen = true
+                    }
+                }else{
+                    print("❌ Verification failed: \(response.message)")
                 }
+                
+                
                 
             } catch {
                 // 3. FAILURE: Navigation won't happen, handle the error here
+                showInvalidOtpError = true
                 print("❌ Verification failed: \(error)")
             }
         }
@@ -40,7 +52,7 @@ struct RegisterOtpVerificationView: View {
     
     var body: some View {
         
-        OTPVerificationView(viewModel:viewModel, otpText: $enteredOtp, screenType: "Register with Us!", actionForPrimaryButton: verifyOTPandNavigate)
+        OTPVerificationView(viewModel:viewModel, otpText: $enteredOtp, screenType: "Register with Us!", actionForPrimaryButton: verifyOTPandNavigate, showInvalidOtpError: showInvalidOtpError)
             .navigationDestination(isPresented: $navigateToImageScreen) {
                 ImageSelectionView(viewModel: viewModel) // The screen you want to go to next
             }
@@ -48,20 +60,4 @@ struct RegisterOtpVerificationView: View {
         
     }
     
-    
-    
-    
-    //{
-    //    "Mobile":"4569871526",
-    //    "countryCode":"91",
-    //"ProfileId":"8019",
-    //"Otp":"1234"
-    //}
-    
-    
-    
 }
-
-//#Preview {
-//    RegisterOtpVerificationView()
-//}

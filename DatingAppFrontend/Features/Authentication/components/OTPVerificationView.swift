@@ -8,6 +8,7 @@ struct OTPVerificationView: View {
     
     var screenType : String = "WelcomeBack!"
     var actionForPrimaryButton : () -> Void = { }
+    var showInvalidOtpError: Bool
     
     // Custom Colors
     // Keep background consistent with LoginView
@@ -86,6 +87,15 @@ struct OTPVerificationView: View {
                         }
                     Spacer()
                     
+                    if showInvalidOtpError {
+                        HStack(spacing: 4) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                            Text("Please enter a valid OTP")
+                        }
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        
+                    }
                     
                     PrimaryButton(buttonText: "Verify OTP", action: actionForPrimaryButton)
                         .padding(.horizontal)

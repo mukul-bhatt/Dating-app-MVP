@@ -7,6 +7,13 @@
 
 import Foundation
 
+// Body for register call
+struct Register: Codable {
+    let phoneNumber: String
+    let countryCode: String
+}
+
+
 struct SendOtpResponse: Codable {
     let success: Bool
     let message: String

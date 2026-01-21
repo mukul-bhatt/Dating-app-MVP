@@ -63,7 +63,7 @@ struct RegisterWithUsView: View {
                         // Call register otp endpoint
                         Task{
                             do{
-                                try await viewModel.callBackendWithRegisterEndpoint()
+                              let _ =  try await viewModel.callBackendWithRegisterEndpoint()
                             }catch{
                                 print("Error is : \(error)")
                             }

@@ -1,250 +1,230 @@
 //
-//  DiscoverView.swift
+//  Profile.swift
 //  DatingAppFrontend
 //
-//  Created by Mukul Bhatt on 19/01/26.
+//  Created by Mukul Bhatt on 21/01/26.
 //
+
 
 import SwiftUI
 
+
+var backgroundPink = Color("BrandColor")
+var foregroundPink = Color("ButtonColor")
+
+// MARK: - Models
+//struct Profile: Identifiable {
+//    let id = UUID()
+//    let name: String
+//    let age: Int
+//    let distance: String
+//    let matchPercentage: Int
+//    let imageName: String
+//}
+
 // MARK: - Main View
 struct DiscoverView: View {
+//    @State private var profiles = [
+//        Profile(name: "Nia Sharma", age: 26, distance: "2km away", matchPercentage: 89, imageName: "person1"),
+//        Profile(name: "Sarah Johnson", age: 24, distance: "5km away", matchPercentage: 92, imageName: "person2"),
+//        Profile(name: "Emma Wilson", age: 28, distance: "3km away", matchPercentage: 85, imageName: "person3")
+//    ]
+    
+    @State private var dragOffset: CGSize = .zero
+    @State private var rotation: Double = 0
+    
+    
+    
+    
     var body: some View {
         ZStack {
-            Color(hex: "FDE5E7") // Light pink background
-                .edgesIgnoringSafeArea(.all)
+            // Background
+            Color(backgroundPink)
+                .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                TopBarView()
-                
+                // Header
+                DiscoverHeader()
                 Spacer()
                 
                 // Card Stack
-                ZStack {
-                    // Background cards (slightly offset and rotated)
-                    CardView(imageName: "person2", name: "", age: "", distance: "", matchPercentage: 0, showInfo: false)
-                        .offset(x: 30, y: -20)
-                        .rotationEffect(.degrees(3))
-                        .opacity(0.7)
+//                ZStack {
+//                    ForEach(profiles.indices.reversed(), id: \.self) { index in
+//                        if index < 3 {
+//                            ProfileCard(profile: profiles[index])
+//                                .offset(y: CGFloat(index * 10))
+//                                .scaleEffect(1 - CGFloat(index) * 0.05)
+//                                .opacity(index == 0 ? 1 : 0.5)
+//                                .offset(x: index == 0 ? dragOffset.width : 0)
+//                                .rotationEffect(.degrees(index == 0 ? rotation : 0))
+//                                .gesture(
+//                                    index == 0 ? DragGesture()
+//                                        .onChanged { value in
+//                                            dragOffset = value.translation
+//                                            rotation = Double(value.translation.width / 20)
+//                                        }
+//                                        .onEnded { value in
+//                                            let threshold: CGFloat = 100
+//                                            if abs(value.translation.width) > threshold {
+//                                                // Swipe action
+////                                                removeCard()
+//                                            } else {
+//                                                // Reset
+//                                                withAnimation(.spring()) {
+//                                                    dragOffset = .zero
+//                                                    rotation = 0
+//                                                }
+//                                            }
+//                                        } : nil
+//                                )
+//                        }
+//                    }
+//                }
+//                .frame(height: 500)
+//                .padding(.horizontal, 20)
+                
+                // Action Buttons
+//                HStack(spacing: 30) {
+//                    Button(action: { handleReject() }) {
+//                        Image(systemName: "xmark")
+//                            .font(.system(size: 28, weight: .bold))
+//                            .foregroundColor(Color(red: 0.9, green: 0.3, blue: 0.5))
+//                            .frame(width: 70, height: 70)
+//                            .background(Color.white)
+//                            .clipShape(Circle())
+//                            .shadow(color: .black.opacity(0.1), radius: 10)
+//                    }
                     
-                    CardView(imageName: "person3", name: "", age: "", distance: "", matchPercentage: 0, showInfo: false)
-                        .offset(x: -30, y: -20)
-                        .rotationEffect(.degrees(-3))
-                        .opacity(0.7)
+//                    Button(action: { handleLike() }) {
+//                        ZStack {
+//                            Image(systemName: "envelope.fill")
+//                                .font(.system(size: 32, weight: .bold))
+//                                .foregroundColor(.white)
+//                            Image(systemName: "heart.fill")
+//                                .font(.system(size: 20, weight: .bold))
+//                                .foregroundColor(.white)
+//                                .offset(y: 2)
+//                        }
+//                        .frame(width: 80, height: 80)
+//                        .background(
+//                            LinearGradient(
+//                                colors: [Color(red: 0.9, green: 0.3, blue: 0.5), Color(red: 0.8, green: 0.2, blue: 0.4)],
+//                                startPoint: .topLeading,
+//                                endPoint: .bottomTrailing
+//                            )
+//                        )
+//                        .clipShape(Circle())
+//                        .shadow(color: Color(red: 0.9, green: 0.3, blue: 0.5).opacity(0.4), radius: 15)
+//                    }
                     
-                    // Foreground card
-                    CardView(imageName: "nia", name: "Nia Sharma", age: "26", distance: "2km away", matchPercentage: 89, showInfo: true)
-                }
-                .padding(.horizontal, 20)
-                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+//                    Button(action: { handleSuperLike() }) {
+//                        Image(systemName: "checkmark")
+//                            .font(.system(size: 28, weight: .bold))
+//                            .foregroundColor(Color(red: 0.9, green: 0.3, blue: 0.5))
+//                            .frame(width: 70, height: 70)
+//                            .background(Color.white)
+//                            .clipShape(Circle())
+//                            .shadow(color: .black.opacity(0.1), radius: 10)
+//                    }
+//                }
+//                .padding(.vertical, 30)
                 
                 Spacer()
                 
-                ActionButtonsView()
-                
-                Spacer()
-                
-                BottomTabBarView()
+                // Bottom Navigation
+//                HStack(spacing: 0) {
+//                    TabButton(icon: "flame.fill", isActive: true)
+//                    TabButton(icon: "message.fill", isActive: false)
+//                    TabButton(icon: "bell.fill", isActive: false)
+//                    TabButton(icon: "person.2.fill", isActive: false)
+//                }
+//                .frame(height: 70)
+//                .background(
+//                    LinearGradient(
+//                        colors: [Color(red: 0.9, green: 0.3, blue: 0.5), Color(red: 0.8, green: 0.2, blue: 0.4)],
+//                        startPoint: .leading,
+//                        endPoint: .trailing
+//                    )
+//                    .cornerRadius(35)
+//                )
+//                .padding(.horizontal, 30)
+//                .padding(.bottom, 20)
             }
+            .padding(.horizontal)
+            .padding(.top, 20)
         }
     }
+    
+//    func removeCard() {
+//        withAnimation(.spring()) {
+//            dragOffset = .zero
+//            rotation = 0
+//            profiles.removeFirst()
+//        }
+//    }
+//    
+//    func handleReject() {
+//        withAnimation(.spring()) {
+//            dragOffset = CGSize(width: -500, height: 0)
+//            rotation = -20
+//        }
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+//            removeCard()
+//        }
+//    }
+//    
+//    func handleLike() {
+//        withAnimation(.spring()) {
+//            dragOffset = CGSize(width: 500, height: 0)
+//            rotation = 20
+//        }
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+//            removeCard()
+//        }
+//    }
+//    
+//    func handleSuperLike() {
+//        withAnimation(.spring()) {
+//            dragOffset = CGSize(width: 0, height: -500)
+//        }
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+//            removeCard()
+//        }
+//    }
 }
 
-// MARK: - Top Bar
-struct TopBarView: View {
+// MARK: - HEADER
+struct DiscoverHeader: View {
     var body: some View {
         HStack {
-            Text("Discover")
-                .font(.system(size: 28, weight: .bold))
-                .foregroundColor(Color(hex: "E85078"))
             Spacer()
-            Button(action: { }) {
+            Text("Discover")
+                .font(.system(size: 34, weight: .bold))
+                .foregroundColor(foregroundPink)
+            Spacer()
+            Button(action: {}) {
                 Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 24))
-                    .foregroundColor(Color(hex: "E85078"))
+                    .font(.title3)
+                    .foregroundColor(.primary)
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 20)
-        .padding(.bottom, 10)
     }
 }
 
-// MARK: - Card View
-struct CardView: View {
-    var imageName: String
-    var name: String
-    var age: String
-    var distance: String
-    var matchPercentage: Int
-    var showInfo: Bool
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            if showInfo {
-                Image(imageName)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 380)
-                    .clipped()
-            } else {
-                Color(hex: "E85078").opacity(0.3) // Placeholder for background cards
-                    .frame(height: 380)
-            }
-            
-            if showInfo {
-                HStack {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("\(name) ,\(age)")
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundColor(.white)
-                        HStack(spacing: 5) {
-                            Image(systemName: "mappin.and.ellipse")
-                                .foregroundColor(.white)
-                            Text(distance)
-                                .foregroundColor(.white)
-                                .font(.system(size: 16))
-                        }
-                    }
-                    Spacer()
-                    HStack {
-                        Image(systemName: "heart.fill")
-                            .foregroundColor(Color(hex: "E85078"))
-                        Text("\(matchPercentage)%")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(Color(hex: "E85078"))
-                    }
-                    .padding(.horizontal, 15)
-                    .padding(.vertical, 8)
-                    .background(Color.white)
-                    .cornerRadius(20)
-                }
-                .padding()
-                .background(Color(hex: "E85078"))
-            }
-        }
-        .cornerRadius(20)
-        .aspectRatio(0.75, contentMode: .fit)
-    }
-}
-
-// MARK: - Action Buttons
-struct ActionButtonsView: View {
-    var body: some View {
-        HStack(spacing: 30) {
-            Button(action: {}) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundColor(Color(hex: "E85078"))
-                    .frame(width: 70, height: 70)
-                    .background(Color.white)
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
-            }
-            
-            Button(action: {}) {
-                Image(systemName: "envelope.fill")
-                    .font(.system(size: 32, weight: .medium))
-                    .foregroundColor(Color(hex: "E85078"))
-                    .frame(width: 80, height: 80)
-                    .background(Color.white)
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
-                    .overlay(
-                        Image(systemName: "heart.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(Color(hex: "E85078"))
-                            .offset(y: -10)
-                    )
-            }
-            
-            Button(action: {}) {
-                Image(systemName: "checkmark")
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundColor(Color(hex: "E85078"))
-                    .frame(width: 70, height: 70)
-                    .background(Color.white)
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
-            }
-        }
-        .padding(.bottom, 20)
-    }
-}
-
-// MARK: - Bottom Tab Bar
-struct BottomTabBarView: View {
-    var body: some View {
-        HStack(spacing: 0) {
-            Button(action: {}) {
-                Image(systemName: "infinity")
-                    .font(.system(size: 24))
-                    .foregroundColor(Color(hex: "E85078"))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 60)
-            }
-            .background(Color.white)
-            
-            Button(action: {}) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 24))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 60)
-            }
-            .background(Color(hex: "E85078"))
-            
-            Button(action: {}) {
-                Image(systemName: "bell.fill")
-                    .font(.system(size: 24))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 60)
-            }
-            .background(Color(hex: "E85078"))
-            
-            Button(action: {}) {
-                Image(systemName: "person.fill")
-                    .font(.system(size: 24))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 60)
-            }
-            .background(Color(hex: "E85078"))
-        }
-        .cornerRadius(30)
-        .padding(.horizontal, 20)
-        .padding(.bottom, 20)
-        .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: -2)
-    }
-}
-
-// MARK: - Color Extension
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3: // RGB (12-bit)
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (1, 1, 1, 0)
-        }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue:  Double(b) / 255,
-            opacity: Double(a) / 255
-        )
-    }
-}
+// MARK: - Tab Button
+//struct TabButton: View {
+//    let icon: String
+//    let isActive: Bool
+//    
+//    var body: some View {
+//        Button(action: {}) {
+//            Image(systemName: icon)
+//                .font(.system(size: 22))
+//                .foregroundColor(.white)
+//                .frame(maxWidth: .infinity)
+//        }
+//    }
+//}
 
 // MARK: - Preview
 struct DiscoverView_Previews: PreviewProvider {
