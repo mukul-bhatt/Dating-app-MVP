@@ -15,7 +15,7 @@ class ProfileViewModel: ObservableObject{
     // Auth token is needed for the entire app - then why am i storing it here
         @Published var authToken: String = ""
     
-    func updateAuthToken(_ token: String) {
+        func updateAuthToken(_ token: String) {
             self.authToken = token
             print("✅ ProfileViewModel token updated")
         }
@@ -328,23 +328,18 @@ class ProfileViewModel: ObservableObject{
              isBioValid &&
             isSelectedReligionValid  &&
             isPreferredPartnerReligionValid &&
-                                isSelectedSexualityValid &&
-                                isPreferredPartnerSexualityValid &&
+            isSelectedSexualityValid &&
+            isPreferredPartnerSexualityValid &&
             isValidHeight &&
             isValidJobTitle &&
             isValidEducation &&
             isValidLocation &&
             isRelationshipStatusValid &&
-                                isLookingForFieldValid
-            
+            isLookingForFieldValid
         }
 
     // MARK: - Master options functions
     let masterService = MasterOptionsService()
-     
-//    let authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZWE0MDYwMS1jZjgwLTQ1MWYtYTJhZS1mODM3MDM3NmU5N2UiLCJqdGkiOiI0NWQ0MmE2ZS00YjRiLTQ4YTMtODQ3ZC0yYzI3ODk1YWEzZDciLCJ1bmlxdWVfbmFtZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Ijk5NzEyMTI0ODkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjYwMTciLCJwcm9maWxlX2lkIjoiNjAxNyIsImFwcGxpY2F0aW9uX3VzZXJJZCI6ImNlYTQwNjAxLWNmODAtNDUxZi1hMmFlLWY4MzcwMzc2ZTk3ZSIsImV4cCI6MTc2ODk3Nzc0MywiaXNzIjoiRGF0aW5nQXBwIiwiYXVkIjoiYWxsX3VzZXJzIn0.YiLOLPwVzoH07IKT6y0zoAxB5ZMUJc_TcMBDEpJk7Kc"
-    
-//    let authToken = authenticationToken
 
     func loadReligionOptions() async {
         do {
@@ -474,63 +469,49 @@ class ProfileViewModel: ObservableObject{
     }
     
     // MARK: - Call Verify API
-    
-    // Auth error helper
-    enum AuthNetworkError: Error {
-        case unauthorized
-        case server(Int)
-        case unknown
-    }
+    // Inside ProfileViewModel.swift
 
-    
-    func callBackendWithVerifyEndpoint(otp: String) async throws -> VerifyOtpResponse{
-        let baseUrl = masterService.baseUrl
-        let endpoint = "/auth/verify-otp"
-        guard let url = URL(string: baseUrl+endpoint) else{
-            throw URLError(.badURL)
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
+    func callBackendWithVerifyEndpoint(otp: String) async throws -> VerifyOtpResponse {
+        // 1. Prepare the body data using your existing model
         let bodyData = OTPVerifyBody(
-                Mobile: phoneNumber,
-                countryCode: selectedCountryDialCode,
-                ProfileId: profileId,
-                Otp: otp
-            )
-        request.httpBody = try JSONEncoder().encode(bodyData)
+            Mobile: phoneNumber,
+            countryCode: selectedCountryDialCode,
+            ProfileId: profileId,
+            Otp: otp
+        )
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw URLError(.badServerResponse)
-            }
-        
-        print("📦 RESPONSE:", String(data: data, encoding: .utf8) ?? "nil")
-        
-        // Check if status is NOT 200-299
-            if !(200...299).contains(httpResponse.statusCode) {
-                
-                throw NSError(domain: "AuthError", code: httpResponse.statusCode)
-            }
-        
-        // Decode response from the server
-        let decodedResponse = try JSONDecoder().decode(VerifyOtpResponse.self, from: data)
-        
-        if decodedResponse.success{
-            self.authToken = decodedResponse.data.token
-            self.refreshToken = decodedResponse.data.refreshToken
-            self.applicationUserId = decodedResponse.data.applicationUserId
-            print("✅ authentication token saved:")
-        }else {
-            print("Error decoding Response")
-        }
-        
-        return decodedResponse
+        return try await NetworkManager.shared.request(
+            endpoint: .verifyOtp,
+            body: bodyData
+        )
     }
-    
+    //  MARK: - Verify Otp AND Navigate
+//    func verifyLoginOtpAndNavigate() {
+//        Task {
+//            do {
+//                // The NetworkManager will try the call, and if it hits a 401,
+//                // it will refresh the token and retry BEFORE returning the response here.
+//                let response = try await callBackendWithVerifyEndpoint(otp: combinedOtp)
+//                
+//                if response.success {
+//                    // If user is not a user, only then you navigate, otherwise take them to Register screen.
+//                    await MainActor.run {
+//                        authViewModel.saveTokenFromResponse(response)
+//                        navigateToDiscoverScreen = true
+//                    }
+//                    
+//                    
+//                }
+//            } catch {
+//                // If it lands here, it means either the internet is out
+//                // or even the Refresh Token was expired.
+//                await MainActor.run {
+//                    showInvalidOtpError = true
+//                }
+//                print("❌ Final failure after retries: \(error)")
+//            }
+//        }
+//    }
     //  MARK: - Call Register Api
    
     func callBackendWithRegisterEndpoint() async throws -> SendOtpResponse{

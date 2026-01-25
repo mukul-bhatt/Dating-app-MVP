@@ -9,48 +9,101 @@ import Foundation
 import Combine
 
 class AuthViewModel: ObservableObject {
-       @Published var authToken: String?
-       @Published var refreshToken: String?
-       @Published var isAuthenticated: Bool = false
-       @Published var profileId: Int?
-       @Published var userMobile: String?
+    @Published var authToken: String?
+    @Published var refreshToken: String?
+    @Published var isAuthenticated: Bool = false
+    @Published var profileId: Int?
+    @Published var userMobile: String?
     
-        private let tokenKey = "authToken"
-        private let refreshTokenKey = "refreshToken"
-        private let tokenExpiryKey = "tokenExpiry"
-        private let profileIdKey = "profileId"
-        private let userMobileKey = "userMobile"
+    private let baseUrl = "https://datolitic-unprejudiced-lawson.ngrok-free.dev/api"
+    private let tokenKey = "authToken"
+    private let refreshTokenKey = "refreshToken"
+    private let profileIdKey = "profileId"
+    private let userMobileKey = "userMobile"
     
     init() {
-        loadAndValidateToken()
-    }
-    
-    // MARK: - Load and validate token on app launch
-    private func loadAndValidateToken() {
-        guard let token = UserDefaults.standard.string(forKey: tokenKey),
-              let expiryDate = UserDefaults.standard.object(forKey: tokenExpiryKey) as? Date else {
-            // No token or expiry date found
-            logout()
-            return
+        Task {
+             loadTokensFromStorage()
         }
-        
-        // Check if token has expired
-        if Date() < expiryDate {
-                   self.authToken = token
-                   self.refreshToken = UserDefaults.standard.string(forKey: refreshTokenKey)
-                   self.profileId = UserDefaults.standard.integer(forKey: profileIdKey)
-                   self.userMobile = UserDefaults.standard.string(forKey: userMobileKey)
-                   self.isAuthenticated = true
-                   print("✅ Valid token loaded from storage")
-               } else {
-                   print("❌ Token expired")
-                   logout()
-               }
     }
     
-    // MARK: - Save token after login/signup
+    // MARK: - Load Tokens from Storage
     
-    func saveTokenFromResponse(_ response: VerifyOtpResponse, expiresInHours: Int = 12) {
+    private func loadTokensFromStorage() {
+            self.authToken = UserDefaults.standard.string(forKey: tokenKey)
+            self.refreshToken = UserDefaults.standard.string(forKey: refreshTokenKey)
+            self.profileId = UserDefaults.standard.integer(forKey: profileIdKey)
+            self.userMobile = UserDefaults.standard.string(forKey: userMobileKey)
+            
+            // User is authenticated if both tokens exist
+            self.isAuthenticated = authToken != nil && refreshToken != nil
+            
+            if isAuthenticated {
+                print("✅ Tokens loaded from storage")
+            } else {
+                print("ℹ️ No tokens found - user needs to login")
+            }
+        }
+    
+    // MARK: - Refresh token using refresh token ⭐
+    // AuthViewModel.swift
+
+    func refreshAuthToken() async throws {
+        // 1. Ensure both tokens exist before attempting a refresh
+        guard let currentToken = self.authToken,
+              let currentRefreshToken = self.refreshToken else {
+            await MainActor.run { logout() }
+            throw AuthNetworkError.unauthorized
+        }
+
+        let endpoint = "/auth/refresh-token"
+        guard let url = URL(string: baseUrl + endpoint) else {
+            throw URLError(.badURL)
+        }
+
+        // 2. Prepare the request
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // 3. Use the RefreshTokenApiBody model for the request body
+        let body = RefreshTokenApiBody(token: currentToken, refreshToken: currentRefreshToken)
+        request.httpBody = try JSONEncoder().encode(body)
+        
+        // 4. Perform the network call
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+
+        // 5. Handle the response
+        if httpResponse.statusCode == 200 {
+            // Decode using your RefreshTokenResponse model
+            let refreshResponse = try JSONDecoder().decode(RefreshTokenResponse.self, from: data)
+            
+            await MainActor.run {
+                // Update the source of truth
+                self.authToken = refreshResponse.token
+                self.refreshToken = refreshResponse.refreshToken
+                self.isAuthenticated = true
+                
+                // Sync with local storage
+                UserDefaults.standard.set(refreshResponse.token, forKey: tokenKey)
+                UserDefaults.standard.set(refreshResponse.refreshToken, forKey: refreshTokenKey)
+                
+                print("✅ Token refreshed successfully")
+            }
+        } else {
+            // If refresh fails (e.g., 401 or 403), the refresh token itself is invalid
+            print("❌ Token refresh failed with status: \(httpResponse.statusCode)")
+            await MainActor.run { logout() }
+            throw AuthNetworkError.unauthorized
+        }
+    }
+    
+    // MARK: - Save token after OTP verification
+    func saveTokenFromResponse(_ response: VerifyOtpResponse) {
         let tokenData = response.data
         
         self.authToken = tokenData.token
@@ -58,51 +111,30 @@ class AuthViewModel: ObservableObject {
         self.profileId = tokenData.profileId
         self.userMobile = tokenData.mobile
         self.isAuthenticated = true
-        
-        // Calculate expiry date
-        let expiryDate = Calendar.current.date(byAdding: .hour, value: expiresInHours, to: Date())!
+        print("Is authenticated = true ✅")
         
         // Save to UserDefaults
         UserDefaults.standard.set(tokenData.token, forKey: tokenKey)
         UserDefaults.standard.set(tokenData.refreshToken, forKey: refreshTokenKey)
-        UserDefaults.standard.set(expiryDate, forKey: tokenExpiryKey)
         UserDefaults.standard.set(tokenData.profileId, forKey: profileIdKey)
         UserDefaults.standard.set(tokenData.mobile, forKey: userMobileKey)
         
-        print("✅ Token saved, expires at: \(expiryDate)")
-        print("✅ Profile ID: \(tokenData.profileId)")
-    }
-
-    
-    // MARK: - Check if token is still valid
-    func isTokenValid() -> Bool {
-        guard let expiryDate = UserDefaults.standard.object(forKey: tokenExpiryKey) as? Date else {
-            return false
-        }
-        return Date() < expiryDate
-    }
-    
-    // MARK: - Get remaining time
-    func getRemainingTokenTime() -> TimeInterval? {
-        guard let expiryDate = UserDefaults.standard.object(forKey: tokenExpiryKey) as? Date else {
-            return nil
-        }
-        return expiryDate.timeIntervalSince(Date())
+        print("✅ Token saved")
     }
     
     // MARK: - Logout
     func logout() {
-           self.authToken = nil
-           self.refreshToken = nil
-           self.profileId = nil
-           self.userMobile = nil
-           self.isAuthenticated = false
-           
-           UserDefaults.standard.removeObject(forKey: tokenKey)
-           UserDefaults.standard.removeObject(forKey: refreshTokenKey)
-           UserDefaults.standard.removeObject(forKey: tokenExpiryKey)
-           UserDefaults.standard.removeObject(forKey: profileIdKey)
-           UserDefaults.standard.removeObject(forKey: userMobileKey)
-       }
+        self.authToken = nil
+        self.refreshToken = nil
+        self.profileId = nil
+        self.userMobile = nil
+        self.isAuthenticated = false
+        
+        UserDefaults.standard.removeObject(forKey: tokenKey)
+        UserDefaults.standard.removeObject(forKey: refreshTokenKey)
+        UserDefaults.standard.removeObject(forKey: profileIdKey)
+        UserDefaults.standard.removeObject(forKey: userMobileKey)
+        
+        print("🚪 Logged out")
+    }
 }
-

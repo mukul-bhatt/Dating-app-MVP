@@ -18,41 +18,33 @@ struct RegisterOtpVerificationView: View {
         enteredOtp.joined()
     }
     
-    func verifyOTPandNavigate() {
+    func verifyOtpAndNavigate() {
         Task {
             do {
-                
-                // 1. Wait for the server response
+                // The NetworkManager will try the call, and if it hits a 401,
+                // it will refresh the token and retry BEFORE returning the response here.
                 let response = try await viewModel.callBackendWithVerifyEndpoint(otp: combinedOtp)
                 
-                showInvalidOtpError = false
-                // Save the response into the USER DEFAULTS
-                
-                if response.success{
-                    authViewModel.saveTokenFromResponse(response, expiresInHours: 12)
-                    viewModel.updateAuthToken(authViewModel.authToken ?? "" )
-                    
-                    // Only if otp is correct, navigate to next screen
+                if response.success {
                     await MainActor.run {
+                        authViewModel.saveTokenFromResponse(response)
                         navigateToImageScreen = true
                     }
-                }else{
-                    print("❌ Verification failed: \(response.message)")
                 }
-                
-                
-                
             } catch {
-                // 3. FAILURE: Navigation won't happen, handle the error here
-                showInvalidOtpError = true
-                print("❌ Verification failed: \(error)")
+                // If it lands here, it means either the internet is out
+                // or even the Refresh Token was expired.
+                await MainActor.run {
+                    showInvalidOtpError = true
+                }
+                print("❌ Final failure after retries: \(error)")
             }
         }
     }
     
     var body: some View {
         
-        OTPVerificationView(viewModel:viewModel, otpText: $enteredOtp, screenType: "Register with Us!", actionForPrimaryButton: verifyOTPandNavigate, showInvalidOtpError: showInvalidOtpError)
+        OTPVerificationView(viewModel:viewModel, otpText: $enteredOtp, screenType: "Register with Us!", actionForPrimaryButton: verifyOtpAndNavigate, showInvalidOtpError: showInvalidOtpError)
             .navigationDestination(isPresented: $navigateToImageScreen) {
                 ImageSelectionView(viewModel: viewModel) // The screen you want to go to next
             }

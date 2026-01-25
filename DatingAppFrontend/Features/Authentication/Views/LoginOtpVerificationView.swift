@@ -20,41 +20,30 @@ struct LoginOtpVerificationView: View {
     @State private var showInvalidOtpError = false
     
     func verifyLoginOtpAndNavigate() {
-            Task {
-                do {
-                    // 1. Wait for the server response
-                    
-                    let response = try await viewModel.callBackendWithVerifyEndpoint(otp: combinedOtp)
-                    // 2. SUCCESS: Update UI on the main thread
-                    showInvalidOtpError = false
+        Task {
+            do {
+                // The NetworkManager will try the call, and if it hits a 401,
+                // it will refresh the token and retry BEFORE returning the response here.
+                let response = try await viewModel.callBackendWithVerifyEndpoint(otp: combinedOtp)
+                
+                if response.success {
+                    // If user is not a user, only then you navigate, otherwise take them to Register screen.
                     await MainActor.run {
+                        authViewModel.saveTokenFromResponse(response)
                         navigateToDiscoverScreen = true
                     }
                     
-                    // Save the response into the USER DEFAULTS
                     
-                    if response.success{
-                        authViewModel.saveTokenFromResponse(response, expiresInHours: 12)
-                        viewModel.updateAuthToken(authViewModel.authToken ?? "" )
-                        
-                        // Only if otp is correct, navigate to next screen
-                        await MainActor.run {
-                            navigateToDiscoverScreen = true
-                        }
-                       
-                    }else{
-                        print("❌ Verification failed: \(response.message)")
-                    }
-                    
-                    
-                } catch {
-                    // 3. FAILURE: Navigation won't happen, handle the error here
-                    showInvalidOtpError = true
-                    
-                    print("❌ Verification failed: \(error)")
                 }
+            } catch {
+                // If it lands here, it means either the internet is out
+                // or even the Refresh Token was expired.
+                await MainActor.run {
+                    showInvalidOtpError = true
+                }
+                print("❌ Final failure after retries: \(error)")
             }
-        
+        }
     }
     
     
@@ -62,7 +51,7 @@ struct LoginOtpVerificationView: View {
     var body: some View {
         OTPVerificationView(viewModel: viewModel, otpText: $enteredOtp, screenType: "Welcome Back!", actionForPrimaryButton: verifyLoginOtpAndNavigate, showInvalidOtpError: showInvalidOtpError )
             .navigationDestination(isPresented: $navigateToDiscoverScreen) {
-               DiscoverView() // The screen you want to go to next
+               DiscoverView()
             }
     }
 }

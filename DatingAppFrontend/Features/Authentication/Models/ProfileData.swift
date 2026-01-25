@@ -51,6 +51,7 @@ struct InterestsBlock: Codable {
 
 extension ProfileViewModel {
     func printDataSnapshot() {
+        
         // 1. Create the DTO
         let snapshot = UserProfileDTO(
             firstName: name,

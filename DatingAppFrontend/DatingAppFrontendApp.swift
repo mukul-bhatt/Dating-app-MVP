@@ -10,28 +10,23 @@ import SwiftUI
 @main
 struct DatingAppFrontendApp: App {
     
-    @State var authViewModel = AuthViewModel()
+    @StateObject var authViewModel = AuthViewModel()
     
     var body: some Scene {
         WindowGroup {
             if authViewModel.isAuthenticated {
-                DiscoverView()
-                    .environmentObject(authViewModel)
-                    .onAppear{
-                        checkTokenValidity()
-                    }
+                
+//                MainTabView()
+                NativeTabView()
+//                    .environmentObject(authViewModel)??????????????
+                
             }else{
                 LandingScreenView()
                     .environmentObject(authViewModel)
-
+                
+                
             }
         }
     }
     
-    func checkTokenValidity() {
-           if !authViewModel.isTokenValid() {
-               print("Token expired, logging out")
-               authViewModel.logout()
-           }
-       }
 }

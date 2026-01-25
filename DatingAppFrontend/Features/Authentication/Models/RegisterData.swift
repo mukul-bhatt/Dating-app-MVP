@@ -7,6 +7,13 @@
 
 import Foundation
 
+// Auth error helper
+enum AuthNetworkError: Error {
+    case unauthorized
+    case server(Int)
+    case unknown
+}
+
 // Body for register call
 struct Register: Codable {
     let phoneNumber: String
