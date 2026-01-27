@@ -17,10 +17,9 @@ struct LoginView: View {
     var isPhoneNumberValid: Bool {
         viewModel.phoneNumber.count == 10 && !viewModel.phoneNumber.isEmpty
     }
-    
+    @Binding var path: NavigationPath
 
     var body: some View {
-        NavigationStack{
             VStack(spacing: 30) {
                 
                 AuthHeader()
@@ -71,12 +70,7 @@ struct LoginView: View {
             .padding(.top, 30)
             .padding(.horizontal)
             .background(Color("BrandColor"))
-        }.navigationDestination(isPresented: $navigateToNextScreen) {
-            LoginOtpVerificationView(viewModel: viewModel)
-        }
-        .navigationDestination(isPresented: $navigateToSplashScreen){
-            LandingScreenView()
-        }
+        
     }
 }
 

@@ -8,7 +8,10 @@
 import SwiftUI
 
 struct NativeTabView: View {
+    @State private var path = NavigationPath()
+    
     var body: some View {
+        
         TabView {
             DiscoverView()
                 .tabItem {
@@ -19,12 +22,12 @@ struct NativeTabView: View {
                     Image("ChatIcon")
                 }
 
-            LandingScreenView()
+            LandingScreenView(path: $path)
                 .tabItem {
                     Image("NotificationIcon")
                 }
 
-            LandingScreenView()
+            LandingScreenView(path: $path)
                 .tabItem {
                     Image("ProfileIcon")
 

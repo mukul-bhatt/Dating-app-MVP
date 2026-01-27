@@ -32,8 +32,7 @@ struct DiscoverView: View {
                 .ignoresSafeArea()
             
             VStack {
-                // Header
-//                ScrollView{
+
                     DiscoverHeader()
                     
                     Spacer()
@@ -43,27 +42,6 @@ struct DiscoverView: View {
                     
                     ActionButtons()
                     Spacer()
-                    
-//                }
-//                MainTabView()
-//                 Bottom Navigation
-//                HStack(spacing: 0) {
-//                    TabButton(icon: "flame.fill", isActive: true)
-//                    TabButton(icon: "message.fill", isActive: false)
-//                    TabButton(icon: "bell.fill", isActive: false)
-//                    TabButton(icon: "person.2.fill", isActive: false)
-//                }
-//                .frame(height: 70)
-//                .background(
-//                    LinearGradient(
-//                        colors: [Color(red: 0.9, green: 0.3, blue: 0.5), Color(red: 0.8, green: 0.2, blue: 0.4)],
-//                        startPoint: .leading,
-//                        endPoint: .trailing
-//                    )
-//                    .cornerRadius(35)
-//                )
-//                .padding(.horizontal, 30)
-//                .padding(.bottom, 20)
             }
             .padding(.horizontal)
             .padding(.top, 20)
@@ -81,7 +59,7 @@ struct ActionButtons: View {
             }) {
                 Image(systemName: "xmark")
                     .font(.system(size: 28, weight: .bold))
-                    .foregroundColor(Color(red: 0.91, green: 0.33, blue: 0.55))
+                    .foregroundColor(foregroundPink)
                     .frame(width: 60, height: 60)
                     .background(Color.white)
                     .clipShape(Circle())
@@ -93,20 +71,20 @@ struct ActionButtons: View {
                 print("Super Like")
             }) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color(red: 0.91, green: 0.33, blue: 0.55))
-                        .frame(width: 80, height: 60)
+                    RoundedRectangle(cornerRadius: 120)
+                        .fill(.white)
+                        .frame(width: 80, height: 80)
                     
                     Image("EnvelopeIcon")
                         .renderingMode(.template)
                         .font(.system(size: 26))
-                        .foregroundColor(.white)
-                        .clipShape(Circle())
+                        .foregroundColor(foregroundPink)
+                        .clipShape(Rectangle())
                     
-//                    Image(systemName: "heart.fill")
-//                        .font(.system(size: 18))
-//                        .foregroundColor(.white)
-//                        .offset(x: -8, y: -8)
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(foregroundPink)
+                        .offset(x: 0, y: 0)
                 }
                 .shadow(color: Color(red: 0.91, green: 0.33, blue: 0.55).opacity(0.4), radius: 8, x: 0, y: 4)
             }
@@ -117,7 +95,7 @@ struct ActionButtons: View {
             }) {
                 Image(systemName: "checkmark")
                     .font(.system(size: 28, weight: .bold))
-                    .foregroundColor(Color(red: 0.91, green: 0.33, blue: 0.55))
+                    .foregroundColor(foregroundPink)
                     .frame(width: 60, height: 60)
                     .background(Color.white)
                     .clipShape(Circle())
@@ -163,56 +141,9 @@ struct TabButton: View {
 struct DiscoverView_Previews: PreviewProvider {
     
     static var previews: some View {
-        TabView {
-            DiscoverView()
-                .tabItem {
-                    Image("HeartIcon_tabBar")
-                }
-            DiscoverView()
-                .tabItem {
-                    Image("ChatIcon").renderingMode(.template)
-                }
-
-            LandingScreenView()
-                .tabItem {
-                    Image("NotificationIcon")
-                }
-
-            LandingScreenView()
-                .tabItem {
-                    Image("ProfileIcon")
-
-                }
-        }
-        .tint(.pink)
+        NativeTabView()
     }
 }
-
-//import SwiftUI
-
-//struct MainTabView: View {
-//    var body: some View {
-//        TabView {
-//            DiscoverView()
-//                .tabItem {
-//                    Image(systemName: "house.fill")
-//                    Text("Home")
-//                }
-//
-//            LandingScreenView()
-//                .tabItem {
-//                    Image(systemName: "magnifyingglass")
-//                    Text("Search")
-//                }
-//
-//            LandingScreenView()
-//                .tabItem {
-//                    Image(systemName: "person.fill")
-//                    Text("Profile")
-//                }
-//        }
-//    }
-//}
 
 
 

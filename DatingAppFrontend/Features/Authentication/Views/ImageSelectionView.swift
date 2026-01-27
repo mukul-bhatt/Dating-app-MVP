@@ -17,6 +17,7 @@ struct ImageSelectionView: View {
     ]
     
     @ObservedObject var viewModel: ProfileViewModel
+    @Binding var path: NavigationPath
 //    @StateObject private var viewModel = ProfileViewModel()
     @State private var navigateToProfileSetup: Bool = false
     @State var showErrorMessage: Bool = false
@@ -25,7 +26,7 @@ struct ImageSelectionView: View {
     
     var body: some View {
         
-        NavigationStack{
+//        NavigationStack{
             // Add Profiles Section
             VStack(spacing: 20){
                 // Header section
@@ -77,7 +78,9 @@ struct ImageSelectionView: View {
                 
                                 // 3. Trigger navigation on SUCCESS
                                 await MainActor.run {
-                                    navigateToProfileSetup = true
+//                                    navigateToProfileSetup = true
+                                      path = NavigationPath()
+                                      path.append(Route.profileSetup)
                                 }
                                 
                             }catch{
@@ -110,10 +113,10 @@ struct ImageSelectionView: View {
             }
             
             
-        }
-        .navigationDestination(isPresented: $navigateToProfileSetup) {
-            ProfileSetup(viewModel: viewModel)
-        }
+//        }
+//        .navigationDestination(isPresented: $navigateToProfileSetup) {
+//            ProfileSetup(viewModel: viewModel)
+//        }
     }
 }
 

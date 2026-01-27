@@ -18,11 +18,12 @@ struct ProfileSetup: View {
     ]
     
     @ObservedObject var viewModel: ProfileViewModel
+    @Binding var path: NavigationPath
     
-    @State private var navigateToInterestView: Bool = false
+//    @State private var navigateToInterestView: Bool = false
     
     var body: some View {
-        NavigationStack{
+//        NavigationStack{
             VStack(spacing: 20){
                 // Header section
                 ProfileSetupHeader()
@@ -80,7 +81,10 @@ struct ProfileSetup: View {
                     print("Next Button was tapped on profile screen")
                     
                     if viewModel.isFormValid {
-                        navigateToInterestView = true
+//                        navigateToInterestView = true
+                        path = NavigationPath()
+                        path.append(Route.interests)
+                        
                     }
                     
 //                    if viewModel.isSelectedReligionValid {
@@ -114,15 +118,16 @@ struct ProfileSetup: View {
                     }
                 }
             }
-        }.navigationDestination(isPresented: $navigateToInterestView ){
-            InterestsView(viewModel: viewModel)
         }
+//        .navigationDestination(isPresented: $navigateToInterestView ){
+//            InterestsView(viewModel: viewModel)
+//        }
     }
     
 //        .navigationDestination(isPresented: $navigateToImageScreen) {
 //            ImageSelectionView() // The screen you want to go to next
 //        }
-}
+
 
 //#Preview {
 //    ProfileSetup()

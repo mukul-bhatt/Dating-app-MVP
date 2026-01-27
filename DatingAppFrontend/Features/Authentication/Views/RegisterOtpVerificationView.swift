@@ -10,6 +10,7 @@ import SwiftUI
 struct RegisterOtpVerificationView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @ObservedObject var viewModel: ProfileViewModel
+    @Binding var path: NavigationPath
     @State private var enteredOtp: [String] = Array(repeating: "", count: 4)
     @State var navigateToImageScreen : Bool = false
     @State private var showInvalidOtpError = false
@@ -28,7 +29,9 @@ struct RegisterOtpVerificationView: View {
                 if response.success {
                     await MainActor.run {
                         authViewModel.saveTokenFromResponse(response)
-                        navigateToImageScreen = true
+//                        navigateToImageScreen = true
+                        path = NavigationPath()
+                        path.append(Route.imageSelectionView)
                     }
                 }
             } catch {
@@ -45,9 +48,9 @@ struct RegisterOtpVerificationView: View {
     var body: some View {
         
         OTPVerificationView(viewModel:viewModel, otpText: $enteredOtp, screenType: "Register with Us!", actionForPrimaryButton: verifyOtpAndNavigate, showInvalidOtpError: showInvalidOtpError)
-            .navigationDestination(isPresented: $navigateToImageScreen) {
-                ImageSelectionView(viewModel: viewModel) // The screen you want to go to next
-            }
+//            .navigationDestination(isPresented: $navigateToImageScreen) {
+//                ImageSelectionView(viewModel: viewModel) // The screen you want to go to next
+//            }
         
         
     }

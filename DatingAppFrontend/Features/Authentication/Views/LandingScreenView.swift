@@ -9,7 +9,8 @@
 import SwiftUI
 
 struct LandingScreenView: View {
-    @StateObject private var viewModel = ProfileViewModel()
+//    @StateObject private var viewModel = ProfileViewModel()
+    @Binding var path: NavigationPath
     
     // MARK: - Properties
     // Using the colors derived from your previous files/images
@@ -20,7 +21,6 @@ struct LandingScreenView: View {
     ]
     
     var body: some View {
-        NavigationStack{
             ZStack {
                 // 1. Main Background Gradient
                 LinearGradient(
@@ -72,7 +72,8 @@ struct LandingScreenView: View {
                         
                         // Create Account Button
                         
-                        NavigationLink(destination: RegisterWithUsView(viewModel: viewModel)) {
+//                        NavigationLink(destination: RegisterWithUsView(viewModel: viewModel)) {
+                        NavigationLink(value: Route.register) {
                             Text("Create Account")
                                 .font(.headline)
                                 .fontWeight(.bold)
@@ -90,12 +91,21 @@ struct LandingScreenView: View {
                             Text("Already have an account?")
                                 .foregroundColor(.white.opacity(0.8))
                             
-                            NavigationLink(destination: LoginView(viewModel: viewModel)){
+//                            NavigationLink(destination: LoginView(viewModel: viewModel)){
+//                                Text("LOGIN")
+//                                    .fontWeight(.bold)
+//                                    .foregroundColor(.white)
+//                                    .underline()
+//                            }
+                            NavigationLink(value: Route.login){
                                 Text("LOGIN")
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)
                                     .underline()
                             }
+                            
+                               
+                            
                         }
                         .font(.callout)
                         .padding(.bottom, 20)
@@ -105,7 +115,7 @@ struct LandingScreenView: View {
             }
         }
     }
-}
+
 
 // MARK: - Subcomponents
 
@@ -179,7 +189,7 @@ struct MockImage: View {
 }
 
 // MARK: - Preview
-#Preview {
-    LandingScreenView()
-}
+//#Preview {
+//    LandingScreenView()
+//}
 

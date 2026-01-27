@@ -7,11 +7,16 @@
 
 import SwiftUI
 
+
+
 struct LoginOtpVerificationView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @ObservedObject var viewModel: ProfileViewModel
+    @Binding var path: NavigationPath
     @State private var enteredOtp: [String] = Array(repeating: "", count: 4)
-    @State private var navigateToDiscoverScreen : Bool = false
+//    @State private var navigateToDiscoverScreen : Bool = false
+   
+
     
     var combinedOtp: String {
         enteredOtp.joined()
@@ -27,13 +32,17 @@ struct LoginOtpVerificationView: View {
                 let response = try await viewModel.callBackendWithVerifyEndpoint(otp: combinedOtp)
                 
                 if response.success {
-                    // If user is not a user, only then you navigate, otherwise take them to Register screen.
+                    // If user is not a new user, only then you navigate next i.e discove screen, otherwise take them to Register screen.
                     await MainActor.run {
                         authViewModel.saveTokenFromResponse(response)
-                        navigateToDiscoverScreen = true
+                        path.append(Route.imageSelectionView) // Replace with discover view
                     }
                     
                     
+                }else{
+                    // when the User is a new User - take him/her to register screen
+                    path = NavigationPath()
+                    path.append(Route.register)
                 }
             } catch {
                 // If it lands here, it means either the internet is out
@@ -50,9 +59,9 @@ struct LoginOtpVerificationView: View {
     
     var body: some View {
         OTPVerificationView(viewModel: viewModel, otpText: $enteredOtp, screenType: "Welcome Back!", actionForPrimaryButton: verifyLoginOtpAndNavigate, showInvalidOtpError: showInvalidOtpError )
-            .navigationDestination(isPresented: $navigateToDiscoverScreen) {
-               DiscoverView()
-            }
+//            .navigationDestination(isPresented: $navigateToDiscoverScreen) {
+//               DiscoverView()
+//            }
     }
 }
 

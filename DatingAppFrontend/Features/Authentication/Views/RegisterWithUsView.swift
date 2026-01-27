@@ -10,15 +10,16 @@ import SwiftUI
 struct RegisterWithUsView: View {
     
     @ObservedObject var viewModel: ProfileViewModel
+    @Binding var path: NavigationPath
     
     @FocusState private var isFocused: Bool
     @FocusState private var isFocusedPhone: Bool
     
-    @State private var navigateToOtpVerificationScreen: Bool = false
+//    @State private var navigateToOtpVerificationScreen: Bool = false
     @State private var hasClickedNextButton = false
     
     var body: some View {
-        NavigationStack{
+//        NavigationStack{
             VStack(spacing: 10){
                 AuthHeader(
                     title: "Register with Us",
@@ -69,7 +70,7 @@ struct RegisterWithUsView: View {
                             }
                         }
                         
-                        navigateToOtpVerificationScreen = true
+                        path.append(Route.registerOtp)
                     }else{
                         hasClickedNextButton = true
                         
@@ -86,12 +87,13 @@ struct RegisterWithUsView: View {
                 isFocusedPhone = false
             }
             
-        }.navigationDestination(isPresented: $navigateToOtpVerificationScreen) {
-            RegisterOtpVerificationView(viewModel: viewModel)
         }
+//        .navigationDestination(isPresented: $navigateToOtpVerificationScreen) {
+//            RegisterOtpVerificationView(viewModel: viewModel)
+//        }
     }
  
-}
+
 
 //#Preview {
 //    RegisterWithUsView(viewModel: <#ProfileViewModel#>)

@@ -13,6 +13,7 @@ struct InterestsView: View {
     // MARK: - State & Data
 //    @State private var selectedInterests: Set<String> = []
     @ObservedObject var viewModel: ProfileViewModel
+    @Binding var path: NavigationPath
     @State var navigateToSettingUpScreen = false
     @State private var hasClickedDoneButton = false
     
@@ -32,7 +33,7 @@ struct InterestsView: View {
     let brandPink = Color("ButtonColor")// The dark pink/magenta
     
     var body: some View {
-        NavigationStack{
+//        NavigationStack{
         ZStack {
             // 1. Background
             backgroundColor.ignoresSafeArea()
@@ -132,9 +133,10 @@ struct InterestsView: View {
                 await viewModel.loadOptionsForInterests()
             }
         }
-        }.navigationDestination(isPresented: $navigateToSettingUpScreen){
-            SettingUpScreen()
-        }
+//        }
+//        .navigationDestination(isPresented: $navigateToSettingUpScreen){
+//            SettingUpScreen()
+//        }
     }
     
     // MARK: - Logic
