@@ -8,32 +8,43 @@
 import SwiftUI
 import WrappingHStack
 
-let imageUrls = [
-    "https://www.verblio.com/wp-content/uploads/2018/08/ariane_stock_photo.jpg",
-    "https://st2.depositphotos.com/4431055/11871/i/450/depositphotos_118714868-stock-photo-beautiful-girl-holding-hair.jpg",
-    "https://c8.alamy.com/comp/D9G036/portrait-of-a-beautiful-woman-smiling-D9G036.jpg"
+//let imageUrls = [
+//    "https://www.verblio.com/wp-content/uploads/2018/08/ariane_stock_photo.jpg",
+//    "https://st2.depositphotos.com/4431055/11871/i/450/depositphotos_118714868-stock-photo-beautiful-girl-holding-hair.jpg",
+//    "https://c8.alamy.com/comp/D9G036/portrait-of-a-beautiful-woman-smiling-D9G036.jpg"
+//]
+
+//let passions: [PassionItem] = [
+//    PassionItem(name: "Cooking", icon: "frying.pan.fill", color: Color(red: 1.0, green: 0.95, blue: 0.8)),
+//    PassionItem(name: "Painting", icon: "paintpalette.fill", color: Color(red: 0.9, green: 1.0, blue: 0.9)),
+//    PassionItem(name: "Singing", icon: "mic.fill", color: Color(red: 0.9, green: 0.95, blue: 1.0)),
+//    PassionItem(name: "Gym", icon: "dumbbell.fill", color: Color(red: 1.0, green: 0.85, blue: 0.85)),
+//    PassionItem(name: "Travel", icon: "airplane", color: Color(red: 0.85, green: 1.0, blue: 0.9)),
+//    PassionItem(name: "Vlogs", icon: "video.fill", color: Color(red: 0.95, green: 0.85, blue: 1.0)),
+//    PassionItem(name: "Literature", icon: "book.fill", color: Color(red: 0.95, green: 0.9, blue: 1.0))
+//]
+
+let colors = [
+     Color(red: 1.0, green: 0.95, blue: 0.8),
+     Color(red: 0.9, green: 1.0, blue: 0.9),
+     Color(red: 0.9, green: 0.95, blue: 1.0),
+     Color(red: 1.0, green: 0.85, blue: 0.85),
+     Color(red: 0.85, green: 1.0, blue: 0.9),
+     Color(red: 0.95, green: 0.85, blue: 1.0),
+     Color(red: 0.95, green: 0.9, blue: 1.0)
 ]
 
-let passions: [PassionItem] = [
-    PassionItem(name: "Cooking", icon: "frying.pan.fill", color: Color(red: 1.0, green: 0.95, blue: 0.8)),
-    PassionItem(name: "Painting", icon: "paintpalette.fill", color: Color(red: 0.9, green: 1.0, blue: 0.9)),
-    PassionItem(name: "Singing", icon: "mic.fill", color: Color(red: 0.9, green: 0.95, blue: 1.0)),
-    PassionItem(name: "Gym", icon: "dumbbell.fill", color: Color(red: 1.0, green: 0.85, blue: 0.85)),
-    PassionItem(name: "Travel", icon: "airplane", color: Color(red: 0.85, green: 1.0, blue: 0.9)),
-    PassionItem(name: "Vlogs", icon: "video.fill", color: Color(red: 0.95, green: 0.85, blue: 1.0)),
-    PassionItem(name: "Literature", icon: "book.fill", color: Color(red: 0.95, green: 0.9, blue: 1.0))
-]
-
-struct PassionItem: Identifiable {
-    let id = UUID()
-    let name: String
-    let icon: String
-    let color: Color
-}
+//struct PassionItem: Identifiable {
+//    let id = UUID()
+//    let name: String
+//    let icon: String
+//    let color: Color
+//}
 
 struct ProfileScreenView: View {
     
-    @ObservedObject var viewModel: DiscoverViewModel
+    @Binding var path: NavigationPath
+    let profile: DiscoverProfile
     
     var body: some View {
         ZStack{
@@ -46,25 +57,25 @@ struct ProfileScreenView: View {
                 VStack(alignment: .leading, spacing: 16){
                     
                    // Top slider and Images
-                   HeaderView()
+                    HeaderView(imageUrls: profile.profileImagesArray)
                     
                    //Primary information
-                    PrimaryInformation()
+                    PrimaryInformation(profile: profile)
                     
                     // Location and work information
-                    LocationAndWork()
+                    LocationAndWork(location: profile.displayLocation, work: profile.job, distance: profile.distanceInKM)
                     
                     // Bio
-                    Bio()
+                    Bio(bio: profile.bio)
                     
                     // Passions
-                    Passions()
+                    Passions(passions: profile.interestsArray)
                     
                     // Action Buttons
                     ActionButtonsProfile()
                     
                     // Footer
-                    Footer()
+                    Footer(path: $path)
                         
 //                    Spacer()
                 }
@@ -77,10 +88,168 @@ struct ProfileScreenView: View {
     }
 }
 
+struct Bio: View {
+    let bio: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Bio")
+                .font(.subheadline)
+                .foregroundColor(.primary)
+            
+            Text(bio)
+                .font(.body)
+                .foregroundColor(.primary)
+                .lineSpacing(4)
+        }
+    }
+}
+
+struct LocationAndWork: View {
+    let location: String
+    let work: String
+    let distance: String
+    
+    var body: some View {
+        VStack(alignment:.leading ,spacing: 12) {
+            
+            VStack(alignment:.leading) {
+                HStack{
+                        Image("LocationPin")
+                        Text("Location")
+                            .font(.caption)
+                            .foregroundColor(.primary)
+                    }
+                    Text("\(location)  •  \(Int(Double(distance) ?? 0)) Km away")
+                        .foregroundColor(.primary)
+                
+            }
+            
+            VStack(alignment:.leading) {
+                HStack{
+                    Image(systemName: "briefcase")
+                    Text("Work")
+                        .font(.caption)
+                        .foregroundColor(.primary)
+                    }
+                Text(work)
+                    .foregroundColor(.primary)
+                
+            }
+        }
+    }
+}
+
+struct PrimaryInformation: View {
+    let profile: DiscoverProfile
+    var body: some View {
+        
+        let matchPercent = profile.matchPercent
+        let matchPercentInt = Int(Double(matchPercent) ?? 0)
+        
+        var bioSummary: String {
+            // Collect all valid pieces of info
+            let parts = [
+                profile.religionText,
+                "\(profile.height) cm",
+                profile.interestsArray.prefix(2).joined(separator: " • ")
+            ].filter { !$0.isEmpty && !$0.contains("0 cm") } // Remove empty or invalid data
+
+            return parts.joined(separator: "  •  ")
+        }
+        
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("\(profile.fullName), \(profile.displayAge)")
+                    .font(.title)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.title3)
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                HStack(spacing: 4) {
+                    Image("HeartIcon").font(.title)
+                    Text("\(matchPercentInt)%").font(.headline)
+                }
+                .foregroundColor(.primary)
+            }
+            
+            Text(bioSummary)
+                .font(.subheadline)
+                .foregroundColor(.primary)
+        }
+    }
+}
+
+
+
+struct HeaderView: View {
+    
+
+    let imageUrls: [String]
+    @State var position: Int = 0
+    
+    // Define a fallback image URL for empty states
+    private let placeholderUrl = "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
+    
+    var body: some View{
+        VStack(spacing: 0){
+            if imageUrls.isEmpty {
+                // 1. Placeholder State
+                AsyncImage(url: URL(string: placeholderUrl)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 400) // 1. Fix the internal image height
+                        .clipped()          // 2. Cut off any horizontal overflow
+                } placeholder: {
+                    Color.gray
+                        .frame(height: 400) // 3. Ensure placeholder matches the height
+                }
+                .frame(maxWidth: 370) // 4. Constrain width to parent
+                .frame(height: 400)    // 5. Hard limit the container height
+                .clipShape(RoundedRectangle(cornerRadius: 15))
+                .padding(.top, 10)
+                
+            } else {
+                
+                HStack(spacing: 8) {
+                    
+                    ForEach(imageUrls.prefix(3).indices, id: \.self) { index in
+                        Capsule().fill(position == index ? AppTheme.foregroundPink : .white).frame(height: 4)
+                    }
+                }
+                .padding(.top, 10)
+                
+                TabView(selection: $position){
+                    
+                    ForEach(imageUrls.prefix(3).indices, id: \.self) { index in
+                        ImageView(position: index, imageUrls: imageUrls).tag(index)
+                    }
+                    
+                }.tabViewStyle(.page(indexDisplayMode: .never))
+                    .frame(height: 400)
+                    .clipShape(RoundedRectangle(cornerRadius: 15))
+            }
+        }
+        
+    }
+}
+
+
+
 struct Footer: View {
+    
+    @Binding var path: NavigationPath
+    
     var body: some View {
         // 8. Footer
-        Button(action: {}) {
+        Button(action: {
+            path.append(DiscoverRoute.ReportProfile)
+        }) {
             Text("Report profile")
                 .font(.subheadline)
                 .foregroundColor(AppTheme.foregroundPink)
@@ -101,6 +270,7 @@ struct Footer: View {
 
 
 struct Passions: View{
+    let passions: [String]
     var body: some View{
         VStack(alignment: .leading, spacing: 10) {
             Text("Passion")
@@ -108,160 +278,49 @@ struct Passions: View{
                 .foregroundColor(.primary)
             
             // Simple Flow Layout using wrapping stacks
-//            WrappingHStack(items: passions)
-            WrappingHStack(passions, id: \.self, spacing: .constant(15), lineSpacing: 10){ passion in
+            WrappingHStack(passions.prefix(10), id: \.self, spacing: .constant(15), lineSpacing: 10){ passion in
         
-                    PassionChip(item: passion)
+                Text(passion)
+                    .font(.callout)
+                    .fontWeight(.medium)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
+                    .background(colors.randomElement())
+                    .cornerRadius(20)
+                    .foregroundColor(.primary.opacity(0.8))
                 }
             }
         }
     }
 
 
-//struct WrappingHStack: View {
-//    let items: [PassionItem]
+
+
+//struct PassionChip: View {
+//    let item: PassionItem
 //    
 //    var body: some View {
-//        // This is a simple logic to group items into two rows to mimic the screenshot
-//        // In a real app, you might use 'Layout' protocol or a proper FlowLayout library
-//        VStack(alignment: .leading, spacing: 10) {
-//            HStack {
-//                ForEach(items.prefix(3)) { item in
-//                    PassionChip(item: item)
-//                }
-//            }
-//            HStack {
-//                ForEach(items.dropFirst(3)) { item in
-//                    PassionChip(item: item)
-//                }
-//            }
+//        HStack(spacing: 6) {
+//            Image(systemName: item.icon)
+//                .font(.caption)
+//           
 //        }
+//        
 //    }
 //}
 
-struct PassionChip: View {
-    let item: PassionItem
-    
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: item.icon)
-                .font(.caption)
-            Text(item.name)
-                .font(.callout)
-                .fontWeight(.medium)
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
-        .background(item.color)
-        .cornerRadius(20)
-        .foregroundColor(.primary.opacity(0.8))
-    }
-}
-
-struct Bio: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Bio")
-                .font(.subheadline)
-                .foregroundColor(.primary)
-            
-            Text("Independent, curious, and always up for deep conversations or spontaneous adventures. I love slow mornings, fast Wi-Fi, and people who can make me laugh. Looking for something real—with someone who’s kind, driven, and a little bit witty.")
-                .font(.body)
-                .foregroundColor(.primary)
-                .lineSpacing(4)
-        }
-    }
-}
-
-struct LocationAndWork: View {
-    var body: some View {
-        VStack(alignment:.leading ,spacing: 12) {
-            
-            VStack(alignment:.leading) {
-                HStack{
-                        Image("LocationPin")
-                        Text("Location")
-                            .font(.caption)
-                            .foregroundColor(.primary)
-                    }
-                    Text("Greater Noida  •  3 Km away")
-                        .foregroundColor(.primary)
-                
-            }
-            
-            VStack(alignment:.leading) {
-                HStack{
-                    Image(systemName: "briefcase")
-                    Text("Work")
-                        .font(.caption)
-                        .foregroundColor(.primary)
-                    }
-                Text("Data analyst")
-                    .foregroundColor(.primary)
-                
-            }
-        }
-    }
-}
-
-struct PrimaryInformation: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Nia Sharma, 26")
-                    .font(.title)
-                    .fontWeight(.medium)
-                    .foregroundColor(.primary)
-                
-                Image(systemName: "checkmark.seal.fill")
-                    .font(.title3)
-                    .foregroundColor(.primary)
-                
-                Spacer()
-                
-                HStack(spacing: 4) {
-                    Image("HeartIcon").font(.title)
-                    Text("89%").font(.headline)
-                }
-                .foregroundColor(.primary)
-            }
-            
-            Text("Taurus  •  Hindu  •  165 cm  •  Vegan")
-                .font(.subheadline)
-                .foregroundColor(.primary)
-        }
-    }
-}
 
 
-struct HeaderView: View {
-    
-    @State var position: Int = 0
-    
-    var body: some View{
-        HStack(spacing: 8) {
-            
-            ForEach(imageUrls.indices, id: \.self) { index in
-                Capsule().fill(position == index ? AppTheme.foregroundPink : .white).frame(height: 4)
-            }
-        }
-        .padding(.top, 10)
-        
-        TabView(selection: $position){
-            
-            ForEach(imageUrls.indices, id: \.self) { index in
-                ImageView(position: index).tag(index)
-                }
-            
-        }.tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 400)
-            .clipShape(RoundedRectangle(cornerRadius: 15))
-    }
-}
+
+
+
+
+
 
 struct ImageView: View {
     
     var position: Int
+    let imageUrls: [String]
     
     var body: some View {
         AsyncImage(url: URL(string: imageUrls[position])) { image in
@@ -278,6 +337,6 @@ struct ImageView: View {
 }
 
 
-#Preview {
-    ProfileScreenView()
-}
+//#Preview {
+//    ProfileScreenView()
+//}

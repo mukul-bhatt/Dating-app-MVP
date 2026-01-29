@@ -24,8 +24,8 @@ var foregroundPink = Color("ButtonColor")
 
 // MARK: - Main View
 struct DiscoverView: View {
-    
-    @ObservedObject var viewModel = DiscoverViewModel()
+    @Binding var path: NavigationPath
+    @ObservedObject var viewModel: DiscoverViewModel
     @State var triggerSwipe: SwipeDirection? = nil
     
     var body: some View {
@@ -40,7 +40,7 @@ struct DiscoverView: View {
                     
                     Spacer()
                     
-                    CardStackView(viewModel: viewModel, triggerSwipe: $triggerSwipe)
+                    CardStackView(viewModel: viewModel, triggerSwipe: $triggerSwipe, path: $path)
 
                     Spacer()
                     

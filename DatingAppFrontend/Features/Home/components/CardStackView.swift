@@ -16,6 +16,7 @@ enum SwipeDirection {
 struct CardStackView: View {
     @ObservedObject var viewModel: DiscoverViewModel
     @Binding var triggerSwipe: SwipeDirection?
+    @Binding var path: NavigationPath
     
     var body: some View {
         ZStack{
@@ -34,6 +35,11 @@ struct CardStackView: View {
                 .zIndex(Double(viewModel.users.count - index))
                 .offset(y: CGFloat(index - viewModel.currentIndex) * 10)
                 .disabled(index != viewModel.currentIndex)
+                .onTapGesture {
+                    // I need to navigate to Feed Screen
+                    path.append(DiscoverRoute.Feed(profileId: profile.id))
+                    
+                }
             }
             
             // Show "No more profiles" when done
@@ -43,6 +49,7 @@ struct CardStackView: View {
                     .foregroundColor(.gray)
             }
         }
+        .navigationBarHidden(true)
         .onAppear {
             Task{
                 do{
@@ -52,7 +59,6 @@ struct CardStackView: View {
                     print("Error fetching profiles: \(error)")
                 }
             }
-           
         }
     }
     

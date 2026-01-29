@@ -79,7 +79,7 @@ struct ProfileCard: View {
                             .font(.callout)
                             .foregroundColor(.black)
 
-                        Text("89%")
+                        Text("\(profile.matchPercent)%")
                             .font(.callout)
                             .foregroundColor(.primary)
                     }
