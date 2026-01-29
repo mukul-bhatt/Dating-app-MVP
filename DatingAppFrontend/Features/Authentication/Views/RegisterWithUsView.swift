@@ -65,12 +65,17 @@ struct RegisterWithUsView: View {
                         Task{
                             do{
                               let _ =  try await viewModel.callBackendWithRegisterEndpoint()
+                                
+                              await MainActor.run {
+                                    path.append(Route.registerOtp)
+                              }
+                                
                             }catch{
                                 print("Error is : \(error)")
                             }
                         }
                         
-                        path.append(Route.registerOtp)
+//                        path.append(Route.registerOtp)
                     }else{
                         hasClickedNextButton = true
                         

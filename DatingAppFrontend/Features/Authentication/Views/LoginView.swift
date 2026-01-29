@@ -11,8 +11,8 @@ struct LoginView: View {
     @ObservedObject var viewModel: ProfileViewModel
     @FocusState private var isFocused: Bool
     @FocusState private var isFocusedPhone: Bool
-    @State private var navigateToNextScreen: Bool = false
-    @State private var navigateToSplashScreen: Bool = false
+//    @State private var navigateToNextScreen: Bool = false
+//    @State private var navigateToSplashScreen: Bool = false
     @State private var hasClickedNextButton: Bool = false
     var isPhoneNumberValid: Bool {
         viewModel.phoneNumber.count == 10 && !viewModel.phoneNumber.isEmpty
@@ -47,20 +47,25 @@ struct LoginView: View {
                         Task{
                             do{
                                 let response = try await viewModel.callBackendWithRegisterEndpoint()
-                                
-                                // If the user is a registered User, only then login, otherwise send them to register
-                                if response.isNewUser == false{
-                                    await MainActor.run {
-                                        navigateToNextScreen = true
-                                    }
-                                }else{
-                                    // SHow an alert to this user that this is a first time user- so this user should Register first
-                                    navigateToSplashScreen = true
-                                }
+                        
+//                                print("response: ",response)
+//                                 If the user is a registered User, only then login, otherwise send them to register
+                                            if response.isNewUser == false{
+                                                await MainActor.run {
+                                                path.append(Route.loginOtp)
+                                                }
+                                                        }else{
+                                                // SHow an alert to this user that this is a first time user- so this user should Register first
+                        //                                 path = NavigationPath()
+                                            path.append(Route.register)
+                                                    }
+                        
                             }catch{
                                 print("Error is : \(error)")
                             }
                         }
+//                        path.append(Route.loginOtp)
+                        
                     }else{
                         hasClickedNextButton = true
                     }
@@ -73,4 +78,7 @@ struct LoginView: View {
         
     }
 }
+
+
+
 

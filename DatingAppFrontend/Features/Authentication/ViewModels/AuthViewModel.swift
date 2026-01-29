@@ -24,6 +24,10 @@ class AuthViewModel: ObservableObject {
     init() {
         Task {
              loadTokensFromStorage()
+            
+            // 2. ✅ LINK THE MANAGER (Add this line)
+            await NetworkManager.shared.setTokenProvider(self)
+            print("✅ NetworkManager linked to AuthViewModel")
         }
     }
     
@@ -110,7 +114,7 @@ class AuthViewModel: ObservableObject {
         self.refreshToken = tokenData.refreshToken
         self.profileId = tokenData.profileId
         self.userMobile = tokenData.mobile
-        self.isAuthenticated = true
+//        self.isAuthenticated = true
         print("Is authenticated = true ✅")
         
         // Save to UserDefaults
@@ -120,6 +124,11 @@ class AuthViewModel: ObservableObject {
         UserDefaults.standard.set(tokenData.mobile, forKey: userMobileKey)
         
         print("✅ Token saved")
+    }
+    
+    // MARK: - Finalize Login
+    func finalizeLogin() {
+        self.isAuthenticated = true
     }
     
     // MARK: - Logout

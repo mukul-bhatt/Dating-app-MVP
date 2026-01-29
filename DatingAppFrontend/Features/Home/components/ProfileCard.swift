@@ -10,14 +10,32 @@ struct ProfileCard: View {
     @State private var offset: CGSize = .zero
     @State private var lastOffset = CGSize.zero
     @State private var lastTime = Date()
+    let profile: DiscoverProfile
+    let onSwipe: (SwipeDirection) async ->Void
     
+    
+    @Binding var triggerSwipe: SwipeDirection?
+    
+    
+    let defaultImageUrl = "https://images.pexels.com/photos/3448813/pexels-photo-3448813.jpeg"
     var body: some View {
         
         ZStack(alignment: .bottomLeading) {
             // Profile Image
-            Image("NiaSharma")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
+//            Image("NiaSharma")
+//                .resizable()
+//                .aspectRatio(contentMode: .fill)
+//                .frame(width: 350, height: 400)
+//                .clipped()
+//                .cornerRadius(20)
+            
+            AsyncImage(url: URL(string: profile.profileImagesArray.count != 0 ? profile.profileImagesArray[0] : defaultImageUrl )) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Color.gray // Displays while loading
+                }
                 .frame(width: 350, height: 400)
                 .clipped()
                 .cornerRadius(20)
@@ -35,8 +53,8 @@ struct ProfileCard: View {
             HStack{
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("Nia Sharma, 26")
-                            .font(.title)
+                        Text("\(profile.fullName), \(profile.displayAge)")
+                            .font(.title2)
                             .foregroundColor(.white)
                     }
                     
@@ -46,8 +64,8 @@ struct ProfileCard: View {
                             .font(.title3)
                             .foregroundColor(.white)
                         
-                        Text("2km away")
-                            .font(.title3)
+                        Text("\(profile.distanceInKM)km away")
+                            .font(.callout)
                             .foregroundColor(.white)
                     }
                     
@@ -63,7 +81,7 @@ struct ProfileCard: View {
 
                         Text("89%")
                             .font(.callout)
-                            .foregroundColor(.black)
+                            .foregroundColor(.primary)
                     }
                     .padding(.horizontal, 18)
                     .padding(.vertical, 8)
@@ -82,8 +100,14 @@ struct ProfileCard: View {
         .cornerRadius(20)
         .offset(x: offset.width, y: offset.height)
         .rotationEffect(.degrees(Double(offset.width / -30)))
+        .onChange(of: triggerSwipe) { oldValue, newValue in
+                        if let direction = newValue {
+                            performSwipe(direction: direction)
+                            triggerSwipe = nil
+                        }
+                    }
         .gesture(
-                        DragGesture()
+                    DragGesture()
                             .onChanged { gesture in
                                 offset = gesture.translation
                                 
@@ -103,16 +127,27 @@ struct ProfileCard: View {
                                 let velocity = (offset.width - lastOffset.width) / CGFloat(timeDiff)
                                 
                                 // Thresholds
-                                let distanceThreshold: CGFloat = 400
+                                let distanceThreshold: CGFloat = 300
                                 let velocityThreshold: CGFloat = 500 // points per second
                                 
                                 // Check if swipe threshold is met (distance OR velocity)
                                 if abs(offset.width) > distanceThreshold || abs(velocity) > velocityThreshold {
+                                    // Determine direction
+                                    let direction: SwipeDirection = offset.width > 0 ? .right : .left
+                                    
                                     // Swipe successful - fly off screen
                                     offset = CGSize(
                                         width: offset.width > 0 ? 500 : -500,
                                         height: offset.height
                                     )
+                                    
+                                    // Notify parent after a brief delay for animation
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+//                                            onSwipe(direction)
+                                        Task {
+                                                await onSwipe(direction)
+                                            }
+                                        }
                                 } else {
                                     // Snap back to center
                                     offset = .zero
@@ -125,20 +160,37 @@ struct ProfileCard: View {
                     )
                     .animation(.spring(), value: offset)
     }
-}
-
-struct ContentView: View {
-    var body: some View {
-        ZStack {
-            Color.gray.opacity(0.1)
-                .ignoresSafeArea()
+    
+    private func performSwipe(direction: SwipeDirection) {
+            // Animate card flying away
+            offset = CGSize(
+                width: direction == .right ? 500 : -500,
+                height: offset.height
+            )
             
-            ProfileCard()
+            // Call the callback after brief delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+//                onSwipe(direction)
+                Task {
+                        await onSwipe(direction)
+                    }
+            }
         }
-    }
+    
 }
 
-#Preview {
-    ContentView()
-}
+//struct ContentView: View {
+//    var body: some View {
+//        ZStack {
+//            Color.gray.opacity(0.1)
+//                .ignoresSafeArea()
+//            
+//            ProfileCard()
+//        }
+//    }
+//}
+//
+//#Preview {
+//    ContentView()
+//}
 

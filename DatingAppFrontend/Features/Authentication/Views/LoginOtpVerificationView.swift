@@ -35,6 +35,7 @@ struct LoginOtpVerificationView: View {
                     // If user is not a new user, only then you navigate next i.e discove screen, otherwise take them to Register screen.
                     await MainActor.run {
                         authViewModel.saveTokenFromResponse(response)
+                        authViewModel.finalizeLogin()
                         path.append(Route.imageSelectionView) // Replace with discover view
                     }
                     

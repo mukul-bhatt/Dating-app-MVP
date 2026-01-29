@@ -10,18 +10,25 @@ enum APIEndpoint {
     case login
     case verifyOtp
     case fetchProfile
+    case getAllProfiles
+    case likeProfile
+    case dislikeProfile
     
     var path: String {
         switch self {
         case .login: return "/auth/login"
         case .verifyOtp: return "/auth/verify-otp"
         case .fetchProfile: return "/profile/me"
+        case .getAllProfiles: return "/profile/get-filtered-users"
+        case .likeProfile: return "/profile/add-like"
+        case .dislikeProfile: return "/profile/unlike"
         }
     }
     
     var method: String {
         switch self {
         case .fetchProfile: return "GET"
+        case .getAllProfiles: return "GET"
         default: return "POST"
         }
     }

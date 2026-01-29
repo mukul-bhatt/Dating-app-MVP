@@ -19,14 +19,16 @@ enum Route: Hashable {
 
 struct AuthFlowView: View {
 
-    @StateObject private var viewModel = ProfileViewModel()
-    @State private var path = NavigationPath()
+    @StateObject var viewModel = ProfileViewModel()
+    @State var path = NavigationPath()
 
     var body: some View {
 
         NavigationStack(path: $path) {
+            
             LandingScreenView(path: $path)
                 .navigationDestination(for: Route.self) { route in
+                    
                 switch route {
                 case .login:
                     LoginView(viewModel: viewModel, path: $path)

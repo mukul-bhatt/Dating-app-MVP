@@ -13,7 +13,11 @@ actor NetworkManager {
     private let baseURL = "https://datolitic-unprejudiced-lawson.ngrok-free.dev/api"
     
     // Dependency Injection: The Network Manager needs access to the Auth Store
-    var tokenProvider: AuthViewModel? 
+    var tokenProvider: AuthViewModel?
+    
+    func setTokenProvider(_ provider: AuthViewModel) {
+            self.tokenProvider = provider
+        }
 
     func request<T: Decodable>(endpoint: APIEndpoint, body: Encodable? = nil) async throws -> T {
         
@@ -37,6 +41,12 @@ actor NetworkManager {
         
         // 4. Perform Request
         let (data, response) = try await URLSession.shared.data(for: request)
+        
+        // ---------------- ADD THIS DEBUG BLOCK ----------------
+//        if let jsonString = String(data: data, encoding: .utf8) {
+//            print("🔴 ACTUAL SERVER RESPONSE: \(jsonString)")
+//        }
+        // ------------------------------------------------------
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
@@ -71,6 +81,12 @@ actor NetworkManager {
         }
         
         // 6. Decode Success
-        return try JSONDecoder().decode(T.self, from: data)
+//          return try JSONDecoder().decode(T.self, from: data)
+        
+        // Debug:-
+        let finalResponse =  try JSONDecoder().decode(T.self, from: data)
+        print("Api Response:", finalResponse)
+        
+        return finalResponse
     }
 }

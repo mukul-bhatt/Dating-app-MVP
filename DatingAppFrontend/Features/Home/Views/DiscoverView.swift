@@ -25,6 +25,9 @@ var foregroundPink = Color("ButtonColor")
 // MARK: - Main View
 struct DiscoverView: View {
     
+    @ObservedObject var viewModel = DiscoverViewModel()
+    @State var triggerSwipe: SwipeDirection? = nil
+    
     var body: some View {
         ZStack {
             // Background
@@ -37,10 +40,11 @@ struct DiscoverView: View {
                     
                     Spacer()
                     
-                    ProfileCard()
+                    CardStackView(viewModel: viewModel, triggerSwipe: $triggerSwipe)
+
                     Spacer()
                     
-                    ActionButtons()
+                    ActionButtons(viewModel: viewModel, triggerSwipe: $triggerSwipe)
                     Spacer()
             }
             .padding(.horizontal)
@@ -51,11 +55,32 @@ struct DiscoverView: View {
 
 // MARK: - Buttons Section
 struct ActionButtons: View {
+    
+    @ObservedObject var viewModel: DiscoverViewModel
+    @Binding var triggerSwipe: SwipeDirection?
+    
+    func handleSwipe(direction: SwipeDirection){
+        // Do swipe animation
+        triggerSwipe = direction
+        
+        // inform the backend about the like/Pass
+//        if direction == .left{
+//            // call api for pass
+//            viewModel.handleSwipeLeft(direction)
+//        }else{
+//            // call api for like
+//            viewModel.handleSwipeRight(direction)
+//            
+//        }
+        
+    }
+    
     var body: some View {
         HStack(spacing: 40) {
             // Decline/Pass Button
             Button(action: {
                 print("Pass")
+                handleSwipe(direction: .left)
             }) {
                 Image(systemName: "xmark")
                     .font(.system(size: 28, weight: .bold))
@@ -92,6 +117,7 @@ struct ActionButtons: View {
             // Like/Accept Button
             Button(action: {
                 print("Like")
+                handleSwipe(direction: .right)
             }) {
                 Image(systemName: "checkmark")
                     .font(.system(size: 28, weight: .bold))

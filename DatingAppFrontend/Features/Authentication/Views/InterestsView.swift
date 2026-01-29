@@ -12,10 +12,12 @@ struct InterestsView: View {
     
     // MARK: - State & Data
 //    @State private var selectedInterests: Set<String> = []
+    @EnvironmentObject var authViewModel: AuthViewModel
     @ObservedObject var viewModel: ProfileViewModel
     @Binding var path: NavigationPath
-    @State var navigateToSettingUpScreen = false
+//    @State var navigateToSettingUpScreen = false
     @State private var hasClickedDoneButton = false
+    @State private var isLoading = false
     
     // Mock Data based on the image
     let interestsList = [
@@ -90,10 +92,10 @@ struct InterestsView: View {
                 Button(action: {
                     print("Selected: \(viewModel.selectedInterestIds)")
                     hasClickedDoneButton = true
-//                    navigateToSettingUpScreen = true
                     viewModel.printDataSnapshot()
                     if viewModel.isFormValid && viewModel.isInterestSelectionValid{
                         // Call function to post all profile data to backend
+                        isLoading = true
                         Task{
                             do{
                                 try await viewModel.postFormDataToBackend()
@@ -102,16 +104,15 @@ struct InterestsView: View {
                                 // 2. ONLY navigate if the line above succeeded
                                             await MainActor.run {
                                                 print("✅ Profile data uploaded successfully")
-                                                navigateToSettingUpScreen = true
+//                                                navigateToSettingUpScreen = true
+                                                isLoading = false
+                                                authViewModel.finalizeLogin()
                                             }
                             }catch{
                                 print("❌ Upload failed: \(error)")
                             }
                             
                         }
-                        
-                        // and only after data is posted - we navigate to next screen
-                        navigateToSettingUpScreen = true
                     }else{
                         print("Else block excecuted, form is not valid")
                     }
@@ -127,6 +128,10 @@ struct InterestsView: View {
                 }
                 .padding(.horizontal, 25)
                 .padding(.bottom, 30)
+            }
+            
+            if isLoading{
+                SettingUpScreen()
             }
         }.onAppear{
             Task{

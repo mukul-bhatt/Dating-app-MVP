@@ -79,7 +79,7 @@ struct ImageSelectionView: View {
                                 // 3. Trigger navigation on SUCCESS
                                 await MainActor.run {
 //                                    navigateToProfileSetup = true
-                                      path = NavigationPath()
+//                                      path = NavigationPath()
                                       path.append(Route.profileSetup)
                                 }
                                 

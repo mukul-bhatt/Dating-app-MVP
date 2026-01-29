@@ -32,7 +32,7 @@ struct OTPVerificationView: View {
        }
     
     var body: some View {
-        NavigationStack {
+//        NavigationStack {
             ZStack {
                 // Background Layer
                 backgroundColor
@@ -105,7 +105,7 @@ struct OTPVerificationView: View {
             .onTapGesture {
                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
             }
-        }
+//        }
         
         
     }

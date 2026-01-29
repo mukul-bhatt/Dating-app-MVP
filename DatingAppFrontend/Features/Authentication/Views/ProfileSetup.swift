@@ -82,7 +82,7 @@ struct ProfileSetup: View {
                     
                     if viewModel.isFormValid {
 //                        navigateToInterestView = true
-                        path = NavigationPath()
+//                        path = NavigationPath()
                         path.append(Route.interests)
                         
                     }

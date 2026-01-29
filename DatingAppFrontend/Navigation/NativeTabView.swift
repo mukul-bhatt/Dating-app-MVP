@@ -17,12 +17,12 @@ struct NativeTabView: View {
                 .tabItem {
                     Image("HeartIcon_tabBar")
                 }
-            DiscoverView()
+            ProfileScreenView()
                 .tabItem {
                     Image("ChatIcon")
                 }
-
-            LandingScreenView(path: $path)
+            
+            FeedView()
                 .tabItem {
                     Image("NotificationIcon")
                 }

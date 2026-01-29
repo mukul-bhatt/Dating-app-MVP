@@ -14,16 +14,15 @@ struct DatingAppFrontendApp: App {
     
     var body: some Scene {
         WindowGroup {
-//            if authViewModel.isAuthenticated {
-//                NativeTabView()
-//                    .environmentObject(authViewModel)
-//                
-//            }else{
-//                AuthFlowView()
-//                    .environmentObject(authViewModel)
-//            }
-            NativeTabView()
-                .environmentObject(authViewModel)
+            if authViewModel.isAuthenticated {
+                NativeTabView()
+                    .environmentObject(authViewModel)
+                
+            }else{
+                AuthFlowView()
+                    .environmentObject(authViewModel)
+            }
+            
         }
     }
     
