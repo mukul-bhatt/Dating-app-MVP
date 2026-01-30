@@ -15,7 +15,7 @@ class AuthViewModel: ObservableObject {
     @Published var profileId: Int?
     @Published var userMobile: String?
     
-    private let baseUrl = "https://datolitic-unprejudiced-lawson.ngrok-free.dev/api"
+    private let baseUrl = "https://prettying-randell-ungrudgingly.ngrok-free.dev/api"
     private let tokenKey = "authToken"
     private let refreshTokenKey = "refreshToken"
     private let profileIdKey = "profileId"

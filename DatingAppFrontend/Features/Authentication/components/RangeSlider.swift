@@ -110,6 +110,7 @@ struct RangeSlider: View {
                         }
                 }
             
+
         }
         
     }

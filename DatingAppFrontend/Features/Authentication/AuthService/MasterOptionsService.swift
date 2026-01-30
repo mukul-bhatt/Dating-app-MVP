@@ -8,7 +8,7 @@
 import Foundation
 
 class MasterOptionsService{
-    let baseUrl = "https://datolitic-unprejudiced-lawson.ngrok-free.dev/api"
+    let baseUrl = "https://prettying-randell-ungrudgingly.ngrok-free.dev/api"
     
     func fetchOptions(endpoint: String, token: String) async throws -> [LookUpOption] {
         guard let url = URL(string: baseUrl+endpoint) else{

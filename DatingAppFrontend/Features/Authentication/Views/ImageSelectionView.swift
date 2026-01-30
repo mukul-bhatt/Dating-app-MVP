@@ -38,7 +38,6 @@ struct ImageSelectionView: View {
                     .frame(height: 5)
                 
                 
-                //            Spacer()
                 AddPictures(columns: columns, viewModel: viewModel)
                 
                 if showErrorMessage {

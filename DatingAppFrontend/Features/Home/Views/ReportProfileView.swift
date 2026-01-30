@@ -7,14 +7,18 @@
 
 
 import SwiftUI
+import PhotosUI
 
 struct ReportProfileView: View {
     @Environment(\.dismiss) var dismiss
-    
+    let profile: DiscoverProfile
+    @ObservedObject var viewModel: DiscoverViewModel
     // MARK: - State Variables
     @State private var selectedReason: String = "Hate speech or discrimination"
     @State private var additionalComments: String = ""
     @State private var isBlockingUser: Bool = false
+    @State private var selectedItems: [PhotosPickerItem] = []
+    @State private var selectedImages: [UIImage] = []
     
     // Hardcoded list of reasons for the dropdown
     let reportReasons = [
@@ -23,6 +27,11 @@ struct ReportProfileView: View {
         "Harassment or bullying",
         "Inappropriate content",
         "Scam or fraud"
+    ]
+    
+    let columns = [
+        GridItem(.flexible(), spacing: 16),
+        GridItem(.flexible(), spacing: 16)
     ]
     
     // MARK: - Colors (Matching your design)
@@ -63,7 +72,7 @@ struct ReportProfileView: View {
                 .padding()
                 
                 // 3. Scrollable Form Content
-                ScrollView {
+                ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 24) {
                         
                         // Description Text
@@ -134,9 +143,12 @@ struct ReportProfileView: View {
                                 .font(.headline)
                                 .fontWeight(.medium)
                             
-                            Button(action: {
-                                // Action to open image picker would go here
-                            }) {
+                            PhotosPicker(
+                                selection: $selectedItems,
+                                maxSelectionCount: 3,
+                                matching: .images,
+                                photoLibrary: .shared(),
+                            ) {
                                 VStack(spacing: 4) {
                                     Image(systemName: "plus")
                                         .font(.system(size: 24))
@@ -149,6 +161,29 @@ struct ReportProfileView: View {
                                     RoundedRectangle(cornerRadius: 8)
                                         .stroke(Color.primary, lineWidth: 1)
                                 )
+                            }.onChange(of: selectedItems) { oldItems, newItems in
+                                
+                                
+                                Task{
+                                    selectedItems.removeAll()
+                                    selectedImages.removeAll()
+                                    
+                                    for item in newItems{
+                                        if let data = try? await item.loadTransferable(type: Data.self) {
+                                                        // 4. Convert Data to UIImage and add to our display array
+                                                        if let uiImage = UIImage(data: data) {
+                                                            selectedImages.append(uiImage)
+                                                        }
+                                                    }
+                                    }
+                                }
+                            }
+                            
+                            // The Selected Images
+                            LazyVGrid(columns: columns){
+                                ForEach(0..<selectedImages.count, id: \.self) { index in
+                                    ImageCell(image: selectedImages[index])
+                                }
                             }
                         }
                         
@@ -166,16 +201,26 @@ struct ReportProfileView: View {
                                 Text("Block this user")
                                     .font(.body)
                                     .fontWeight(.medium)
-                                    .foregroundColor(.black)
+                                    .foregroundColor(.primary)
                             }
                         }
                         .padding(.top, 10)
                         
-                        Spacer(minLength: 40)
+//                        Spacer(minLength: 40)
                         
                         // --- Submit Button ---
                         Button(action: {
-                            print("Report Submitted")
+//                            print("Report Submitted")
+                            Task{
+                              await viewModel.reportProfile(
+                                    ToUserId: profile.id,
+                                    reason: selectedReason,
+                                    comments: additionalComments,
+                                    status: isBlockingUser ? "Blocked" : "Reported",
+                                    images: selectedImages
+                                )
+                            }
+                           
                         }) {
                             Text("Submit")
                                 .font(.headline)
@@ -196,6 +241,6 @@ struct ReportProfileView: View {
     }
 }
 
-#Preview {
-    ReportProfileView()
-}
+//#Preview {
+//    ReportProfileView()
+//}

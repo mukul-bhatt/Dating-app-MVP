@@ -10,7 +10,7 @@ import SwiftUI
 enum DiscoverRoute: Hashable {
     case Feed(profileId: Int)
     case Profile(profileId: Int)
-    case ReportProfile
+    case ReportProfile(profileId: Int)
     
 }
 
@@ -38,8 +38,10 @@ struct DiscoverFlowView: View {
                                 ProfileScreenView(path: $path, profile: profile)
                             }
                     
-                case .ReportProfile:
-                    ReportProfileView()
+                case .ReportProfile(let id):
+                    if let profile = viewModel.users.first(where: { $0.id == id }) {
+                        ReportProfileView(profile: profile, viewModel: viewModel)
+                    }
                 }
             }
         }

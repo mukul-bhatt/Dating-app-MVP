@@ -7,10 +7,7 @@
 
 import SwiftUI
 
-enum SwipeDirection {
-    case left
-    case right
-}
+
 
 
 struct CardStackView: View {

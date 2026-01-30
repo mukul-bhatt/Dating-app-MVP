@@ -13,12 +13,12 @@ struct MatchView: View {
     let matchedUserName: String = "Nia"
     
     // MARK: - Colors
-    let brandPink = Color(red: 223/255, green: 70/255, blue: 118/255)
+    let brandPink = AppTheme.foregroundPink
     
     var body: some View {
         ZStack {
             // 1. Background
-            brandPink.ignoresSafeArea()
+            MatchBackground()
             
             // 2. Decorative Floating Hearts
             // Use an overlay or background ZStack for the hand-drawn hearts
@@ -36,11 +36,11 @@ struct MatchView: View {
                 // 4. Overlapping Profile Images
                 HStack(spacing: -30) {
                     // Your Profile
-                    CircularProfileImage(imageName: "user_me", size: 160)
+                    CircularProfileImage(imageName: "Image8", size: 160)
                         .offset(y: -20)
                     
                     // Matched User Profile
-                    CircularProfileImage(imageName: "user_nia", size: 160)
+                    CircularProfileImage(imageName: "Image4", size: 160)
                         .offset(y: 40)
                 }
                 .padding(.vertical, 20)
@@ -60,7 +60,7 @@ struct MatchView: View {
                     }) {
                         Text("Say Hi!")
                             .font(.headline)
-                            .foregroundColor(brandPink)
+                            .foregroundColor(.primary)
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color.white)
@@ -72,10 +72,10 @@ struct MatchView: View {
                     }) {
                         Text("Keep Swiping")
                             .font(.headline)
-                            .foregroundColor(.black)
+                            .foregroundColor(.primary)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.white.opacity(0.8))
+                            .background(Color.white.opacity(0.5))
                             .clipShape(Capsule())
                     }
                 }
@@ -108,29 +108,92 @@ struct BackgroundHeartsView: View {
     var body: some View {
         ZStack {
             // Randomly placed hearts matching the design
-            Image(systemName: "heart")
+            Image("IconPark")
                 .resizable()
                 .frame(width: 60, height: 60)
                 .foregroundColor(.white.opacity(0.4))
                 .rotationEffect(.degrees(-15))
                 .position(x: 80, y: 150)
             
-            Image(systemName: "heart")
+            Image("IconPark")
                 .resizable()
                 .frame(width: 80, height: 80)
                 .foregroundColor(.white.opacity(0.4))
                 .rotationEffect(.degrees(20))
-                .position(x: 350, y: 120)
+                .position(x: 350, y: 150)
             
-            Image(systemName: "heart")
+            Image("IconPark")
+                .resizable()
+                .frame(width: 70, height: 70)
+                .foregroundColor(.white.opacity(0.4))
+                .rotationEffect(.degrees(20))
+                .position(x: 250, y: 280)
+            
+            Image("IconPark")
+                .resizable()
+                .frame(width: 50, height: 50)
+                .foregroundColor(.white.opacity(0.4))
+                .rotationEffect(.degrees(20))
+                .position(x: 350, y: 300)
+            
+            Image("IconPark")
+                .resizable()
+                .frame(width: 80, height: 80)
+                .foregroundColor(.white.opacity(0.4))
+                .rotationEffect(.degrees(20))
+                .position(x: 200, y: 120)
+            
+            Image("IconPark")
+                .resizable()
+                .frame(width: 50, height: 50)
+                .foregroundColor(.white.opacity(0.4))
+                .position(x: 45, y: 280)
+            
+            Image("IconPark")
                 .resizable()
                 .frame(width: 50, height: 50)
                 .foregroundColor(.white.opacity(0.4))
                 .position(x: 40, y: 400)
             
+            Image("IconPark")
+                .resizable()
+                .frame(width: 50, height: 50)
+                .foregroundColor(.white.opacity(0.4))
+                .position(x: 40, y: 500)
+            
+            Image("IconPark")
+                .resizable()
+                .frame(width: 50, height: 50)
+                .foregroundColor(.white.opacity(0.4))
+                .position(x: 350, y: 500)
+            
             // Add more as per the screenshot...
         }
         .ignoresSafeArea()
+    }
+}
+
+
+struct MatchBackground: View {
+    // Colors from your CSS hex codes
+    let startColor = Color("StartColor")
+    let endColor = Color("EndColor")
+    
+    
+    var body: some View {
+        
+        GeometryReader { geometry in
+            let largestDimension = max(geometry.size.width, geometry.size.height)
+            
+            RadialGradient(
+                gradient: Gradient(colors: [startColor, endColor]),
+                center: .center,
+                startRadius: 0,
+                endRadius: largestDimension / 2
+            )
+        }
+        .ignoresSafeArea()
+
     }
 }
 

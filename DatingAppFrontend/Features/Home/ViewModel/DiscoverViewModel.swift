@@ -7,6 +7,12 @@
 
 import Foundation
 import Combine
+import PhotosUI
+
+enum SwipeDirection {
+    case left
+    case right
+}
 
 class DiscoverViewModel: ObservableObject {
     @Published var users: [DiscoverProfile] = []
@@ -45,21 +51,36 @@ class DiscoverViewModel: ObservableObject {
                 )
                 print("Like Success: \(String(describing: response.success))")
             } else {
-                let body = sendPass(toUserId: String(profile.id)) // Ensure this struct accepts Int if profile.id is Int
-                let response: passResponse = try await NetworkManager.shared.request(
-                    endpoint: .dislikeProfile,
+                let body = sendLike(toUserId: profile.id, action: "Reject")
+                let response: likeResponse = try await NetworkManager.shared.request(
+                    endpoint: .likeProfile,
                     body: body
                 )
                 print("Pass Success: \(response.message)")
             }
         } catch {
-            // 3. SILENT FAILURE HANDLER:
-            // If it fails, just log it. Do NOT throw, or you break the UI flow.
-            // Optionally: You could save this to a "retry queue" for later.
             print("Failed to sync swipe to backend: \(error.localizedDescription)")
         }
     }
     
+    
+    func reportProfile(ToUserId: Int, reason: String, comments: String, status: String, images: [UIImage]) async{
+        
+        let parameters = ["ToUserId": String(ToUserId),
+                          "reason": reason,
+                          "comments": comments,
+                          "status": String(status)
+        ]
+        
+        // call upload function of Network Manager
+        do{
+            let response: ReportProfileResponse = try await NetworkManager.shared.upload(endpoint: .reportProfile, parameters: parameters, images: images)
+            print(response)
+        }catch{
+            print("Error occured in reporting profile: \(error)")
+        }
+        
+    }
     
 } // End
 

@@ -75,7 +75,7 @@ struct ProfileScreenView: View {
                     ActionButtonsProfile()
                     
                     // Footer
-                    Footer(path: $path)
+                    Footer(profile:profile ,path: $path)
                         
 //                    Spacer()
                 }
@@ -243,12 +243,13 @@ struct HeaderView: View {
 
 struct Footer: View {
     
+    let profile: DiscoverProfile
     @Binding var path: NavigationPath
     
     var body: some View {
         // 8. Footer
         Button(action: {
-            path.append(DiscoverRoute.ReportProfile)
+            path.append(DiscoverRoute.ReportProfile(profileId: profile.id))
         }) {
             Text("Report profile")
                 .font(.subheadline)

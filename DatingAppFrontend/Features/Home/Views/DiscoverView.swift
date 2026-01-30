@@ -12,16 +12,6 @@ import SwiftUI
 var backgroundPink = Color("BrandColor")
 var foregroundPink = Color("ButtonColor")
 
-// MARK: - Models
-//struct Profile: Identifiable {
-//    let id = UUID()
-//    let name: String
-//    let age: Int
-//    let distance: String
-//    let matchPercentage: Int
-//    let imageName: String
-//}
-
 // MARK: - Main View
 struct DiscoverView: View {
     @Binding var path: NavigationPath
@@ -31,7 +21,7 @@ struct DiscoverView: View {
     var body: some View {
         ZStack {
             // Background
-            Color(backgroundPink)
+            backgroundPink
                 .ignoresSafeArea()
             
             VStack {
@@ -92,28 +82,28 @@ struct ActionButtons: View {
             }
             
             // Super Like/Message Button
-            Button(action: {
-                print("Super Like")
-            }) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 120)
-                        .fill(.white)
-                        .frame(width: 80, height: 80)
-                    
-                    Image("EnvelopeIcon")
-                        .renderingMode(.template)
-                        .font(.system(size: 26))
-                        .foregroundColor(foregroundPink)
-                        .clipShape(Rectangle())
-                    
-                    Image(systemName: "heart.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(foregroundPink)
-                        .offset(x: 0, y: 0)
-                }
-                .shadow(color: Color(red: 0.91, green: 0.33, blue: 0.55).opacity(0.4), radius: 8, x: 0, y: 4)
-            }
-            
+//            Button(action: {
+//                print("Super Like")
+//            }) {
+//                ZStack {
+//                    RoundedRectangle(cornerRadius: 120)
+//                        .fill(.white)
+//                        .frame(width: 80, height: 80)
+//                    
+//                    Image("EnvelopeIcon")
+//                        .renderingMode(.template)
+//                        .font(.system(size: 26))
+//                        .foregroundColor(foregroundPink)
+//                        .clipShape(Rectangle())
+//                    
+//                    Image(systemName: "heart.fill")
+//                        .font(.system(size: 18))
+//                        .foregroundColor(foregroundPink)
+//                        .offset(x: 0, y: 0)
+//                }
+//                .shadow(color: Color(red: 0.91, green: 0.33, blue: 0.55).opacity(0.4), radius: 8, x: 0, y: 4)
+//            }
+//            
             // Like/Accept Button
             Button(action: {
                 print("Like")
@@ -171,41 +161,3 @@ struct DiscoverView_Previews: PreviewProvider {
     }
 }
 
-
-
-
-// Card Stack
-//                ZStack {
-//                    ForEach(profiles.indices.reversed(), id: \.self) { index in
-//                        if index < 3 {
-//                            ProfileCard(profile: profiles[index])
-//                                .offset(y: CGFloat(index * 10))
-//                                .scaleEffect(1 - CGFloat(index) * 0.05)
-//                                .opacity(index == 0 ? 1 : 0.5)
-//                                .offset(x: index == 0 ? dragOffset.width : 0)
-//                                .rotationEffect(.degrees(index == 0 ? rotation : 0))
-//                                .gesture(
-//                                    index == 0 ? DragGesture()
-//                                        .onChanged { value in
-//                                            dragOffset = value.translation
-//                                            rotation = Double(value.translation.width / 20)
-//                                        }
-//                                        .onEnded { value in
-//                                            let threshold: CGFloat = 100
-//                                            if abs(value.translation.width) > threshold {
-//                                                // Swipe action
-////                                                removeCard()
-//                                            } else {
-//                                                // Reset
-//                                                withAnimation(.spring()) {
-//                                                    dragOffset = .zero
-//                                                    rotation = 0
-//                                                }
-//                                            }
-//                                        } : nil
-//                                )
-//                        }
-//                    }
-//                }
-//                .frame(height: 500)
-//                .padding(.horizontal, 20)

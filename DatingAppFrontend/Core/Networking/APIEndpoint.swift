@@ -13,6 +13,7 @@ enum APIEndpoint {
     case getAllProfiles
     case likeProfile
     case dislikeProfile
+    case reportProfile
     
     var path: String {
         switch self {
@@ -22,6 +23,7 @@ enum APIEndpoint {
         case .getAllProfiles: return "/profile/get-filtered-users"
         case .likeProfile: return "/profile/add-like"
         case .dislikeProfile: return "/profile/unlike"
+        case .reportProfile: return "/profile/report-profile"
         }
     }
     
