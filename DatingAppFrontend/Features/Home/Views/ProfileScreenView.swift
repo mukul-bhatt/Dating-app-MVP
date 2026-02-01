@@ -8,22 +8,6 @@
 import SwiftUI
 import WrappingHStack
 
-//let imageUrls = [
-//    "https://www.verblio.com/wp-content/uploads/2018/08/ariane_stock_photo.jpg",
-//    "https://st2.depositphotos.com/4431055/11871/i/450/depositphotos_118714868-stock-photo-beautiful-girl-holding-hair.jpg",
-//    "https://c8.alamy.com/comp/D9G036/portrait-of-a-beautiful-woman-smiling-D9G036.jpg"
-//]
-
-//let passions: [PassionItem] = [
-//    PassionItem(name: "Cooking", icon: "frying.pan.fill", color: Color(red: 1.0, green: 0.95, blue: 0.8)),
-//    PassionItem(name: "Painting", icon: "paintpalette.fill", color: Color(red: 0.9, green: 1.0, blue: 0.9)),
-//    PassionItem(name: "Singing", icon: "mic.fill", color: Color(red: 0.9, green: 0.95, blue: 1.0)),
-//    PassionItem(name: "Gym", icon: "dumbbell.fill", color: Color(red: 1.0, green: 0.85, blue: 0.85)),
-//    PassionItem(name: "Travel", icon: "airplane", color: Color(red: 0.85, green: 1.0, blue: 0.9)),
-//    PassionItem(name: "Vlogs", icon: "video.fill", color: Color(red: 0.95, green: 0.85, blue: 1.0)),
-//    PassionItem(name: "Literature", icon: "book.fill", color: Color(red: 0.95, green: 0.9, blue: 1.0))
-//]
-
 let colors = [
      Color(red: 1.0, green: 0.95, blue: 0.8),
      Color(red: 0.9, green: 1.0, blue: 0.9),
@@ -33,13 +17,6 @@ let colors = [
      Color(red: 0.95, green: 0.85, blue: 1.0),
      Color(red: 0.95, green: 0.9, blue: 1.0)
 ]
-
-//struct PassionItem: Identifiable {
-//    let id = UUID()
-//    let name: String
-//    let icon: String
-//    let color: Color
-//}
 
 struct ProfileScreenView: View {
     
@@ -296,28 +273,6 @@ struct Passions: View{
 
 
 
-
-//struct PassionChip: View {
-//    let item: PassionItem
-//    
-//    var body: some View {
-//        HStack(spacing: 6) {
-//            Image(systemName: item.icon)
-//                .font(.caption)
-//           
-//        }
-//        
-//    }
-//}
-
-
-
-
-
-
-
-
-
 struct ImageView: View {
     
     var position: Int
@@ -332,12 +287,7 @@ struct ImageView: View {
             Color.gray.opacity(0.3)
         }
         .frame(height: 400)
-//        .clipShape(RoundedRectangle(cornerRadius: 15))
-//        .clipped()
     }
 }
 
 
-//#Preview {
-//    ProfileScreenView()
-//}

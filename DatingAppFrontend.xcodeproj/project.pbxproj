@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		AE34FDB22F2F2AE500CCE079 /* WrappingHStack in Frameworks */ = {isa = PBXBuildFile; productRef = AE34FDB12F2F2AE500CCE079 /* WrappingHStack */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		AEC9D18E2EFEB6DE000921CC /* DatingAppFrontend.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DatingAppFrontend.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AE34FDB22F2F2AE500CCE079 /* WrappingHStack in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = DatingAppFrontend;
 			packageProductDependencies = (
+				AE34FDB12F2F2AE500CCE079 /* WrappingHStack */,
 			);
 			productName = DatingAppFrontend;
 			productReference = AEC9D18E2EFEB6DE000921CC /* DatingAppFrontend.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = AEC9D1852EFEB6DE000921CC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				AE34FDB02F2F2AE500CCE079 /* XCRemoteSwiftPackageReference "WrappingHStack" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AEC9D18F2EFEB6DE000921CC /* Products */;
 			projectDirPath = "";
@@ -328,6 +337,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AE34FDB02F2F2AE500CCE079 /* XCRemoteSwiftPackageReference "WrappingHStack" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dkk/WrappingHStack";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.2.11;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AE34FDB12F2F2AE500CCE079 /* WrappingHStack */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AE34FDB02F2F2AE500CCE079 /* XCRemoteSwiftPackageReference "WrappingHStack" */;
+			productName = WrappingHStack;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AEC9D1862EFEB6DE000921CC /* Project object */;
 }
