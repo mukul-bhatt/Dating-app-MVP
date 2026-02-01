@@ -23,6 +23,7 @@ struct DatingAppFrontendApp: App {
                     .environmentObject(authViewModel)
             }
             
+
         }
     }
     

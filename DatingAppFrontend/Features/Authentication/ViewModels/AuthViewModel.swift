@@ -114,7 +114,6 @@ class AuthViewModel: ObservableObject {
         self.refreshToken = tokenData.refreshToken
         self.profileId = tokenData.profileId
         self.userMobile = tokenData.mobile
-//        self.isAuthenticated = true
         print("Is authenticated = true ✅")
         
         // Save to UserDefaults

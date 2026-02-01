@@ -11,6 +11,7 @@ import SwiftUI
 
 struct FeedView: View {
     @Binding var path: NavigationPath
+    @State private var showFilterModal = false
     let profile: DiscoverProfile
     
     var body: some View {
@@ -26,6 +27,8 @@ struct FeedView: View {
             
             // 3. Content Layer
             VStack {
+                
+//                FeedHeader(showFilterModal: $showFilterModal)
                 Spacer()
                 
                 // Profile Details Area
@@ -53,6 +56,7 @@ struct FeedView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
                         print("Filter tapped")
+                        showFilterModal = true
                     }) {
                         Image("FilterIcon") // Your custom icon asset
                             .resizable()
@@ -62,6 +66,13 @@ struct FeedView: View {
                     .buttonStyle(.plain)
                 }
             }
+            .sheet(isPresented: $showFilterModal) {
+                FilterModal()
+                    .presentationDetents([.medium])
+                    .presentationDragIndicator(.visible)
+                    .presentationBackground(.white)
+            }
+        
             // 5. Make the Bar Transparent & Back Button White
 //            .toolbarBackground(.hidden, for: .navigationBar)
 //            .toolbarColorScheme(.dark, for: .navigationBar)
@@ -207,6 +218,7 @@ struct BackgroundImageView: View {
 
 
 struct FeedHeader : View {
+    @Binding var showFilterModal: Bool
     var body: some View {
         HStack {
             Image("FilterIcon")
@@ -227,11 +239,18 @@ struct FeedHeader : View {
                     .scaledToFit()
                     .frame(width: 20, height: 20)
                     .foregroundColor(.red)
+                    .onTapGesture{
+                        showFilterModal = true
+                    }
             
         }
     }
 }
 
-//#Preview{
-//    FeedView()
-//}
+#Preview {
+    // Uses the static mock we just created
+    FeedView(
+        path: .constant(NavigationPath()),
+        profile: .mock
+    )
+}

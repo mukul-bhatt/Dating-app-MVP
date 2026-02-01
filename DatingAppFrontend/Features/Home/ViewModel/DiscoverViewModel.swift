@@ -32,7 +32,7 @@ class DiscoverViewModel: ObservableObject {
             }
     }
     
-    func handleSwipe(direction: SwipeDirection, profile: DiscoverProfile) async { // Removed 'throws' to handle errors internally
+    func handleSwipe(direction: SwipeDirection, profile: DiscoverProfile) async {
         print("Swiped \(direction) on profile: \(profile.fullName) (ID: \(profile.id))")
         
         // 1. OPTIMISTIC UPDATE:

@@ -71,8 +71,6 @@ struct LandingScreenView: View {
                             .lineSpacing(4)
                         
                         // Create Account Button
-                        
-//                        NavigationLink(destination: RegisterWithUsView(viewModel: viewModel)) {
                         NavigationLink(value: Route.register) {
                             Text("Create Account")
                                 .font(.headline)
@@ -91,12 +89,6 @@ struct LandingScreenView: View {
                             Text("Already have an account?")
                                 .foregroundColor(.white.opacity(0.8))
                             
-//                            NavigationLink(destination: LoginView(viewModel: viewModel)){
-//                                Text("LOGIN")
-//                                    .fontWeight(.bold)
-//                                    .foregroundColor(.white)
-//                                    .underline()
-//                            }
                             NavigationLink(value: Route.login){
                                 Text("LOGIN")
                                     .fontWeight(.bold)
