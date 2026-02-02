@@ -49,7 +49,7 @@ struct ProfileScreenView: View {
                     Passions(passions: profile.interestsArray)
                     
                     // Action Buttons
-                    ActionButtonsProfile()
+                    ActionButtonsProfile(id: profile.id)
                     
                     // Footer
                     Footer(profile:profile ,path: $path)

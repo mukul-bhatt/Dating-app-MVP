@@ -51,7 +51,7 @@ class DiscoverViewModel: ObservableObject {
                 )
                 print("Like Success: \(String(describing: response.success))")
             } else {
-                let body = sendLike(toUserId: profile.id, action: "Reject")
+                let body = sendLike(toUserId: profile.id, action: "Dislike")
                 let response: likeResponse = try await NetworkManager.shared.request(
                     endpoint: .likeProfile,
                     body: body
@@ -82,5 +82,15 @@ class DiscoverViewModel: ObservableObject {
         
     }
     
+    func dislikeProfile(id: Int) async {
+        do{
+            let response: dislikeResponse = try await NetworkManager.shared.request(endpoint: .dislikeProfile, body: sendDislike(toUserId: String(id)))
+            print("Unlike Success: \(String(describing: response.message))")
+        }catch{
+            print("Error in sending dislike Response: \(error)")
+        }
+    }
+    
+//    function messageFunction 
 } // End
 

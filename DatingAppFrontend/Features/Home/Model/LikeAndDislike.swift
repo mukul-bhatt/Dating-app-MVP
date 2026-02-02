@@ -26,12 +26,12 @@ struct likeResponse: Codable{
        let match: Bool
 }
 
-struct sendPass: Codable{
+struct sendDislike: Codable{
 //    let toUserId: Int?
     let toUserId: String
 }
 
-struct passResponse: Codable{
+struct dislikeResponse: Codable{
 //    let isLikedByMe: Bool?
 //    let message: String?
     let isLikedByMe: Bool

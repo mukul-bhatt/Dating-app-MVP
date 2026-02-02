@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct FilterModal: View {
+    
+    @Binding var showFilterModal: Bool
+    
     @State var isBlockingUser: Bool = false
     @State private var selection = 0
     @State var selectedGender: String = ""
@@ -15,8 +18,7 @@ struct FilterModal: View {
     @State private var maxAge: Double = 65
     @State private var minDistance: Double = 1
     @State private var maxDistance: Double = 65
-//    @State private var ageRange: ClosedRange<Double> = 18...60
-//    @State private var distanceRange: ClosedRange<Double> = 1...65
+
     var body: some View {
         ZStack{
             Color.clear
@@ -43,13 +45,23 @@ struct FilterModal: View {
                     RangeSlider(minValue: $minDistance, maxValue: $maxDistance, range: 1...65, title: "Distance Range")
                 }
                 
-                Text("Apply")
-                    .font(.headline)
-                    .foregroundStyle(Color.white)
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 70)
-                    .background(AppTheme.foregroundPink)
-                    .clipShape(RoundedRectangle(cornerRadius: 5))
+                
+                
+                Button {
+                    showFilterModal = false
+                    // update the preferences
+                } label: {
+                    Text("Apply")
+                        .font(.headline)
+                        .foregroundStyle(Color.white)
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 70)
+                        .background(AppTheme.foregroundPink)
+                        .clipShape(RoundedRectangle(cornerRadius: 5))
+                }
+
+                
+                
                 
             }
             .padding(.horizontal)
@@ -82,6 +94,6 @@ struct RadioButton: View {
 }
 
 #Preview {
-    FilterModal()
+    FilterModal(showFilterModal: .constant(true))
 }
 

@@ -10,6 +10,7 @@ import SwiftUI
 //let interests = ["Vegan", "Loves pet", "Model"]
 
 struct FeedView: View {
+   
     @Binding var path: NavigationPath
     @State private var showFilterModal = false
     let profile: DiscoverProfile
@@ -38,7 +39,7 @@ struct FeedView: View {
                 InterestView(interests: profile.interestsArray)
                 
                 // Action Buttons
-                ActionButtonsProfile()
+                ActionButtonsProfile(id: profile.id)
 
             }.padding()
             
@@ -67,7 +68,7 @@ struct FeedView: View {
                 }
             }
             .sheet(isPresented: $showFilterModal) {
-                FilterModal()
+                FilterModal(showFilterModal: $showFilterModal)
                     .presentationDetents([.medium])
                     .presentationDragIndicator(.visible)
                     .presentationBackground(.white)

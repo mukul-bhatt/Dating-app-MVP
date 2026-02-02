@@ -11,6 +11,7 @@ enum DiscoverRoute: Hashable {
     case Feed(profileId: Int)
     case Profile(profileId: Int)
     case ReportProfile(profileId: Int)
+    case Submit
     
 }
 
@@ -40,8 +41,11 @@ struct DiscoverFlowView: View {
                     
                 case .ReportProfile(let id):
                     if let profile = viewModel.users.first(where: { $0.id == id }) {
-                        ReportProfileView(profile: profile, viewModel: viewModel)
+                        ReportProfileView(path: $path, profile: profile, viewModel: viewModel)
                     }
+                    
+                case .Submit:
+                    SettingUpScreen(title: "Report Submitted", subTitle: "Thanks for reporting. Our Team will review this profile shortly")
                 }
             }
         }

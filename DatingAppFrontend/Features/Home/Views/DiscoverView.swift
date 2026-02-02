@@ -17,7 +17,7 @@ struct DiscoverView: View {
     @Binding var path: NavigationPath
     @ObservedObject var viewModel: DiscoverViewModel
     @State var triggerSwipe: SwipeDirection? = nil
-    
+    @State private var showFilterModal = false
     var body: some View {
         ZStack {
             // Background
@@ -26,7 +26,7 @@ struct DiscoverView: View {
             
             VStack {
 
-                    DiscoverHeader()
+                    DiscoverHeader(showFilterModal: $showFilterModal)
                     
                     Spacer()
                     
@@ -39,6 +39,12 @@ struct DiscoverView: View {
             }
             .padding(.horizontal)
             .padding(.top, 20)
+        }
+        .sheet(isPresented: $showFilterModal) {
+            FilterModal(showFilterModal: $showFilterModal)
+                .presentationDetents([.medium])
+                .presentationBackground(.white)
+                .presentationDragIndicator(.visible)
         }
     }
 }
@@ -122,6 +128,7 @@ struct ActionButtons: View {
 }
 // MARK: - HEADER
 struct DiscoverHeader: View {
+    @Binding var showFilterModal: Bool
     var body: some View {
         HStack {
             Spacer()
@@ -129,7 +136,9 @@ struct DiscoverHeader: View {
                 .font(.system(size: 34, weight: .bold))
                 .foregroundColor(foregroundPink)
             Spacer()
-            Button(action: {}) {
+            Button(action: {
+                showFilterModal.toggle()
+            }) {
                 Image(systemName: "slider.horizontal.3")
                     .font(.title3)
                     .foregroundColor(.primary)

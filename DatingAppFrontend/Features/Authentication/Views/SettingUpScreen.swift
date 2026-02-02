@@ -9,6 +9,9 @@
 import SwiftUI
 
 struct SettingUpScreen: View {
+    var title = "Setting up your Profile"
+    var subTitle = "This may take a while, Please wait."
+    
     var body: some View {
         ZStack {
             // 1. Background Color
@@ -26,14 +29,15 @@ struct SettingUpScreen: View {
                 
                 // 3. The Text Labels
                 VStack(spacing: 12) {
-                    Text("Setting up your Profile")
+                    Text(title)
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(Color(red: 0.2, green: 0.05, blue: 0.1))
                     
-                    Text("This may take a while, Please wait")
+                    Text(subTitle)
                         .font(.subheadline)
                         .foregroundColor(.black.opacity(0.7))
+                        .multilineTextAlignment(.center)
                 }
             }
         }
@@ -94,6 +98,6 @@ struct FillingHeartView: View {
     }
 }
 
-#Preview {
-    SettingUpScreen()
-}
+//#Preview {
+//    SettingUpScreen()
+//}

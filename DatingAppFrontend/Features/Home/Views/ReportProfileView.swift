@@ -11,6 +11,7 @@ import PhotosUI
 
 struct ReportProfileView: View {
     @Environment(\.dismiss) var dismiss
+    @Binding var path: NavigationPath
     let profile: DiscoverProfile
     @ObservedObject var viewModel: DiscoverViewModel
     // MARK: - State Variables
@@ -22,11 +23,7 @@ struct ReportProfileView: View {
     
     // Hardcoded list of reasons for the dropdown
     let reportReasons = [
-        "Hate speech or discrimination",
-        "Fake profile",
-        "Harassment or bullying",
-        "Inappropriate content",
-        "Scam or fraud"
+       "Hate speech or discrimination", "Harassment or bullying", "Threats or violent behavior", "Sexual harassment", "Others"
     ]
     
     let columns = [
@@ -219,6 +216,11 @@ struct ReportProfileView: View {
                                     status: isBlockingUser ? "Blocked" : "Reported",
                                     images: selectedImages
                                 )
+                                
+                                await MainActor.run {
+                                    // navigate to report is submitted screen
+                                    path.append(DiscoverRoute.Submit)
+                                }
                             }
                            
                         }) {
@@ -242,5 +244,6 @@ struct ReportProfileView: View {
 }
 
 //#Preview {
-//    ReportProfileView()
+//    ReportProfileView(path: .constant(NavigationPath()),profile: DiscoverProfile.mock, viewModel: DiscoverViewModel())
 //}
+
