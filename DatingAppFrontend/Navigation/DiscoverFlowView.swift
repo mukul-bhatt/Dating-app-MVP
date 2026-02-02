@@ -31,12 +31,12 @@ struct DiscoverFlowView: View {
                 case .Feed(let id):
                     // Find the profile in the array using the ID
                             if let profile = viewModel.users.first(where: { $0.id == id }) {
-                                FeedView(path: $path, profile: profile)
+                                FeedView(path: $path, profile: profile, viewModel:viewModel)
                             }
 
                 case .Profile(let id):
                     if let profile = viewModel.users.first(where: { $0.id == id }) {
-                                ProfileScreenView(path: $path, profile: profile)
+                        ProfileScreenView(path: $path, profile: profile, viewModel: viewModel)
                             }
                     
                 case .ReportProfile(let id):

@@ -22,6 +22,7 @@ struct ProfileScreenView: View {
     
     @Binding var path: NavigationPath
     let profile: DiscoverProfile
+    @ObservedObject var viewModel: DiscoverViewModel
     
     var body: some View {
         ZStack{
@@ -49,7 +50,11 @@ struct ProfileScreenView: View {
                     Passions(passions: profile.interestsArray)
                     
                     // Action Buttons
-                    ActionButtonsProfile(id: profile.id)
+                    ActionButtonsProfile(onDislike: {
+                       await viewModel.dislikeProfile(id: profile.id)
+                    }, onMessage: {
+                        print("Closure for message")
+                    })
                     
                     // Footer
                     Footer(profile:profile ,path: $path)
@@ -291,3 +296,11 @@ struct ImageView: View {
 }
 
 
+
+#Preview {
+    ProfileScreenView(
+        path: .constant(NavigationPath()),
+        profile: .mock,
+        viewModel: DiscoverViewModel()
+    )
+}

@@ -11,10 +11,12 @@ import SwiftUI
 
 struct FeedView: View {
    
-    @Binding var path: NavigationPath
-    @State private var showFilterModal = false
-    let profile: DiscoverProfile
     
+    @Binding var path: NavigationPath
+    let profile: DiscoverProfile
+    @ObservedObject var viewModel: DiscoverViewModel
+    
+    @State private var showFilterModal = false
     var body: some View {
         ZStack {
             
@@ -39,7 +41,9 @@ struct FeedView: View {
                 InterestView(interests: profile.interestsArray)
                 
                 // Action Buttons
-                ActionButtonsProfile(id: profile.id)
+                ActionButtonsProfile(onDislike:{
+                   await viewModel.dislikeProfile(id:profile.id)
+                })
 
             }.padding()
             
@@ -252,6 +256,8 @@ struct FeedHeader : View {
     // Uses the static mock we just created
     FeedView(
         path: .constant(NavigationPath()),
-        profile: .mock
+        profile: .mock,
+        viewModel: DiscoverViewModel()
+           
     )
 }

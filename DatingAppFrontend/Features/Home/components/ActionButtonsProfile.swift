@@ -8,22 +8,25 @@
 import SwiftUI
 
 struct ActionButtonsProfile: View {
-    @StateObject var viewModel = DiscoverViewModel()
     
-    let id: Int
+//    let id: Int
+    var onDislike: (() async -> Void)? = nil
+    var onMessage: (() async -> Void)? = nil
+    
+    
     var body: some View {
         // 7. Action Buttons
         HStack(spacing: 30) {
             Spacer()
             
             // Pass Button
-            CircularButton(icon: "HeartSlashIcon", color: AppTheme.foregroundPink, id: id, actionToPerform: viewModel.dislikeProfile)
+            CircularButton(icon: "HeartSlashIcon", color: AppTheme.foregroundPink, actionToPerform: onDislike)
             
             // Super Like / Message
 //            CircularButton(icon: "EnvelopeIcon", color: foregroundPink, size: 80)
             
 //             Chat Button
-            CircularButton(icon: "MessageIcon", color: AppTheme.foregroundPink, id: id)
+            CircularButton(icon: "MessageIcon", color: AppTheme.foregroundPink, actionToPerform: onMessage)
             
             Spacer()
         }
@@ -35,13 +38,13 @@ struct CircularButton: View {
     var icon: String
     var color: Color
     var size: CGFloat = 60
-    let id: Int
-    var actionToPerform: ((Int) async -> Void)? = nil
+//    let id: Int
+    var actionToPerform: (() async -> Void)? = nil
     var body: some View {
         Button {
             guard let actionToPerform else { return }
             Task {
-                await actionToPerform(id)
+                await actionToPerform()
             }
         } label: {
             ZStack {
@@ -55,12 +58,12 @@ struct CircularButton: View {
                     .font(.system(size: size * 0.4))
                     .foregroundColor(color)
                 
-                if icon == "EnvelopeIcon" {
-                    Image(systemName: "heart.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(foregroundPink)
-                        .offset(x: 0, y: 0)
-                }
+//                if icon == "EnvelopeIcon" {
+//                    Image(systemName: "heart.fill")
+//                        .font(.system(size: 18))
+//                        .foregroundColor(AppTheme.foregroundPink)
+//                        .offset(x: 0, y: 0)
+//                }
             }
             .frame(width: size, height: size)
             
