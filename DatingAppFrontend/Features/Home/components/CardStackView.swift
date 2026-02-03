@@ -51,12 +51,15 @@ struct CardStackView: View {
         }
         .navigationBarHidden(true)
         .onAppear {
-            Task{
-                do{
-                   try await viewModel.getUserProfiles()
-                    print("Profiles fetched successfully")
-                }catch{
-                    print("Error fetching profiles: \(error)")
+            Task {
+                
+                if !viewModel.hasFetchedInitialData {
+                    do {
+                        try await viewModel.getUserProfiles()
+                        print("Profiles fetched successfully")
+                    } catch {
+                        print("Error fetching profiles: \(error)")
+                    }
                 }
             }
         }

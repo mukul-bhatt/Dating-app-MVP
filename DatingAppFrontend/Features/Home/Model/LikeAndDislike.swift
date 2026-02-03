@@ -8,8 +8,6 @@
 import Foundation
 
 struct sendLike: Codable{
-//    let toUserId: Int?
-//    let action: String?
     let toUserId: Int
     let action: String
 }
