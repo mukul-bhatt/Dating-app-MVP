@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import PhotosUI
+import CoreLocation
 
 enum SwipeDirection {
     case left
@@ -30,10 +31,66 @@ class DiscoverViewModel: ObservableObject {
     @Published  var minDistance: Double = 1
     @Published  var maxDistance: Double = 65
     
+    // Location state
+    @Published var latitude: Double?
+    @Published var longitude: Double?
+    @Published var cityName: String?
+    private var cancellables = Set<AnyCancellable>()
+    
     var hasFetchedInitialData = false
+    
+    init() {
+        setupLocationTracking()
+    }
+    
+    private func setupLocationTracking() {
+        LocationManager.shared.$location
+            .compactMap { $0 }
+            .sink { [weak self] location in
+                self?.latitude = location.coordinate.latitude
+                self?.longitude = location.coordinate.longitude
+                self?.syncLocationWithBackend()
+            }
+            .store(in: &cancellables)
+        
+        LocationManager.shared.$cityName
+            .sink { [weak self] city in
+                self?.cityName = city
+                self?.syncLocationWithBackend()
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func syncLocationWithBackend() {
+        guard let lat = latitude, let long = longitude, let city = cityName else { return }
+        
+        // Prevent multiple identical syncs in a short period if needed
+        // For now, we'll just call it
+        
+        Task {
+            let request = UpdateLocationRequest(
+                Location: city,
+                Latitude: "\(lat)",
+                Longitude: "\(long)"
+            )
+            
+            do {
+                let response: UpdateLocationResponse = try await NetworkManager.shared.request(
+                    endpoint: .updateLocation,
+                    body: request
+                )
+                print("✅ Backend Location Sync Success: \(response.message)")
+            } catch {
+                print("❌ Backend Location Sync Failed: \(error.localizedDescription)")
+            }
+        }
+    }
     
     func getUserProfiles() async throws {
             isLoading = true
+            
+            // Request location before fetching profiles
+            LocationManager.shared.requestLocation()
         
         do{
             let response: GetProfileResponse = try await NetworkManager.shared.request(endpoint: .getAllProfiles)
