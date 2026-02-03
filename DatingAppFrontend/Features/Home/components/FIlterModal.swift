@@ -9,16 +9,10 @@ import SwiftUI
 
 struct FilterModal: View {
     
+    @ObservedObject var viewModel: DiscoverViewModel
+    @Binding var path: NavigationPath
     @Binding var showFilterModal: Bool
     
-    @State var isBlockingUser: Bool = false
-    @State private var selection = 0
-    @State var selectedGender: String = ""
-    @State private var minAge: Double = 18
-    @State private var maxAge: Double = 65
-    @State private var minDistance: Double = 1
-    @State private var maxDistance: Double = 65
-
     var body: some View {
         ZStack{
             Color.clear
@@ -32,17 +26,17 @@ struct FilterModal: View {
                     Text("Gender")
                         .fontWeight(.semibold)
                     
-                    HStack{
-                        RadioButton(isSelected: $selectedGender, label: "Men")
-                        RadioButton(isSelected: $selectedGender, label: "Women")
-                        RadioButton(isSelected: $selectedGender, label: "Trans")
-                        RadioButton(isSelected: $selectedGender, label: "Non Binary")
-                        RadioButton(isSelected: $selectedGender, label: "All")
+                    VStack(alignment: .leading){
+                        RadioButton(isSelected: $viewModel.selectedGender, label: "Male")
+                        RadioButton(isSelected:  $viewModel.selectedGender, label: "Female")
+                        RadioButton(isSelected:  $viewModel.selectedGender, label: "Transgender")
+                        RadioButton(isSelected:  $viewModel.selectedGender, label: "Prefer not to say")
+                        RadioButton(isSelected:  $viewModel.selectedGender, label: "All")
                     }
                     
-                    RangeSlider(minValue: $minAge, maxValue: $maxAge, range: 18...65, title: "Preferred age Range")
+                    RangeSlider(minValue: $viewModel.minAge, maxValue: $viewModel.maxAge, range: 18...65, title: "Preferred age Range")
                     
-                    RangeSlider(minValue: $minDistance, maxValue: $maxDistance, range: 1...65, title: "Distance Range")
+                    RangeSlider(minValue: $viewModel.minDistance, maxValue: $viewModel.maxDistance, range: 1...65, title: "Distance Range")
                 }
                 
                 
@@ -50,6 +44,19 @@ struct FilterModal: View {
                 Button {
                     showFilterModal = false
                     // update the preferences
+                    Task{
+                        await viewModel.updatePreferences()
+                        
+                        // THe above api return the new data for profiles - use it to update data for Discover Profiles
+                        
+                        
+                        
+                        
+                        // Navigate to Discover Screen
+//                        path.removeAll()
+                        path = NavigationPath()
+                    }
+                    
                 } label: {
                     Text("Apply")
                         .font(.headline)
@@ -78,7 +85,7 @@ struct RadioButton: View {
         HStack{
             Circle()
                 .stroke(Color.primary, lineWidth: 2)
-                .frame(maxWidth: 10, maxHeight: 10)
+                .frame(width: 10, height: 10)
                 .overlay(
                     Circle().fill(isSelected == label ? .pink: .gray.opacity(0.5))
                 )
@@ -94,6 +101,9 @@ struct RadioButton: View {
 }
 
 #Preview {
-    FilterModal(showFilterModal: .constant(true))
+    FilterModal(
+        viewModel: DiscoverViewModel(),
+        path: .constant(NavigationPath()),
+        showFilterModal: .constant(true)
+    )
 }
-

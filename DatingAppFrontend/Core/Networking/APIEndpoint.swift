@@ -14,6 +14,7 @@ enum APIEndpoint {
     case likeProfile
     case dislikeProfile
     case reportProfile
+    case search(query: String)
     
     var path: String {
         switch self {
@@ -24,13 +25,13 @@ enum APIEndpoint {
         case .likeProfile: return "/profile/add-like"
         case .dislikeProfile: return "/profile/unlike"
         case .reportProfile: return "/profile/report-profile"
+        case .search(let query): return "/profile/search\(query)"
         }
     }
     
     var method: String {
         switch self {
-        case .fetchProfile: return "GET"
-        case .getAllProfiles: return "GET"
+        case .fetchProfile, .getAllProfiles, .search: return "GET"
         default: return "POST"
         }
     }

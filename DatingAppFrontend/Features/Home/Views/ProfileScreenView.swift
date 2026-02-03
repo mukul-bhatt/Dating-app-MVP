@@ -198,13 +198,15 @@ struct HeaderView: View {
                 
             } else {
                 
-                HStack(spacing: 8) {
-                    
-                    ForEach(imageUrls.prefix(3).indices, id: \.self) { index in
-                        Capsule().fill(position == index ? AppTheme.foregroundPink : .white).frame(height: 4)
+                if imageUrls.count > 1{
+                    HStack(spacing: 8) {
+                        
+                        ForEach(imageUrls.prefix(3).indices, id: \.self) { index in
+                            Capsule().fill(position == index ? AppTheme.foregroundPink : .white).frame(height: 4)
+                        }
                     }
+                    .padding(.top, 10)
                 }
-                .padding(.top, 10)
                 
                 TabView(selection: $position){
                     
@@ -296,11 +298,3 @@ struct ImageView: View {
 }
 
 
-
-#Preview {
-    ProfileScreenView(
-        path: .constant(NavigationPath()),
-        profile: .mock,
-        viewModel: DiscoverViewModel()
-    )
-}

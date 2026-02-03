@@ -21,6 +21,15 @@ class DiscoverViewModel: ObservableObject {
     @Published var currentIndex = 0
 
     
+    // FIlter Modal States
+    @Published var isBlockingUser: Bool = false
+    @Published var selection = 0
+    @Published var selectedGender: String = ""
+    @Published  var minAge: Double = 18
+    @Published  var maxAge: Double = 65
+    @Published  var minDistance: Double = 1
+    @Published  var maxDistance: Double = 65
+    
     func getUserProfiles() async throws {
             isLoading = true
         
@@ -91,6 +100,25 @@ class DiscoverViewModel: ObservableObject {
         }
     }
     
-//    function messageFunction 
+//    function messageFunction
+    
+    func updatePreferences() async{
+        
+        let query = "?gender=\(selectedGender)&preferredAge=\(Int(minAge))-\(Int(maxAge))&PreferredRange=\(Int(minDistance))-\(Int(maxDistance))"
+        do{
+            let response: PreferenceUpdateResponse = try await NetworkManager.shared.request(endpoint: .search(query: query))
+            
+            if let newProfileData = response.data{
+                users = newProfileData
+                
+                print("Preference update successful \(response.message)")
+            }else{
+                print("No new data to update")
+            }
+        }catch{
+            print("Error in updating preferences: \(error)")
+        }
+    }
+    
 } // End
 

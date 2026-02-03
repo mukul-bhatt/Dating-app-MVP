@@ -72,8 +72,8 @@ struct FeedView: View {
                 }
             }
             .sheet(isPresented: $showFilterModal) {
-                FilterModal(showFilterModal: $showFilterModal)
-                    .presentationDetents([.medium])
+                FilterModal(viewModel: viewModel, path: $path, showFilterModal: $showFilterModal)
+                    .presentationDetents([.medium, .large])
                     .presentationDragIndicator(.visible)
                     .presentationBackground(.white)
             }

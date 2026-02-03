@@ -38,7 +38,6 @@ struct CircularButton: View {
     var icon: String
     var color: Color
     var size: CGFloat = 60
-//    let id: Int
     var actionToPerform: (() async -> Void)? = nil
     var body: some View {
         Button {

@@ -85,13 +85,13 @@ actor NetworkManager {
         }
         
         // 6. Decode Success
-          return try JSONDecoder().decode(T.self, from: data)
+//          return try JSONDecoder().decode(T.self, from: data)
         
         // Debug:-
-//        let finalResponse =  try JSONDecoder().decode(T.self, from: data)
-//        print("Api Response:", finalResponse)
-//        
-//        return finalResponse
+        let finalResponse =  try JSONDecoder().decode(T.self, from: data)
+        print("Api Response:", finalResponse)
+        
+        return finalResponse
     }
     
     func upload<T: Decodable>(endpoint: APIEndpoint, parameters: [String: String], images: [UIImage]) async throws -> T {
@@ -159,56 +159,7 @@ actor NetworkManager {
         return finalresponse
     }
     
-    
-//    func uploadReport(toUserId: String, reason: String, comments: String, status: String, images: [UIImage]) async throws -> Bool {
-//        guard let url = URL(string: baseURL + "/report") else { throw URLError(.badURL) }
-//        
-//        
-//        var request = URLRequest(url: url)
-//        request.httpMethod = "POST"
-//        
-//        let boundary = "Boundary-\(UUID().uuidString)"
-//        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-//        
-//        // Auth Token logic reused from your current manager
-//        if let token = await tokenProvider?.authToken {
-//            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-//        }
-//        
-//        var body = Data()
-//        
-//        // 1. Text Fields (Matching your sample keys)
-//        let textFields = [
-//            "ToUserId": toUserId,
-//            "Reason": reason,
-//            "Comments": comments,
-//            "Status": status
-//        ]
-//        
-//        for (key, value) in textFields {
-//            body.append(Data("--\(boundary)\r\n".utf8))
-//            body.append(Data("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".utf8))
-//            body.append(Data("\(value)\r\n".utf8))
-//        }
-//        
-//        // 2. File Field (Matching your key: FileProof)
-//        for (index, image) in images.enumerated() {
-//            if let imageData = image.jpegData(compressionQuality: 0.8) {
-//                body.append(Data("--\(boundary)\r\n".utf8))
-//                // Use FileProof as the key from your sample
-//                body.append(Data("Content-Disposition: form-data; name=\"FileProof\"; filename=\"proof_\(index).jpg\"\r\n".utf8))
-//                body.append(Data("Content-Type: image/jpeg\r\n\r\n".utf8))
-//                body.append(imageData)
-//                body.append(Data("\r\n".utf8))
-//            }
-//        }
-//        
-//        body.append(Data("--\(boundary)--\r\n".utf8))
-//        request.httpBody = body
-//        
-//        let (_, response) = try await URLSession.shared.data(for: request)
-//        return (response as? HTTPURLResponse)?.statusCode == 200
-//    }
+
 }
 
 

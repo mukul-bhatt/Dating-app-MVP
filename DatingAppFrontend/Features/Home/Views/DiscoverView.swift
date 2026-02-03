@@ -41,8 +41,8 @@ struct DiscoverView: View {
             .padding(.top, 20)
         }
         .sheet(isPresented: $showFilterModal) {
-            FilterModal(showFilterModal: $showFilterModal)
-                .presentationDetents([.medium])
+            FilterModal(viewModel: viewModel, path: $path, showFilterModal: $showFilterModal)
+                .presentationDetents([.medium, .large])
                 .presentationBackground(.white)
                 .presentationDragIndicator(.visible)
         }
