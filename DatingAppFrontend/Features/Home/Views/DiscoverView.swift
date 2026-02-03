@@ -42,7 +42,7 @@ struct DiscoverView: View {
         }
         .sheet(isPresented: $showFilterModal) {
             FilterModal(viewModel: viewModel, path: $path, showFilterModal: $showFilterModal)
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.fraction(0.8)])
                 .presentationBackground(.white)
                 .presentationDragIndicator(.visible)
         }

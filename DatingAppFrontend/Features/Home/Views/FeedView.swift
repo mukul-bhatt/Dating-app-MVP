@@ -73,7 +73,7 @@ struct FeedView: View {
             }
             .sheet(isPresented: $showFilterModal) {
                 FilterModal(viewModel: viewModel, path: $path, showFilterModal: $showFilterModal)
-                    .presentationDetents([.medium, .large])
+                    .presentationDetents([.fraction(0.8)])
                     .presentationDragIndicator(.visible)
                     .presentationBackground(.white)
             }
@@ -252,12 +252,12 @@ struct FeedHeader : View {
     }
 }
 
-#Preview {
-    // Uses the static mock we just created
-    FeedView(
-        path: .constant(NavigationPath()),
-        profile: .mock,
-        viewModel: DiscoverViewModel()
-           
-    )
-}
+//#Preview {
+//    // Uses the static mock we just created
+//    FeedView(
+//        path: .constant(NavigationPath()),
+//        profile: .mock,
+//        viewModel: DiscoverViewModel()
+//           
+//    )
+//}
