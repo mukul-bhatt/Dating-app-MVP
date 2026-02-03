@@ -107,6 +107,7 @@ struct ReportProfileView: View {
                                 )
                             }
                         }
+                        .disabled(viewModel.isReporting)
                         
                         // --- Additional Comments ---
                         VStack(alignment: .leading, spacing: 8) {
@@ -133,6 +134,7 @@ struct ReportProfileView: View {
                                     .stroke(Color.primary, lineWidth: 1)
                             )
                         }
+                        .disabled(viewModel.isReporting)
                         
                         // --- Attach Proofs ---
                         VStack(alignment: .leading, spacing: 8) {
@@ -158,7 +160,9 @@ struct ReportProfileView: View {
                                     RoundedRectangle(cornerRadius: 8)
                                         .stroke(Color.primary, lineWidth: 1)
                                 )
-                            }.onChange(of: selectedItems) { oldItems, newItems in
+                            }
+                            .disabled(viewModel.isReporting)
+                            .onChange(of: selectedItems) { oldItems, newItems in
                                 
                                 
                                 Task{
@@ -202,14 +206,14 @@ struct ReportProfileView: View {
                             }
                         }
                         .padding(.top, 10)
+                        .disabled(viewModel.isReporting)
                         
 //                        Spacer(minLength: 40)
                         
                         // --- Submit Button ---
                         Button(action: {
-//                            print("Report Submitted")
-                            Task{
-                              await viewModel.reportProfile(
+                            Task {
+                                let success = await viewModel.reportProfile(
                                     ToUserId: profile.id,
                                     reason: selectedReason,
                                     comments: additionalComments,
@@ -217,21 +221,32 @@ struct ReportProfileView: View {
                                     images: selectedImages
                                 )
                                 
-                                await MainActor.run {
-                                    // navigate to report is submitted screen
-                                    path.append(DiscoverRoute.Submit)
+                                if success {
+                                    await MainActor.run {
+                                        // navigate to report is submitted screen only on success
+                                        path.append(DiscoverRoute.Submit)
+                                    }
                                 }
                             }
                            
                         }) {
-                            Text("Submit")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(brandPink)
-                                .clipShape(Capsule())
+                            ZStack {
+                                Text("Submit")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .opacity(viewModel.isReporting ? 0 : 1)
+                                
+                                if viewModel.isReporting {
+                                    ProgressView()
+                                        .tint(.white)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(brandPink)
+                            .clipShape(Capsule())
                         }
+                        .disabled(viewModel.isReporting)
                         .padding(.bottom, 20)
                         
                     }

@@ -20,6 +20,7 @@ class DiscoverViewModel: ObservableObject {
     @Published var isLoading = false // Good practice for UI feedback
     @Published var errorMessage: String?
     @Published var currentIndex = 0
+    @Published var isReporting = false
 
     
     // FIlter Modal States
@@ -143,7 +144,18 @@ class DiscoverViewModel: ObservableObject {
     }
     
     
-    func reportProfile(ToUserId: Int, reason: String, comments: String, status: String, images: [UIImage]) async{
+    func reportProfile(ToUserId: Int, reason: String, comments: String, status: String, images: [UIImage]) async -> Bool {
+        await MainActor.run {
+            isReporting = true
+        }
+        
+        defer {
+            Task {
+                await MainActor.run {
+                    isReporting = false
+                }
+            }
+        }
         
         let parameters = ["ToUserId": String(ToUserId),
                           "reason": reason,
@@ -151,14 +163,14 @@ class DiscoverViewModel: ObservableObject {
                           "status": String(status)
         ]
         
-        // call upload function of Network Manager
-        do{
+        do {
             let response: ReportProfileResponse = try await NetworkManager.shared.upload(endpoint: .reportProfile, parameters: parameters, images: images)
-            print(response)
-        }catch{
-            print("Error occured in reporting profile: \(error)")
+            print("✅ Report Success: \(response)")
+            return true
+        } catch {
+            print("❌ Error occured in reporting profile: \(error)")
+            return false
         }
-        
     }
     
     func dislikeProfile(id: Int) async {

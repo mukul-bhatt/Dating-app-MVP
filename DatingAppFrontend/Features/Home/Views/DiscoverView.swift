@@ -42,7 +42,7 @@ struct DiscoverView: View {
         }
         .sheet(isPresented: $showFilterModal) {
             FilterModal(viewModel: viewModel, path: $path, showFilterModal: $showFilterModal)
-                .presentationDetents([.fraction(0.8)])
+                .presentationDetents([.fraction(0.6)])
                 .presentationBackground(.white)
                 .presentationDragIndicator(.visible)
         }
@@ -169,4 +169,3 @@ struct DiscoverView_Previews: PreviewProvider {
         NativeTabView()
     }
 }
-
