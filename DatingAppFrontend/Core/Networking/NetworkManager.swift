@@ -153,10 +153,10 @@ actor NetworkManager {
             throw AuthNetworkError.unauthorized
         }
         
-//        return try JSONDecoder().decode(T.self, from: data)
-        let finalresponse = try JSONDecoder().decode(T.self, from: data)
-        print("APi response from network manager:",response)
-        return finalresponse
+        return try JSONDecoder().decode(T.self, from: data)
+//        let finalresponse = try JSONDecoder().decode(T.self, from: data)
+//        print("APi response from network manager:",response)
+//        return finalresponse
     }
     
 

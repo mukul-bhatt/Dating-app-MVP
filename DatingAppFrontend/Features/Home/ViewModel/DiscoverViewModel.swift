@@ -88,15 +88,20 @@ class DiscoverViewModel: ObservableObject {
     }
     
     func getUserProfiles() async throws {
+
             isLoading = true
             
             // Request location before fetching profiles
             LocationManager.shared.requestLocation()
+
+        isLoading = true
+
         
         do{
             let response: GetProfileResponse = try await NetworkManager.shared.request(endpoint: .getAllProfiles)
+            
             print("response for user profiles:", response)
-        
+            print("Profiles fetched successfully")
             await MainActor.run{
                 self.users = response.data
                 self.isLoading = false

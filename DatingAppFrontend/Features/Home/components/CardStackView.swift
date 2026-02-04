@@ -56,7 +56,7 @@ struct CardStackView: View {
                 if !viewModel.hasFetchedInitialData {
                     do {
                         try await viewModel.getUserProfiles()
-                        print("Profiles fetched successfully")
+                        
                     } catch {
                         print("Error fetching profiles: \(error)")
                     }
