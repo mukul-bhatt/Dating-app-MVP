@@ -22,6 +22,7 @@ struct ProfileScreenView: View {
     
     @Binding var path: NavigationPath
     let profile: DiscoverProfile
+    @ObservedObject var viewModel: DiscoverViewModel
     
     var body: some View {
         ZStack{
@@ -49,7 +50,11 @@ struct ProfileScreenView: View {
                     Passions(passions: profile.interestsArray)
                     
                     // Action Buttons
-                    ActionButtonsProfile()
+                    ActionButtonsProfile(onDislike: {
+                       await viewModel.dislikeProfile(id: profile.id)
+                    }, onMessage: {
+                        print("Closure for message")
+                    })
                     
                     // Footer
                     Footer(profile:profile ,path: $path)
@@ -193,13 +198,15 @@ struct HeaderView: View {
                 
             } else {
                 
-                HStack(spacing: 8) {
-                    
-                    ForEach(imageUrls.prefix(3).indices, id: \.self) { index in
-                        Capsule().fill(position == index ? AppTheme.foregroundPink : .white).frame(height: 4)
+                if imageUrls.count > 1{
+                    HStack(spacing: 8) {
+                        
+                        ForEach(imageUrls.prefix(3).indices, id: \.self) { index in
+                            Capsule().fill(position == index ? AppTheme.foregroundPink : .white).frame(height: 4)
+                        }
                     }
+                    .padding(.top, 10)
                 }
-                .padding(.top, 10)
                 
                 TabView(selection: $position){
                     

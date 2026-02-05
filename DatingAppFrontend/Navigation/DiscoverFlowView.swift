@@ -11,6 +11,7 @@ enum DiscoverRoute: Hashable {
     case Feed(profileId: Int)
     case Profile(profileId: Int)
     case ReportProfile(profileId: Int)
+    case Submit
     
 }
 
@@ -30,18 +31,21 @@ struct DiscoverFlowView: View {
                 case .Feed(let id):
                     // Find the profile in the array using the ID
                             if let profile = viewModel.users.first(where: { $0.id == id }) {
-                                FeedView(path: $path, profile: profile)
+                                FeedView(path: $path, profile: profile, viewModel:viewModel)
                             }
 
                 case .Profile(let id):
                     if let profile = viewModel.users.first(where: { $0.id == id }) {
-                                ProfileScreenView(path: $path, profile: profile)
+                        ProfileScreenView(path: $path, profile: profile, viewModel: viewModel)
                             }
                     
                 case .ReportProfile(let id):
                     if let profile = viewModel.users.first(where: { $0.id == id }) {
-                        ReportProfileView(profile: profile, viewModel: viewModel)
+                        ReportProfileView(path: $path, profile: profile, viewModel: viewModel)
                     }
+                    
+                case .Submit:
+                    SettingUpScreen(title: "Report Submitted", subTitle: "Thanks for reporting. Our Team will review this profile shortly")
                 }
             }
         }

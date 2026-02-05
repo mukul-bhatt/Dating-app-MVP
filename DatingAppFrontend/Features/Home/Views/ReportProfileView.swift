@@ -11,6 +11,7 @@ import PhotosUI
 
 struct ReportProfileView: View {
     @Environment(\.dismiss) var dismiss
+    @Binding var path: NavigationPath
     let profile: DiscoverProfile
     @ObservedObject var viewModel: DiscoverViewModel
     // MARK: - State Variables
@@ -22,11 +23,7 @@ struct ReportProfileView: View {
     
     // Hardcoded list of reasons for the dropdown
     let reportReasons = [
-        "Hate speech or discrimination",
-        "Fake profile",
-        "Harassment or bullying",
-        "Inappropriate content",
-        "Scam or fraud"
+       "Hate speech or discrimination", "Harassment or bullying", "Threats or violent behavior", "Sexual harassment", "Others"
     ]
     
     let columns = [
@@ -110,6 +107,7 @@ struct ReportProfileView: View {
                                 )
                             }
                         }
+                        .disabled(viewModel.isReporting)
                         
                         // --- Additional Comments ---
                         VStack(alignment: .leading, spacing: 8) {
@@ -136,6 +134,7 @@ struct ReportProfileView: View {
                                     .stroke(Color.primary, lineWidth: 1)
                             )
                         }
+                        .disabled(viewModel.isReporting)
                         
                         // --- Attach Proofs ---
                         VStack(alignment: .leading, spacing: 8) {
@@ -161,7 +160,9 @@ struct ReportProfileView: View {
                                     RoundedRectangle(cornerRadius: 8)
                                         .stroke(Color.primary, lineWidth: 1)
                                 )
-                            }.onChange(of: selectedItems) { oldItems, newItems in
+                            }
+                            .disabled(viewModel.isReporting)
+                            .onChange(of: selectedItems) { oldItems, newItems in
                                 
                                 
                                 Task{
@@ -205,31 +206,47 @@ struct ReportProfileView: View {
                             }
                         }
                         .padding(.top, 10)
+                        .disabled(viewModel.isReporting)
                         
 //                        Spacer(minLength: 40)
                         
                         // --- Submit Button ---
                         Button(action: {
-//                            print("Report Submitted")
-                            Task{
-                              await viewModel.reportProfile(
+                            Task {
+                                let success = await viewModel.reportProfile(
                                     ToUserId: profile.id,
                                     reason: selectedReason,
                                     comments: additionalComments,
                                     status: isBlockingUser ? "Blocked" : "Reported",
                                     images: selectedImages
                                 )
+                                
+                                if success {
+                                    await MainActor.run {
+                                        // navigate to report is submitted screen only on success
+                                        path.append(DiscoverRoute.Submit)
+                                    }
+                                }
                             }
                            
                         }) {
-                            Text("Submit")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(brandPink)
-                                .clipShape(Capsule())
+                            ZStack {
+                                Text("Submit")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .opacity(viewModel.isReporting ? 0 : 1)
+                                
+                                if viewModel.isReporting {
+                                    ProgressView()
+                                        .tint(.white)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(brandPink)
+                            .clipShape(Capsule())
                         }
+                        .disabled(viewModel.isReporting)
                         .padding(.bottom, 20)
                         
                     }
@@ -242,5 +259,6 @@ struct ReportProfileView: View {
 }
 
 //#Preview {
-//    ReportProfileView()
+//    ReportProfileView(path: .constant(NavigationPath()),profile: DiscoverProfile.mock, viewModel: DiscoverViewModel())
 //}
+

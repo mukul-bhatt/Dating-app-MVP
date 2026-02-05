@@ -10,10 +10,13 @@ import SwiftUI
 //let interests = ["Vegan", "Loves pet", "Model"]
 
 struct FeedView: View {
-    @Binding var path: NavigationPath
-    @State private var showFilterModal = false
-    let profile: DiscoverProfile
+   
     
+    @Binding var path: NavigationPath
+    let profile: DiscoverProfile
+    @ObservedObject var viewModel: DiscoverViewModel
+    
+    @State private var showFilterModal = false
     var body: some View {
         ZStack {
             
@@ -38,7 +41,9 @@ struct FeedView: View {
                 InterestView(interests: profile.interestsArray)
                 
                 // Action Buttons
-                ActionButtonsProfile()
+                ActionButtonsProfile(onDislike:{
+                   await viewModel.dislikeProfile(id:profile.id)
+                })
 
             }.padding()
             
@@ -67,8 +72,8 @@ struct FeedView: View {
                 }
             }
             .sheet(isPresented: $showFilterModal) {
-                FilterModal()
-                    .presentationDetents([.medium])
+                FilterModal(viewModel: viewModel, path: $path, showFilterModal: $showFilterModal)
+                    .presentationDetents([.fraction(0.8)])
                     .presentationDragIndicator(.visible)
                     .presentationBackground(.white)
             }
@@ -247,10 +252,12 @@ struct FeedHeader : View {
     }
 }
 
-#Preview {
-    // Uses the static mock we just created
-    FeedView(
-        path: .constant(NavigationPath()),
-        profile: .mock
-    )
-}
+//#Preview {
+//    // Uses the static mock we just created
+//    FeedView(
+//        path: .constant(NavigationPath()),
+//        profile: .mock,
+//        viewModel: DiscoverViewModel()
+//           
+//    )
+//}
