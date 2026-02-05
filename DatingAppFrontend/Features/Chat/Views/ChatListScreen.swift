@@ -1,45 +1,54 @@
+//
+//  ChatListScreen.swift
+//  DatingAppFrontend
+//
+//  Created by Mukul Bhatt on 04/02/26.
+//
+
+
 import SwiftUI
 
 struct ChatListScreen: View {
     var body: some View {
-        VStack(spacing: 0) {
-            // MARK: - Header
-            headerView
+        ZStack{
             
-            ScrollView {
+            AppTheme.backgroundPink.ignoresSafeArea()
+            
+            VStack{
+                // MARK: - Header
+                headerView
+                // Spacer()
                 VStack(alignment: .leading, spacing: 20) {
                     Text("Online")
                         .font(.headline)
                         .padding(.horizontal)
                         .padding(.top)
-
+                    
                     // MARK: - Online Stories Row
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 15) {
-                            ForEach(0..<3) { _ in
+                            ForEach(0..<7) { _ in
                                 OnlineCircleView()
                             }
                         }
                         .padding(.horizontal)
                     }
                     
-                    // MARK: - Chat List
-                    VStack(spacing: 0) {
-                        ForEach(0..<5) { _ in
-                            ChatRowView()
-                            Divider()
-                                .padding(.leading, 80)
-                                .padding(.trailing)
+                    ScrollView {
+                        // MARK: - Chat List
+                        VStack(spacing: 0) {
+                            ForEach(0..<9) { _ in
+                                ChatRowView()
+                                Divider()
+                                    .padding(.leading, 80)
+                                    .padding(.trailing)
+                            }
                         }
                     }
+                    
                 }
             }
-            .background(Color(red: 1.0, green: 0.9, blue: 0.94)) // Light pink background
-            
-            // MARK: - Custom Bottom Tab Bar
-            customTabBar
         }
-        .edgesIgnoringSafeArea(.bottom)
     }
     
     var headerView: some View {
@@ -52,22 +61,9 @@ struct ChatListScreen: View {
         }
         .padding()
         .foregroundColor(.white)
-        .background(Color(red: 0.85, green: 0.25, blue: 0.45))
+        .background(AppTheme.foregroundPink)
     }
     
-    var customTabBar: some View {
-        HStack(spacing: 0) {
-            TabBarIcon(icon: "heart.fill", isSelected: false)
-            TabBarIcon(icon: "bubble.left.fill", isSelected: true) // The active white tab
-            TabBarIcon(icon: "bell.fill", isSelected: false)
-            TabBarIcon(icon: "person.fill", isSelected: false)
-        }
-        .frame(height: 80)
-        .background(Color(red: 0.85, green: 0.25, blue: 0.45))
-        .cornerRadius(30, corners: [.topLeft, .topRight, .bottomLeft, .bottomRight])
-        .padding(.horizontal)
-        .padding(.bottom, 30)
-    }
 }
 
 // MARK: - Subviews
@@ -87,7 +83,7 @@ struct OnlineCircleView: View {
     }
 }
 
-struct ChatRowView: some View {
+struct ChatRowView: View {
     var body: some View {
         HStack(spacing: 15) {
             Circle()
@@ -106,27 +102,13 @@ struct ChatRowView: some View {
             
             Text("9:56 AM")
                 .font(.system(size: 12))
-                .foregroundColor(.black)
+                .foregroundColor(.primary)
         }
         .padding()
     }
 }
 
-struct TabBarIcon: some View {
-    let icon: String
-    let isSelected: Bool
-    
-    var body: some View {
-        ZStack {
-            if isSelected {
-                Rectangle()
-                    .fill(Color.white)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            Image(systemName: icon)
-                .font(.system(size: 24))
-                .foregroundColor(isSelected ? Color(red: 0.85, green: 0.25, blue: 0.45) : .white.opacity(0.8))
-        }
-        .frame(maxWidth: .infinity)
-    }
+
+#Preview{
+    ChatListScreen()
 }

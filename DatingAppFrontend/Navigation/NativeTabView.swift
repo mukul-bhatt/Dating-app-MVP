@@ -10,6 +10,7 @@ import SwiftUI
 struct NativeTabView: View {
     @State private var path = NavigationPath()
     @StateObject var viewModel = DiscoverViewModel()
+   
     
     var body: some View {
         
@@ -20,13 +21,13 @@ struct NativeTabView: View {
                     Image("HeartIcon_tabBar")
                 }
 //            ProfileScreenView(profile: viewModel.users[0])
-            DiscoverFlowView(viewModel: viewModel)
+            ChatListScreen()
                 .tabItem {
                     Image("ChatIcon")
                 }
             
 //            FeedView()
-            LandingScreenView(path: $path)
+            ChatView()
                 .tabItem {
                     Image("NotificationIcon")
                 }

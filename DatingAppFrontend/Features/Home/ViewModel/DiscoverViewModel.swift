@@ -2,13 +2,14 @@
 //  DiscoverViewModel.swift
 //  DatingAppFrontend
 //
-//  Created by Mukul Bhatt on 27/01/26.
+//  Created by Antigravity on 16/01/25.
 //
 
 import Foundation
 import Combine
 import PhotosUI
 import CoreLocation
+import UIKit
 
 enum SwipeDirection {
     case left
@@ -17,20 +18,20 @@ enum SwipeDirection {
 
 class DiscoverViewModel: ObservableObject {
     @Published var users: [DiscoverProfile] = []
-    @Published var isLoading = false // Good practice for UI feedback
+    @Published var isLoading = false 
     @Published var errorMessage: String?
     @Published var currentIndex = 0
     @Published var isReporting = false
 
     
-    // FIlter Modal States
+    // Filter Modal States
     @Published var isBlockingUser: Bool = false
     @Published var selection = 0
     @Published var selectedGender: String = ""
-    @Published  var minAge: Double = 18
-    @Published  var maxAge: Double = 65
-    @Published  var minDistance: Double = 1
-    @Published  var maxDistance: Double = 65
+    @Published var minAge: Double = 18
+    @Published var maxAge: Double = 65
+    @Published var minDistance: Double = 1
+    @Published var maxDistance: Double = 65
     
     // Location state
     @Published var latitude: Double?
@@ -65,9 +66,6 @@ class DiscoverViewModel: ObservableObject {
     private func syncLocationWithBackend() {
         guard let lat = latitude, let long = longitude, let city = cityName else { return }
         
-        // Prevent multiple identical syncs in a short period if needed
-        // For now, we'll just call it
-        
         Task {
             let request = UpdateLocationRequest(
                 Location: city,
@@ -88,54 +86,48 @@ class DiscoverViewModel: ObservableObject {
     }
     
     func getUserProfiles() async throws {
-
+        await MainActor.run {
             isLoading = true
-            
-            // Request location before fetching profiles
-            LocationManager.shared.requestLocation()
-
-        isLoading = true
-
+        }
         
-        do{
+        // Request location before fetching profiles
+        LocationManager.shared.requestLocation()
+        
+        do {
             let response: GetProfileResponse = try await NetworkManager.shared.request(endpoint: .getAllProfiles)
             
             print("response for user profiles:", response)
             print("Profiles fetched successfully")
-            await MainActor.run{
+            await MainActor.run {
                 self.users = response.data
                 self.isLoading = false
                 self.hasFetchedInitialData = true
             }
-        }catch{
+        } catch {
             print("Error at Get user profiles: \(error)")
+            await MainActor.run {
+                self.isLoading = false
+                self.errorMessage = error.localizedDescription
+            }
         }
-            
     }
     
     func handleSwipe(direction: SwipeDirection, profile: DiscoverProfile) async {
         print("Swiped \(direction) on profile: \(profile.fullName) (ID: \(profile.id))")
         
-        // 1. OPTIMISTIC UPDATE:
-        // Update UI immediately so the user can keep swiping without waiting.
         await MainActor.run {
             currentIndex += 1
         }
 
-        // 2. NETWORK REQUEST (Background):
         do {
             if direction == .right {
-                print("profile", profile.id)
                 let body = sendLike(toUserId: profile.id, action: "Like")
-                print("Like:", body)
                 let response: likeResponse = try await NetworkManager.shared.request(
                     endpoint: .likeProfile,
                     body: body
                 )
-                print("Response: ", response)
                 print("Like Success: \(String(describing: response.success))")
             } else {
-                print("profile", profile.id)
                 let body = sendLike(toUserId: profile.id, action: "Dislike")
                 let response: likeResponse = try await NetworkManager.shared.request(
                     endpoint: .likeProfile,
@@ -179,18 +171,15 @@ class DiscoverViewModel: ObservableObject {
     }
     
     func dislikeProfile(id: Int) async {
-        do{
+        do {
             let response: dislikeResponse = try await NetworkManager.shared.request(endpoint: .dislikeProfile, body: sendDislike(toUserId: String(id)))
             print("Unlike Success: \(String(describing: response.message))")
-        }catch{
+        } catch {
             print("Error in sending dislike Response: \(error)")
         }
     }
     
-//    function messageFunction
-    
     func updatePreferences() async {
-        // Construct query parameters using URLComponents for safety and readability
         var components = URLComponents()
         var queryItems: [URLQueryItem] = []
         
@@ -218,7 +207,7 @@ class DiscoverViewModel: ObservableObject {
             await MainActor.run {
                 if let newProfileData = response.data {
                     self.users = newProfileData
-                    self.hasFetchedInitialData = true // Prevents onAppear from resetting the list
+                    self.hasFetchedInitialData = true 
                     print("✅ Preference update successful: \(response.message). Received \(newProfileData.count) profiles.")
                 } else {
                     print("⚠️ No new data to update in response")
@@ -234,6 +223,4 @@ class DiscoverViewModel: ObservableObject {
             }
         }
     }
-    
-} // End
-
+}

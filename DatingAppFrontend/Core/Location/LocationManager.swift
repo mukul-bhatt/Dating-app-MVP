@@ -2,20 +2,20 @@
 //  LocationManager.swift
 //  DatingAppFrontend
 //
-
-//  Created by Antigravity on 03/02/26.
-
 //  Created by Mukul Bhatt on 03/02/26.
-
 //
 
 import Foundation
 import CoreLocation
 import Combine
-
 import MapKit
 
-class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+import Foundation
+import CoreLocation
+import Combine
+import MapKit
+
+final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     
     @Published var location: CLLocation?
@@ -85,33 +85,5 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("❌ Location Manager Error: \(error.localizedDescription)")
-        
-        
-        final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-            
-            private let manager =  CLLocationManager()
-            
-            @Published var authorizationStatus: CLAuthorizationStatus
-            @Published var lastLocation: CLLocation?
-            
-            override init() {
-                self.authorizationStatus = manager.authorizationStatus
-                super.init()
-                manager.delegate = self
-            }
-            
-            func requestPermission(){
-                manager.requestWhenInUseAuthorization()
-            }
-            
-            func requestLocation() {
-                manager.requestLocation()
-            }
-            
-            
-        }
-        
-        
-        
     }
 }
