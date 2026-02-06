@@ -11,8 +11,8 @@ import Combine
 
 
 
-class ChatViewModel: ObservableObject{
-    
+class ChatViewModel: ObservableObject
+{
     
     @Published var lastMessageId: UUID?
     
@@ -25,9 +25,8 @@ class ChatViewModel: ObservableObject{
         Message(text: "Aw wow, already in the inner circle? I must be doing something right.", isFromMe: true)
     ]
     
-    
-    
     @Published var messageFieldValue: String = ""
+    
     
     func sendMessage() {
         let message = Message(text: messageFieldValue, isFromMe: true)
@@ -37,6 +36,31 @@ class ChatViewModel: ObservableObject{
         messageFieldValue = ""
         
         self.lastMessageId = message.id
+    }
+    
+    // MARK: - Socket Handlers
+    
+    
+    
+    func handleIncomingChatMessage(_ socketMessage: SocketChatMessage) {
+        // Convert socket message to our local Message type
+        let newMessage = Message(text: socketMessage.Message, isFromMe: false)
+        
+        // Append to UI list
+        messages.append(newMessage)
+        
+        // Ensure scroll to bottom
+        self.lastMessageId = newMessage.id
+    }
+    
+    func handleIncomingNotification(_ notification: NotificationEvent) {
+        // Only handle specific "message" type notifications if needed
+        // Or simply append the message if it's broad
+        if notification.data.notificationType == "message" {
+            let newMessage = Message(text: notification.data.Message, isFromMe: false)
+            messages.append(newMessage)
+            self.lastMessageId = newMessage.id
+        }
     }
 }
 

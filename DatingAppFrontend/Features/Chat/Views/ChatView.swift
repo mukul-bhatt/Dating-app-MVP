@@ -42,6 +42,20 @@ struct ChatView: View {
             // MARK: - Input Field
             inputArea
         }
+        .onAppear{
+            // 1. Setup Callbacks
+            ChatSocketManager.shared.onChatMessageReceived = { message in
+                viewModel.handleIncomingChatMessage(message)
+            }
+            
+            ChatSocketManager.shared.onNotificationReceived = { notification in
+                viewModel.handleIncomingNotification(notification)
+            }
+            
+            
+            // 2. Connect
+            ChatSocketManager.shared.connect()
+        }
     }
     
     // Header View with Profile Info
