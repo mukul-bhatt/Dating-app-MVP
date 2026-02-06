@@ -32,24 +32,27 @@ actor NetworkManager {
         var request = URLRequest(url: url)
         request.httpMethod = await endpoint.method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        print("🌐 PERFORMING \(request.httpMethod ?? "GET") REQUEST: \(url.absoluteString)")
         
         // 2. Attach Token Automatically
         if let token = await tokenProvider?.authToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
         
-        // 3. Encode Body
         if let body = body {
             request.httpBody = try JSONEncoder().encode(body)
+            print("📦 REQUEST BODY: \(String(data: request.httpBody!, encoding: .utf8) ?? "binary")")
         }
+        
+        print("📑 REQUEST HEADERS: \(request.allHTTPHeaderFields ?? [:])")
         
         // 4. Perform Request
         let (data, response) = try await URLSession.shared.data(for: request)
         
         // ---------------- ADD THIS DEBUG BLOCK ----------------
-//        if let jsonString = String(data: data, encoding: .utf8) {
-//            print("🔴 ACTUAL SERVER RESPONSE: \(jsonString)")
-//        }
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("🔴 ACTUAL SERVER RESPONSE: \(jsonString)")
+        }
         // ------------------------------------------------------
         
         guard let httpResponse = response as? HTTPURLResponse else {

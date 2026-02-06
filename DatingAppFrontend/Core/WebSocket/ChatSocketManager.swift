@@ -12,10 +12,17 @@ class ChatSocketManager{
     static let shared = ChatSocketManager()
     
     private var webSocketTask: URLSessionWebSocketTask?
+    private var currentUserId: Int?
     let session = URLSession(configuration: .default)
     
-    func connect() {
-        guard let url = URL(string: "ws://prettying-randell-ungrudgingly.ngrok-free.dev/ws?userId=6017") else{
+    func connect(userId: Int) {
+        if webSocketTask?.state == .running && currentUserId == userId {
+            print("ℹ️ Socket already running for userId: \(userId)")
+            return
+        }
+        
+        self.currentUserId = userId
+        guard let url = URL(string: "ws://prettying-randell-ungrudgingly.ngrok-free.dev/ws?userId=\(userId)") else{
             print("❌ Error constructing socket URL")
             return
         }
@@ -23,9 +30,8 @@ class ChatSocketManager{
         webSocketTask = session.webSocketTask(with: url)
         
         webSocketTask?.resume()
-        print("🟢 Socket connecting...")
+        print("🟢 Socket connecting for userId: \(userId)...")
         listen()
-        
     }
     
     func listen(){
@@ -55,11 +61,30 @@ class ChatSocketManager{
                             let decoder = JSONDecoder()
 
                             let formatter = DateFormatter()
-                            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSS'Z'"
                             formatter.locale = .init(identifier: "en_US_POSIX")
-                            formatter.timeZone = .current
+                            formatter.timeZone = TimeZone(secondsFromGMT: 0)
 
-                            decoder.dateDecodingStrategy = .formatted(formatter)
+                            decoder.dateDecodingStrategy = .custom { decoder in
+                                let container = try decoder.singleValueContainer()
+                                let dateString = try container.decode(String.self)
+                                
+                                let formats = [
+                                    "yyyy-MM-dd'T'HH:mm:ss.SSSSSSS'Z'",
+                                    "yyyy-MM-dd'T'HH:mm:ss.SSSSSSS",
+                                    "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                                    "yyyy-MM-dd'T'HH:mm:ss.SS",
+                                    "yyyy-MM-dd'T'HH:mm:ss",
+                                    "dd MMM yyyy, hh:mm a"
+                                ]
+                                
+                                for format in formats {
+                                    formatter.dateFormat = format
+                                    if let date = formatter.date(from: dateString) {
+                                        return date
+                                    }
+                                }
+                                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateString)")
+                            }
 
                             // 👇 Step 1: check if there's a `type`
                             let envelope = try decoder.decode(SocketTypeEnvelope.self, from: data)
@@ -78,12 +103,17 @@ class ChatSocketManager{
                                 
                                 self.onMatchStatusReceived?(matchStatus)
                                 
+                            } else if let msgType = envelope.type, !msgType.isEmpty {
+                                // If it has a 'type' (e.g., "Text"), it's likely a regular incoming message
+                                let receivedMessage = try decoder.decode(SocketReceivedMessage.self, from: data)
+                                print("📩 Received message from other:", receivedMessage.content)
+                                self.onReceivedMessage?(receivedMessage)
+                                
                             } else {
-
-                                let message = try decoder.decode(SocketChatMessage.self, from: data)
-                                print("📩 Chat message:", message.Message)
-
-                                self.onChatMessageReceived?(message)
+                                // Likely a PascalCase Sent Acknowledgment (no 'type' field, uses 'MessageType' usually)
+                                let ackMessage = try decoder.decode(SocketChatMessage.self, from: data)
+                                print("✅ Sent Ack received for:", ackMessage.Message)
+                                self.onChatMessageReceived?(ackMessage)
                             }
 
                         } catch {
@@ -103,7 +133,9 @@ class ChatSocketManager{
                     
                     // Reconnect after delay
                     try? await Task.sleep(nanoseconds: 3 * 1_000_000_000)
-                    self.connect()
+                    if let userId = self.currentUserId {
+                        self.connect(userId: userId)
+                    }
                 }
             }
         }
@@ -114,8 +146,27 @@ class ChatSocketManager{
             webSocketTask = nil
         }
     
+    func sendMessage(payload: Encodable) {
+        do {
+            let data = try JSONEncoder().encode(payload)
+            if let jsonString = String(data: data, encoding: .utf8) {
+                let message = URLSessionWebSocketTask.Message.string(jsonString)
+                webSocketTask?.send(message) { error in
+                    if let error = error {
+                        print("❌ Failed to send message: \(error)")
+                    } else {
+                        print("✅ Message sent: \(jsonString)")
+                    }
+                }
+            }
+        } catch {
+            print("❌ Failed to encode payload: \(error)")
+        }
+    }
+    
     
     var onChatMessageReceived: ((SocketChatMessage) -> Void)?
+    var onReceivedMessage: ((SocketReceivedMessage) -> Void)?
     var onNotificationReceived: ((NotificationEvent) -> Void)?
     var onMatchStatusReceived: ((MatchStatusEvent) -> Void)?
 

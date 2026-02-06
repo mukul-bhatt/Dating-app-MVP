@@ -19,13 +19,41 @@ struct SocketTypeEnvelope: Decodable, Sendable {
 
 
 
-struct SocketChatMessage: Decodable, Sendable {
+struct SocketChatMessage: Codable, Sendable {
     let ConversationId: Int
     let SenderId: Int
     let ReceiverId: Int
     let Message: String
     let MessageType: String
     let SentAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case ConversationId = "ConversationId"
+        case SenderId = "SenderId"
+        case ReceiverId = "ReceiverId"
+        case Message = "Message"
+        case MessageType = "MessageType"
+        case SentAt = "SentAt"
+    }
+}
+
+struct SocketReceivedMessage: Decodable, Sendable {
+    let conversationId: Int
+    let fromUserId: Int
+    let toUserId: Int
+    let content: String
+    let type: String
+    let created_At: Date
+}
+
+struct MessageHistoryResponse: Decodable, Sendable {
+    let success: Bool
+    let message: String
+    let data: [SocketReceivedMessage]
+}
+
+struct MessageHistoryRequest: Codable, Sendable {
+    let ConversationId: String
 }
 
 
@@ -49,8 +77,17 @@ struct NotificationData: Decodable, Sendable {
     let Profile: String
 
     enum CodingKeys: String, CodingKey {
-        case notificationType = "NotificationType"
-        case type = "Type"
-        case FromUserId, FromUserName, ToUserId, Title, Body, Message, WithUserId, WithUserName, ConversationId, Profile
+        case notificationType = "notificationType"
+        case type = "type"
+        case FromUserId = "fromUserId"
+        case FromUserName = "fromUserName"
+        case ToUserId = "toUserId"
+        case Title = "title"
+        case Body = "body"
+        case Message = "message"
+        case WithUserId = "WithUserId"
+        case WithUserName = "WithUserName"
+        case ConversationId = "ConversationId"
+        case Profile = "Profile"
     }
 }

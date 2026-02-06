@@ -13,12 +13,13 @@ struct MatchStatusEvent: Codable, Sendable {
     let users: [MatchStatusUser]
 }
 
-struct MatchStatusUser: Codable, Sendable {
+struct MatchStatusUser: Codable, Sendable, Identifiable {
     let userId: Int
+    let name: String?
     let isOnline: Bool
     let lastSeen: Date
     let profileImage: URL?
 
     // Conform to Identifiable for SwiftUI lists
-//    var id: Int { userId }
+    var id: Int { userId }
 }
