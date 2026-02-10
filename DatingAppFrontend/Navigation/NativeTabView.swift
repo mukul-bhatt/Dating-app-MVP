@@ -27,7 +27,7 @@ struct NativeTabView: View {
                 }
             
 //            FeedView()
-            ChatView(conversationId: 7020, receiverId: 17634, receiverName: "Nia Sharma", receiverImageURL: nil)
+            NotificationsScreen()
                 .tabItem {
                     Image("NotificationIcon")
                 }

@@ -12,18 +12,21 @@ class ChatListViewModel: ObservableObject {
     @Published var onlineUsers: [MatchStatusUser] = []
     @Published var inboxItems: [InboxItem] = []
     
+    private var cancellables = Set<AnyCancellable>()
+    
     init() {
         setupSocketCallbacks()
         fetchInbox()
     }
     
     func setupSocketCallbacks() {
-        ChatSocketManager.shared.onMatchStatusReceived = { [weak self] event in
-            print("🔥 ViewModel received match status update: \(event.users.count) users")
-            DispatchQueue.main.async {
+        ChatSocketManager.shared.matchStatusSubject
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] event in
+                print("🔥 ViewModel received match status update: \(event.users.count) users")
                 self?.onlineUsers = event.users
             }
-        }
+            .store(in: &cancellables)
     }
     
     func fetchInbox() {

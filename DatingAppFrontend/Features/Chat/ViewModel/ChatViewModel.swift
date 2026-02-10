@@ -23,6 +23,8 @@ class ChatViewModel: ObservableObject
     private var receiverId: Int?
     @Published var receiverName: String = "Nia Sharma" // default placeholder
     @Published var receiverImageURL: URL?
+    
+    private var cancellables = Set<AnyCancellable>()
 
     init() {
         // Mock messages removed to support dynamic history and empty states
@@ -44,31 +46,43 @@ class ChatViewModel: ObservableObject
         // 2. Fetch History
         fetchMessageHistory(conversationId: conversationId)
         
-        // 3. Setup Callbacks
-        ChatSocketManager.shared.onChatMessageReceived = { [weak self] message in
-            self?.handleSentAcknowledgment(message)
-        }
+        // 3. Setup Callbacks via Combine
+        cancellables.removeAll()
         
-        ChatSocketManager.shared.onReceivedMessage = { [weak self] message in
-            self?.handleIncomingReceivedMessage(message)
-        }
+        ChatSocketManager.shared.chatMessageSubject
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] message in
+                self?.handleSentAcknowledgment(message)
+            }
+            .store(in: &cancellables)
+        
+        ChatSocketManager.shared.receivedMessageSubject
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] message in
+                self?.handleIncomingReceivedMessage(message)
+            }
+            .store(in: &cancellables)
 
-        ChatSocketManager.shared.onNotificationReceived = { [weak self] notification in
-            self?.handleIncomingNotification(notification)
-        }
+        ChatSocketManager.shared.notificationSubject
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] notification in
+                self?.handleIncomingNotification(notification)
+            }
+            .store(in: &cancellables)
         
         // 2. Connect via Manager
         ChatSocketManager.shared.connect(userId: userId)
     }
     
     func sendMessage() {
-        guard !messageFieldValue.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let text = messageFieldValue
+        guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         guard let userId = userId, let conversationId = conversationId, let receiverId = receiverId else {
             print("❌ Cannot send message: Missing session info")
             return
         }
 
-        let text = messageFieldValue
+//        let text = messageFieldValue
         let localMessage = Message(text: text, isFromMe: true)
         
         // 1. Add to local UI
@@ -94,13 +108,14 @@ class ChatViewModel: ObservableObject
     func fetchMessageHistory(conversationId: Int) {
         Task {
             do {
-                let requestBody = MessageHistoryRequest(ConversationId: "\(conversationId)")
-                let response: MessageHistoryResponse = try await NetworkManager.shared.request(endpoint: .getMessages, body: requestBody)
+                let response: MessageHistoryResponse = try await NetworkManager.shared.request(endpoint: .getMessages(conversationId: conversationId))
                 
                 if response.success {
                     // Convert historical messages to our UI Message type
+                    // Logic: Backend seems to use toUserId as a source field for history.
+                    // If toUserId == myId, then I am the sender.
                     let historicalMessages = response.data.map { msg in
-                        Message(text: msg.content, isFromMe: msg.fromUserId == self.userId)
+                        Message(text: msg.content, isFromMe: msg.toUserId == self.userId)
                     }
                     
                     await MainActor.run {

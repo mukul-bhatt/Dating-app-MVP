@@ -20,19 +20,27 @@ actor NetworkManager {
     func setTokenProvider(_ provider: AuthViewModel) {
             self.tokenProvider = provider
         }
-
-    
     
     func request<T: Decodable>(endpoint: APIEndpoint, body: Encodable? = nil) async throws -> T {
         
-        // 1. Construct URL
-        guard let url = await URL(string: baseURL + endpoint.path) else {
+        // 1. Construct URL safely using URLComponents
+        guard var components = URLComponents(string: baseURL + endpoint.path) else {
             throw URLError(.badURL)
         }
+        
+        // Add Query Items if present
+        if let queryItems = endpoint.queryItems {
+            components.queryItems = queryItems
+        }
+        
+        guard let url = components.url else {
+            throw URLError(.badURL)
+        }
+        
         var request = URLRequest(url: url)
-        request.httpMethod = await endpoint.method
+        request.httpMethod = endpoint.method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        print("🌐 PERFORMING \(request.httpMethod ?? "GET") REQUEST: \(url.absoluteString)")
+//        print("🌐 PERFORMING \(request.httpMethod ?? "GET") REQUEST: \(url.absoluteString)")
         
         // 2. Attach Token Automatically
         if let token = await tokenProvider?.authToken {
@@ -44,7 +52,7 @@ actor NetworkManager {
             print("📦 REQUEST BODY: \(String(data: request.httpBody!, encoding: .utf8) ?? "binary")")
         }
         
-        print("📑 REQUEST HEADERS: \(request.allHTTPHeaderFields ?? [:])")
+//        print("📑 REQUEST HEADERS: \(request.allHTTPHeaderFields ?? [:])")
         
         // 4. Perform Request
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -89,17 +97,34 @@ actor NetworkManager {
         
         // 6. Decode Success
 //          return try JSONDecoder().decode(T.self, from: data)
-        
-        // Debug:-
-        let finalResponse =  try JSONDecoder().decode(T.self, from: data)
-        print("Api Response:", finalResponse)
-        
-        return finalResponse
+        do {
+            let finalResponse = try JSONDecoder().decode(T.self, from: data)
+            print("✅ DECODED SUCCESS: \(T.self)")
+            return finalResponse
+        } catch let error as DecodingError {
+            print("❌ DECODING ERROR IN \(T.self): \(error)")
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📝 RAW DATA AT FAILURE: \(jsonString)")
+            }
+            throw error
+        } catch {
+            print("❌ UNKNOWN ERROR IN \(T.self): \(error)")
+            throw error
+        }
     }
     
     func upload<T: Decodable>(endpoint: APIEndpoint, parameters: [String: String], images: [UIImage]) async throws -> T {
-        // 1. Construct URL
-        guard let url = await URL(string: baseURL + endpoint.path) else {
+        // 1. Construct URL safely using URLComponents
+        guard var components = URLComponents(string: baseURL + endpoint.path) else {
+            throw URLError(.badURL)
+        }
+        
+        // Add Query Items if present
+        if let queryItems = endpoint.queryItems {
+            components.queryItems = queryItems
+        }
+        
+        guard let url = components.url else {
             throw URLError(.badURL)
         }
         

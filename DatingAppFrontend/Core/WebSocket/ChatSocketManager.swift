@@ -6,10 +6,17 @@
 //
 
 import Foundation
+import Combine
 
 @MainActor
 class ChatSocketManager{
     static let shared = ChatSocketManager()
+    
+    // Combine Subjects for multi-subscriber support
+    let chatMessageSubject = PassthroughSubject<SocketChatMessage, Never>()
+    let receivedMessageSubject = PassthroughSubject<SocketReceivedMessage, Never>()
+    let notificationSubject = PassthroughSubject<NotificationEvent, Never>()
+    let matchStatusSubject = PassthroughSubject<MatchStatusEvent, Never>()
     
     private var webSocketTask: URLSessionWebSocketTask?
     private var currentUserId: Int?
@@ -93,27 +100,25 @@ class ChatSocketManager{
 
                                 let notification = try decoder.decode(NotificationEvent.self, from: data)
                                 print("🔔 Notification:", notification.data.Message)
-
-                                self.onNotificationReceived?(notification)
+                                self.notificationSubject.send(notification)
 
                             } else if envelope.type == "match_status_list" {
                                 
                                 let matchStatus = try decoder.decode(MatchStatusEvent.self, from: data)
                                 print("🔥 Match Status Update: \(matchStatus.users.count) users")
-                                
-                                self.onMatchStatusReceived?(matchStatus)
+                                self.matchStatusSubject.send(matchStatus)
                                 
                             } else if let msgType = envelope.type, !msgType.isEmpty {
                                 // If it has a 'type' (e.g., "Text"), it's likely a regular incoming message
                                 let receivedMessage = try decoder.decode(SocketReceivedMessage.self, from: data)
                                 print("📩 Received message from other:", receivedMessage.content)
-                                self.onReceivedMessage?(receivedMessage)
+                                self.receivedMessageSubject.send(receivedMessage)
                                 
                             } else {
-                                // Likely a PascalCase Sent Acknowledgment (no 'type' field, uses 'MessageType' usually)
+                                // Likely a Sent Acknowledgment (e.g., from self)
                                 let ackMessage = try decoder.decode(SocketChatMessage.self, from: data)
-                                print("✅ Sent Ack received for:", ackMessage.Message)
-                                self.onChatMessageReceived?(ackMessage)
+                                print("✅ Sent Ack received for message: \(ackMessage.Message)")
+                                self.chatMessageSubject.send(ackMessage)
                             }
 
                         } catch {
@@ -148,8 +153,15 @@ class ChatSocketManager{
     
     func sendMessage(payload: Encodable) {
         do {
-            let data = try JSONEncoder().encode(payload)
+            let encoder = JSONEncoder()
+            // Standard date encoding for server
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+            encoder.dateEncodingStrategy = .formatted(formatter)
+            
+            let data = try encoder.encode(payload)
             if let jsonString = String(data: data, encoding: .utf8) {
+                print("📤 SENDING SOCKET PAYLOAD: \(jsonString)")
                 let message = URLSessionWebSocketTask.Message.string(jsonString)
                 webSocketTask?.send(message) { error in
                     if let error = error {
@@ -164,12 +176,6 @@ class ChatSocketManager{
         }
     }
     
-    
-    var onChatMessageReceived: ((SocketChatMessage) -> Void)?
-    var onReceivedMessage: ((SocketReceivedMessage) -> Void)?
-    var onNotificationReceived: ((NotificationEvent) -> Void)?
-    var onMatchStatusReceived: ((MatchStatusEvent) -> Void)?
-
 }
 
 

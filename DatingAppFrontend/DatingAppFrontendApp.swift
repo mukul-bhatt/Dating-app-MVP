@@ -11,19 +11,20 @@ import SwiftUI
 struct DatingAppFrontendApp: App {
     
     @StateObject var authViewModel = AuthViewModel()
+    @StateObject var notificationsManager = NotificationsManager()
     
     var body: some Scene {
         WindowGroup {
             if authViewModel.isAuthenticated {
                 NativeTabView()
                     .environmentObject(authViewModel)
+                    .environmentObject(notificationsManager)
                 
-            }else{
+            } else {
                 AuthFlowView()
                     .environmentObject(authViewModel)
+                    .environmentObject(notificationsManager)
             }
-            
-
         }
     }
     

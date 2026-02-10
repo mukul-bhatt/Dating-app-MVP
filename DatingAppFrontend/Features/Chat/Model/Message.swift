@@ -28,12 +28,12 @@ struct SocketChatMessage: Codable, Sendable {
     let SentAt: Date
 
     enum CodingKeys: String, CodingKey {
-        case ConversationId = "ConversationId"
-        case SenderId = "SenderId"
-        case ReceiverId = "ReceiverId"
-        case Message = "Message"
-        case MessageType = "MessageType"
-        case SentAt = "SentAt"
+        case ConversationId = "conversationId"
+        case SenderId = "senderId"
+        case ReceiverId = "receiverId"
+        case Message = "content"
+        case MessageType = "type"
+        case SentAt = "sentAt"
     }
 }
 
@@ -46,14 +46,21 @@ struct SocketReceivedMessage: Decodable, Sendable {
     let created_At: Date
 }
 
+struct HistoricalMessage: Decodable, Sendable {
+    let type: String
+    let toUserId: Int
+    let conversationId: Int
+    let isRead: Bool
+    let readAt: String
+    let status: String
+    let content: String
+    let created_At: String
+}
+
 struct MessageHistoryResponse: Decodable, Sendable {
     let success: Bool
     let message: String
-    let data: [SocketReceivedMessage]
-}
-
-struct MessageHistoryRequest: Codable, Sendable {
-    let ConversationId: String
+    let data: [HistoricalMessage]
 }
 
 
