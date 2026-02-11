@@ -105,8 +105,18 @@ class ChatSocketManager{
                             } else if envelope.type == "match_status_list" {
                                 
                                 let matchStatus = try decoder.decode(MatchStatusEvent.self, from: data)
-                                print("🔥 Match Status Update: \(matchStatus.users.count) users")
+                                print("🔥 Match Status List Update: \(matchStatus.users.count) users")
                                 self.matchStatusSubject.send(matchStatus)
+
+                            } else if envelope.type == "match_status" {
+                                
+                                let single = try decoder.decode(MatchStatusSingleEvent.self, from: data)
+                                print("🔥 Single Match Status: User \(single.userId) is \(single.isOnline ? "Online" : "Offline")")
+                                
+                                // Map to shared MatchStatusEvent for subscribers
+                                let user = MatchStatusUser(userId: single.userId, name: nil, isOnline: single.isOnline, lastSeen: single.lastSeen, profileImage: nil)
+                                let event = MatchStatusEvent(type: "match_status", users: [user])
+                                self.matchStatusSubject.send(event)
                                 
                             } else if let msgType = envelope.type, !msgType.isEmpty {
                                 // If it has a 'type' (e.g., "Text"), it's likely a regular incoming message

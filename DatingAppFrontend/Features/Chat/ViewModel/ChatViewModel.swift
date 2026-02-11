@@ -36,15 +36,43 @@ class ChatViewModel: ObservableObject
         sendMessage()
     }
 
-    func connect(userId: Int, conversationId: Int, receiverId: Int, name: String? = nil, imageURL: URL? = nil) {
-        self.userId = userId
-        self.conversationId = conversationId
-        self.receiverId = receiverId
-        self.receiverName = name ?? "Chat"
-        self.receiverImageURL = imageURL
+    func connect(userId: Int, conversationId: Int, receiverId: Int, name: String? = nil, imageURL: URL? = nil, initialMessage: String? = nil, notificationsManager: NotificationsManager? = nil) {
+        var resolvedConvId = conversationId
+        var resolvedImageUrl = imageURL
         
-        // 2. Fetch History
-        fetchMessageHistory(conversationId: conversationId)
+        // 🚀 Resolution Logic: If ID is 0, try to find it in the cached inbox
+        if resolvedConvId == 0, let manager = notificationsManager {
+            if let existing = manager.inboxItems.first(where: { $0.profileId == receiverId }) {
+                print("🔍 Resolved conversation ID \(existing.conversationId) from inbox cache for user \(receiverId)")
+                resolvedConvId = existing.conversationId
+                
+                // Also pick up the image if missing
+                if resolvedImageUrl == nil {
+                    resolvedImageUrl = existing.profile
+                }
+            }
+        }
+
+        print("🔌 ViewModel connecting: user=\(userId), conv=\(resolvedConvId), receiver=\(receiverId), name=\(name ?? "nil")")
+        self.userId = userId
+        self.conversationId = resolvedConvId
+        self.receiverId = receiverId
+        self.receiverName = (name == nil || name!.isEmpty) ? "Chat" : name!
+        self.receiverImageURL = resolvedImageUrl
+        
+        // 1. If we have an initial message (from deep link), show it immediately
+        if let firstMsg = initialMessage, !firstMsg.isEmpty {
+            let newMessage = Message(text: firstMsg, isFromMe: false)
+            self.messages.append(newMessage)
+            self.lastMessageId = newMessage.id
+        }
+
+        // 2. Fetch History (only if conversation actually exists)
+        if self.conversationId! > 0 {
+            fetchMessageHistory(conversationId: self.conversationId!)
+        } else {
+            print("🆕 New conversation detected (ID 0). Skipping history fetch.")
+        }
         
         // 3. Setup Callbacks via Combine
         cancellables.removeAll()
@@ -168,11 +196,19 @@ class ChatViewModel: ObservableObject
     
     func handleIncomingNotification(_ notification: NotificationEvent) {
         if notification.data.notificationType == "message" {
-            // Check if this notification is for the current conversation
-            if let incomingConvId = notification.data.ConversationId, incomingConvId == self.conversationId {
+            let incomingConvId = notification.data.ConversationId
+            let senderId = notification.data.FromUserId
+            
+            // Match logic: Same conversation ID OR same sender (if no ID yet)
+            let isCurrentConv = (incomingConvId != nil && incomingConvId == self.conversationId)
+            let isFromCurrentReceiver = (senderId == self.receiverId)
+            
+            if isCurrentConv || isFromCurrentReceiver {
                 let newMessage = Message(text: notification.data.Message, isFromMe: false)
-                messages.append(newMessage)
-                self.lastMessageId = newMessage.id
+                DispatchQueue.main.async {
+                    self.messages.append(newMessage)
+                    self.lastMessageId = newMessage.id
+                }
             }
         }
     }

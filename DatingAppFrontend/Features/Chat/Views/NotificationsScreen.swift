@@ -10,54 +10,72 @@ import SwiftUI
 
 struct NotificationsScreen: View {
     @State private var selectedTab = "All"
+    @EnvironmentObject var notificationsManager: NotificationsManager
     
     var body: some View {
-        VStack(spacing: 0) {
-            // MARK: - Custom Segmented Picker
-            HStack(spacing: 0) {
-                PickerButton(title: "All", isSelected: selectedTab == "All") {
-                    selectedTab = "All"
+        NavigationStack {
+            VStack(spacing: 0) {
+                // MARK: - Custom Segmented Picker
+                HStack(spacing: 0) {
+                    PickerButton(title: "All", isSelected: selectedTab == "All") {
+                        selectedTab = "All"
+                    }
+                    PickerButton(title: "Matches", isSelected: selectedTab == "Matches") {
+                        selectedTab = "Matches"
+                    }
                 }
-                PickerButton(title: "Matches", isSelected: selectedTab == "Matches") {
-                    selectedTab = "Matches"
+                .padding(4)
+                .background(Color.white)
+                .cornerRadius(25)
+                .padding()
+                
+                ScrollView {
+                    VStack(spacing: 0) {
+                        if notificationsManager.notifications.isEmpty {
+                            VStack(spacing: 20) {
+                                Spacer(minLength: 50)
+                                Image(systemName: "bell.slash")
+                                    .font(.system(size: 50))
+                                    .foregroundColor(.gray.opacity(0.5))
+                                Text("No new notifications")
+                                    .font(.headline)
+                                    .foregroundColor(.gray)
+                            }
+                        } else {
+                            ForEach(notificationsManager.notifications) { notification in
+                                NotificationRow(
+                                    imageUrl: notification.senderImageUrl,
+                                    text: "New message from \(notification.senderName): '\(notification.message)'"
+                                ) {
+                                    NavigationLink {
+                                        ChatView(
+                                            conversationId: notification.conversationId ?? 0,
+                                            receiverId: notification.senderId,
+                                            receiverName: notification.senderName,
+                                            receiverImageURL: notification.senderImageUrl,
+                                            initialMessage: notification.message
+                                        )
+                                    } label: {
+                                        ActionButton(title: "View Message 📧")
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Legacy/Mock rows for other types (Matches, etc)
+//                        if selectedTab == "All" || selectedTab == "Matches" {
+//                             NotificationRow(imageName: "user1", text: "Alex has liked your profile") {
+//                                 ActionButton(title: "Like back ❤️")
+//                             }
+//                        }
+                    }
                 }
             }
-            .padding(4)
-            .background(Color.white)
-            .cornerRadius(25)
-            .padding()
-            
-            ScrollView {
-                VStack(spacing: 0) {
-                    // New Match Row
-                    NotificationRow(imageName: "user1", text: "You have a new match with Alex!") {
-                        HStack {
-                            ActionButton(title: "View Profile 🤗")
-                            ActionButton(title: "Send Message 📧")
-                        }
-                    }
-                    
-                    // Message Row
-                    NotificationRow(imageName: "user2", text: "New message from Ryan: 'Hey, how's your day?'") {
-                        ActionButton(title: "Send Message 📧")
-                    }
-                    
-                    // Profile Waiting Row (Overlapping images)
-                    NotificationRow(imageName: "group", text: "You have 3 new profiles waiting - Check them out !", hasOverlappingImages: true) {
-                        EmptyView()
-                    }
-                    
-                    // Like Row
-                    NotificationRow(imageName: "user1", text: "Ajay Kumar has liked your profile") {
-                        HStack {
-                            ActionButton(title: "Like back ❤️")
-                            ActionButton(title: "Decline 🙅")
-                        }
-                    }
-                }
+            .background(AppTheme.backgroundPink)
+            .onAppear {
+                notificationsManager.clearUnreadCount()
             }
         }
-        .background(AppTheme.backgroundPink) // Light pink background
     }
 }
 
@@ -82,12 +100,24 @@ struct PickerButton: View {
 }
 
 struct NotificationRow<Content: View>: View {
-    let imageName: String
+    let imageUrl: URL?
+    let imageName: String?
     let text: String
     var hasOverlappingImages: Bool = false
     let actions: Content
     
+    // Remote Image Init
+    init(imageUrl: URL?, text: String, hasOverlappingImages: Bool = false, @ViewBuilder actions: () -> Content) {
+        self.imageUrl = imageUrl
+        self.imageName = nil
+        self.text = text
+        self.hasOverlappingImages = hasOverlappingImages
+        self.actions = actions()
+    }
+    
+    // Asset Image Init (Legacy)
     init(imageName: String, text: String, hasOverlappingImages: Bool = false, @ViewBuilder actions: () -> Content) {
+        self.imageUrl = nil
         self.imageName = imageName
         self.text = text
         self.hasOverlappingImages = hasOverlappingImages
@@ -100,9 +130,29 @@ struct NotificationRow<Content: View>: View {
                 if hasOverlappingImages {
                     overlappingAvatars
                 } else {
-                    Circle()
-                        .frame(width: 50, height: 50)
-                        .foregroundColor(.gray.opacity(0.3))
+                    if let url = imageUrl {
+                        AsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 50, height: 50)
+                                .clipShape(Circle())
+                        } placeholder: {
+                            Circle()
+                                .frame(width: 50, height: 50)
+                                .foregroundColor(.gray.opacity(0.3))
+                        }
+                    } else if let name = imageName {
+                        Image(name)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 50, height: 50)
+                            .clipShape(Circle())
+                    } else {
+                        Circle()
+                            .frame(width: 50, height: 50)
+                            .foregroundColor(.gray.opacity(0.3))
+                    }
                 }
                 
                 VStack(alignment: .leading, spacing: 10) {

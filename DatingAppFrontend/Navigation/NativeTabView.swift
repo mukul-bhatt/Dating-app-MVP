@@ -10,7 +10,7 @@ import SwiftUI
 struct NativeTabView: View {
     @State private var path = NavigationPath()
     @StateObject var viewModel = DiscoverViewModel()
-   
+    @EnvironmentObject var notificationsManager: NotificationsManager
     
     var body: some View {
         
@@ -31,6 +31,7 @@ struct NativeTabView: View {
                 .tabItem {
                     Image("NotificationIcon")
                 }
+                .badge(notificationsManager.unreadCount)
 
             LandingScreenView(path: $path)
                 .tabItem {

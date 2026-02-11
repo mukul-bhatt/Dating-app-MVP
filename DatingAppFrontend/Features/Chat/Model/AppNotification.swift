@@ -9,6 +9,7 @@ import Foundation
 
 struct AppNotification: Identifiable, Sendable {
     let id = UUID()
+    let senderId: Int
     let senderName: String
     let message: String
     let senderImageUrl: URL?

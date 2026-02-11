@@ -13,6 +13,13 @@ struct MatchStatusEvent: Codable, Sendable {
     let users: [MatchStatusUser]
 }
 
+struct MatchStatusSingleEvent: Codable, Sendable {
+    let type: String
+    let userId: Int
+    let isOnline: Bool
+    let lastSeen: Date
+}
+
 struct MatchStatusUser: Codable, Sendable, Identifiable {
     let userId: Int
     let name: String?

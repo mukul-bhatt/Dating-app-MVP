@@ -11,12 +11,14 @@ struct ChatView: View {
     
     @StateObject var viewModel = ChatViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var notificationsManager: NotificationsManager
     @Environment(\.dismiss) var dismiss
     
     let conversationId: Int
     let receiverId: Int
     let receiverName: String?
     let receiverImageURL: URL?
+    var initialMessage: String? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -65,10 +67,29 @@ struct ChatView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .tabBar)
         .onAppear{
+            print("👁️ ChatView appeared for convId: \(conversationId)")
             // Connect using the current user's profileId and passed receiver info
             if let myId = authViewModel.profileId {
-                viewModel.connect(userId: myId, conversationId: conversationId, receiverId: receiverId, name: receiverName, imageURL: receiverImageURL)
+                viewModel.connect(
+                    userId: myId, 
+                    conversationId: conversationId, 
+                    receiverId: receiverId, 
+                    name: receiverName, 
+                    imageURL: receiverImageURL,
+                    initialMessage: initialMessage,
+                    notificationsManager: notificationsManager
+                )
+            } else {
+                print("⚠️ authViewModel.profileId is missing in ChatView")
             }
+            // Track focus for global notifications
+            notificationsManager.activeConversationId = conversationId
+            notificationsManager.activeReceiverId = receiverId
+        }
+        .onDisappear {
+            // Clear focus
+            notificationsManager.activeConversationId = nil
+            notificationsManager.activeReceiverId = nil
         }
     }
     
@@ -76,11 +97,11 @@ struct ChatView: View {
     var headerView: some View {
         
         HStack(spacing: 15) {
-            Button(action: {
-                dismiss()
-            }) {
-                Image(systemName: "arrow.left")
-            }
+//            Button(action: {
+//                dismiss()
+//            }) {
+//                Image(systemName: "arrow.left")
+//            }
             
             
             AsyncImage(url: viewModel.receiverImageURL){ image in

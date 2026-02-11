@@ -11,6 +11,7 @@ import SwiftUI
 struct ChatListScreen: View {
     @StateObject var viewModel = ChatListViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var notificationsManager: NotificationsManager
     
     var body: some View {
         NavigationStack {
@@ -72,10 +73,14 @@ struct ChatListScreen: View {
             }
         }
         .onAppear {
+            viewModel.notificationsManager = notificationsManager
+            
             if let myId = authViewModel.profileId {
                 ChatSocketManager.shared.connect(userId: myId)
             }
+            
             viewModel.fetchInbox()
+            
         }
     }
     

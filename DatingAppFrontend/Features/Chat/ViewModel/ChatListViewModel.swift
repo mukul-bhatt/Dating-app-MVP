@@ -11,7 +11,7 @@ import Combine
 class ChatListViewModel: ObservableObject {
     @Published var onlineUsers: [MatchStatusUser] = []
     @Published var inboxItems: [InboxItem] = []
-    
+    var notificationsManager: NotificationsManager?
     private var cancellables = Set<AnyCancellable>()
     
     init() {
@@ -23,8 +23,34 @@ class ChatListViewModel: ObservableObject {
         ChatSocketManager.shared.matchStatusSubject
             .receive(on: DispatchQueue.main)
             .sink { [weak self] event in
-                print("🔥 ViewModel received match status update: \(event.users.count) users")
-                self?.onlineUsers = event.users
+                guard let self = self else { return }
+                
+                if event.type == "match_status_list" {
+                    print("🔥 Full Match Status List received: \(event.users.count) users")
+                    self.onlineUsers = event.users
+                } else {
+                    // Incremental update (single user)
+                    print("🔥 Incremental Match Status Update: \(event.users.count) users")
+                    
+                    var currentList = self.onlineUsers
+                    for userUpdate in event.users {
+                        if let index = currentList.firstIndex(where: { $0.userId == userUpdate.userId }) {
+                            // Update existing user properties while keeping name/image from local
+                            let old = currentList[index]
+                            currentList[index] = MatchStatusUser(
+                                userId: old.userId,
+                                name: old.name, // Keep existing name
+                                isOnline: userUpdate.isOnline,
+                                lastSeen: userUpdate.lastSeen,
+                                profileImage: old.profileImage // Keep existing image
+                            )
+                        } else if userUpdate.isOnline {
+                            // Only add if they are online and new
+                            currentList.append(userUpdate)
+                        }
+                    }
+                    self.onlineUsers = currentList
+                }
             }
             .store(in: &cancellables)
     }
@@ -36,6 +62,7 @@ class ChatListViewModel: ObservableObject {
                 if response.success {
                     await MainActor.run {
                         self.inboxItems = response.data
+                        self.notificationsManager?.inboxItems = response.data
                         print("📫 Inbox fetched: \(self.inboxItems.count) conversations")
                     }
                 }
