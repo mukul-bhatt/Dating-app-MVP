@@ -10,29 +10,51 @@ import SwiftUI
 struct ChatView: View {
     
     @StateObject var viewModel = ChatViewModel()
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var notificationsManager: NotificationsManager
+    @Environment(\.dismiss) var dismiss
     
-    
+    let conversationId: Int
+    let receiverId: Int
+    let receiverName: String?
+    let receiverImageURL: URL?
+    var initialMessage: String? = nil
+
     var body: some View {
         VStack(spacing: 0) {
             // MARK: - Custom Header
             headerView
             
             // MARK: - Chat Bubble List
-            ScrollViewReader { proxy in
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 16) {
-                        ForEach(viewModel.messages) { message in
-                            MessageBubble(message: message)
-                                .id(message.id)
+            GeometryReader { geometry in
+                ScrollViewReader { proxy in
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 0) {
+                            if viewModel.messages.isEmpty {
+                                Spacer(minLength: 120)
+                                SayHiView(viewModel: viewModel)
+                                Spacer()
+                            } else {
+                                // This Spacer forces the messages to the bottom
+                                Spacer(minLength: 0)
+                                
+                                VStack(spacing: 16) {
+                                    ForEach(viewModel.messages) { message in
+                                        MessageBubble(message: message)
+                                            .id(message.id)
+                                    }
+                                }
+                                .padding()
+                            }
                         }
+                        .frame(minWidth: geometry.size.width, minHeight: geometry.size.height)
                     }
-                    .padding()
-                }
-                .background(Color.white)
-                .onChange(of: viewModel.lastMessageId) { oldValue, newValue in
-                    if let newValue = newValue {
-                        withAnimation {
-                            proxy.scrollTo(newValue, anchor: .bottom)
+                    .background(Color.white)
+                    .onChange(of: viewModel.lastMessageId) { oldValue, newValue in
+                        if let newValue = newValue {
+                            withAnimation {
+                                proxy.scrollTo(newValue, anchor: .bottom)
+                            }
                         }
                     }
                 }
@@ -42,29 +64,60 @@ struct ChatView: View {
             // MARK: - Input Field
             inputArea
         }
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .tabBar)
+        .onAppear{
+            print("👁️ ChatView appeared for convId: \(conversationId)")
+            // Connect using the current user's profileId and passed receiver info
+            if let myId = authViewModel.profileId {
+                viewModel.connect(
+                    userId: myId, 
+                    conversationId: conversationId, 
+                    receiverId: receiverId, 
+                    name: receiverName, 
+                    imageURL: receiverImageURL,
+                    initialMessage: initialMessage,
+                    notificationsManager: notificationsManager
+                )
+            } else {
+                print("⚠️ authViewModel.profileId is missing in ChatView")
+            }
+            // Track focus for global notifications
+            notificationsManager.activeConversationId = conversationId
+            notificationsManager.activeReceiverId = receiverId
+        }
+        .onDisappear {
+            // Clear focus
+            notificationsManager.activeConversationId = nil
+            notificationsManager.activeReceiverId = nil
+        }
     }
     
     // Header View with Profile Info
     var headerView: some View {
         
-        let imageUrl = URL(string: "https://images.pexels.com/photos/2238433/pexels-photo-2238433.jpeg")
-        
-        return HStack(spacing: 15) {
-            Image(systemName: "arrow.left")
+        HStack(spacing: 15) {
+//            Button(action: {
+//                dismiss()
+//            }) {
+//                Image(systemName: "arrow.left")
+//            }
             
             
-            AsyncImage(url: imageUrl){ image in
+            AsyncImage(url: viewModel.receiverImageURL){ image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 45, height: 45)
-                    .cornerRadius(50)
+                    .clipShape(Circle())
             }placeholder: {
-                ProgressView()
+                Circle()
+                    .frame(width: 45, height: 45)
+                    .foregroundColor(.gray.opacity(0.3))
             }
 
             
-            Text("Nia Sharma")
+            Text(viewModel.receiverName)
                 .font(.headline)
             
             Spacer()
@@ -127,6 +180,49 @@ struct ChatView: View {
     }
 }
 
+struct SayHiView: View {
+    @ObservedObject var viewModel: ChatViewModel
+    
+    var body: some View {
+        VStack(spacing: 15) {
+            ZStack {
+                Circle()
+                    .fill(AppTheme.backgroundPink)
+                    .frame(width: 100, height: 100)
+                
+                Text("👋")
+                    .font(.system(size: 50))
+            }
+            
+            VStack(spacing: 8) {
+                Text("No messages yet")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                
+                Text("Start the conversation by saying Hi!")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            
+            Button(action: {
+                viewModel.sendGreeting()
+            }) {
+                Text("Say Hi! 👋")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 30)
+                    .padding(.vertical, 12)
+                    .background(AppTheme.foregroundPink)
+                    .cornerRadius(25)
+                    .shadow(color: AppTheme.foregroundPink.opacity(0.3), radius: 5, x: 0, y: 5)
+            }
+            .padding(.top, 10)
+        }
+    }
+}
+
 struct MessageBubble: View {
     let message: Message
     
@@ -147,6 +243,6 @@ struct MessageBubble: View {
 
 
 
-#Preview {
-    ChatView()
-}
+//#Preview {
+//    ChatView(receiverId: 6002, receiverName: "Nia Sharma", receiverImageURL: URL(string: "https://images.pexels.com/photos/2238433/pexels-photo-2238433.jpeg"))
+//}
