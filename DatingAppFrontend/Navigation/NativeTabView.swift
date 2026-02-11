@@ -15,25 +15,26 @@ struct NativeTabView: View {
     var body: some View {
         
         TabView {
-//            DiscoverView(path: $path)
+//          DiscoverView(path: $path)
             DiscoverFlowView(viewModel: viewModel)
                 .tabItem {
                     Image("HeartIcon_tabBar")
                 }
-//            ProfileScreenView(profile: viewModel.users[0])
+//          ProfileScreenView(profile: viewModel.users[0])
             ChatListScreen()
                 .tabItem {
                     Image("ChatIcon")
                 }
             
-//            FeedView()
+//          FeedView()
             NotificationsScreen()
                 .tabItem {
                     Image("NotificationIcon")
                 }
                 .badge(notificationsManager.unreadCount)
 
-            LandingScreenView(path: $path)
+//          Edit Profile Flow
+            EditProfileFlowView()
                 .tabItem {
                     Image("ProfileIcon")
 
