@@ -36,9 +36,9 @@ struct EditProfileFlowView: View {
                         case .editProfile2:
                             EditProfileDetailsScreen2(viewModel: profileViewModel, path: $path)
                         case .editProfile3:
-                            EditProfileDetailsScreen3(viewModel: profileViewModel)
+                            EditProfileDetailsScreen3(viewModel: profileViewModel, path: $path)
                         case .contactDetails:
-                            ContactDetailsView()
+                            ContactDetailsView(viewModel: profileViewModel)
                         case .notificationSetting:
                             NotificationSettingView()
                         case .myMatches:

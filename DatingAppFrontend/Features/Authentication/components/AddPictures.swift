@@ -13,10 +13,11 @@ import PhotosUI
         let columns: [GridItem]
         
         @ObservedObject var viewModel: ProfileViewModel
+        var isFromEditProfile: Bool = false
         
         var body: some View {
             VStack(alignment: .leading, spacing: 16) {
-                AddPicturesHeader(title: "Add your pictures", subTitle: "Add a photo so people can see the real you!")
+                AddPicturesHeader(title: "Add your pictures", subTitle: "Add a photo so people can see the real you!", isFromEditProfile: isFromEditProfile)
                 
                 LazyVGrid(columns: columns, spacing: 16) {
                     // Wrap button in PhotosPicker

@@ -86,19 +86,30 @@ struct EditProfileMain: View {
                         
                         // MARK: - Settings List
                         VStack(spacing: 12) {
-                            ProfileMenuRow(icon: "phone.fill", title: "Contact Details")
-                            ProfileMenuRow(icon: "bell.fill", title: "Notification Settings")
-                            ProfileMenuRow(icon: "heart.fill", title: "My Matches")
-                            ProfileMenuRow(icon: "gearshape.fill", title: "Privacy Settings")
-                            ProfileMenuRow(icon: "trash.fill", title: "Delete Account")
-                            ProfileMenuRow(icon: "rectangle.portrait.and.arrow.right", title: "Log Out")
+                            ProfileMenuRow(icon: "phone.fill", title: "Contact Details", action: {
+                                path.append(EditProfileRoutes.contactDetails)
+                            })
+                            ProfileMenuRow(icon: "bell.fill", title: "Notification Settings", action: {
+                                path.append(EditProfileRoutes.notificationSetting)
+                            })
+                            ProfileMenuRow(icon: "heart.fill", title: "My Matches", action: {
+                                path.append(EditProfileRoutes.myMatches)
+                            })
+                            ProfileMenuRow(icon: "gearshape.fill", title: "Privacy Settings", action: {
+                                path.append(EditProfileRoutes.privacySettings)
+                            })
+                            ProfileMenuRow(icon: "trash.fill", title: "Delete Account", action: {
+                                path.append(EditProfileRoutes.deleteAccount)
+                            })
+                            ProfileMenuRow(icon: "rectangle.portrait.and.arrow.right", title: "Log Out", action: {
+                                path.append(EditProfileRoutes.logout)
+                            })
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 100) // Space for Tab Bar
                     }
                     .padding(.horizontal)
                 }
-//                .background(Color(red: 1.0, green: 0.9, blue: 0.94))
             }
             .overlay(alignment: .bottom) {
                 // Reuse the custom Tab Bar logic from previous screens here
@@ -197,7 +208,7 @@ struct ProfileMenuRow: View {
                     .font(.system(size: 14, weight: .bold))
             }
             .padding()
-            .background(Color.white)
+            .background(AppTheme.foregroundPink)
             .cornerRadius(12)
             .foregroundColor(.black)
         }

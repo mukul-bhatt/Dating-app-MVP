@@ -9,6 +9,7 @@ import SwiftUI
 
 struct EditProfileDetailsScreen3: View {
     @ObservedObject var viewModel: ProfileViewModel
+    @Binding var path: NavigationPath
     @State private var showSuccessAlert = false
     @State private var isSaving = false
     @State private var showInterestsSheet = false
@@ -50,6 +51,7 @@ struct EditProfileDetailsScreen3: View {
                             await MainActor.run {
                                 isSaving = false
                                 showSuccessAlert = true
+
                             }
                         } catch {
                             print("❌ Error saving profile: \(error)")
@@ -90,7 +92,9 @@ struct EditProfileDetailsScreen3: View {
                 }
             }
             .alert("Success", isPresented: $showSuccessAlert) {
-                Button("OK", role: .cancel) { }
+                Button("OK", role: .cancel) {
+                    path.removeLast(path.count)
+                 }
             } message: {
                 Text("Your profile has been updated successfully.")
             }
@@ -100,6 +104,6 @@ struct EditProfileDetailsScreen3: View {
     }
 }
 
-#Preview {
-    EditProfileDetailsScreen3(viewModel: ProfileViewModel())
-}
+//#Preview {
+//    EditProfileDetailsScreen3(viewModel: ProfileViewModel())
+//}

@@ -27,28 +27,37 @@ struct DiscoverFlowView: View {
             DiscoverView(path: $path, viewModel: viewModel)
                 .navigationDestination(for: DiscoverRoute.self) { route in
                     
-                switch route {
-                case .Feed(let id):
-                    // Find the profile in the array using the ID
+               
+                    switch route {
+                    case .Feed(let id):
+                        // Find the profile in the array using the ID
+                        if let profile = viewModel.users.first(where: { $0.id == id }) {
+                            FeedView(path: $path, profile: profile, viewModel:viewModel)
+                                // Tab bar remains visible for Feed
+                        }
+                   
+                        case .Profile(let id):
                             if let profile = viewModel.users.first(where: { $0.id == id }) {
-                                FeedView(path: $path, profile: profile, viewModel:viewModel)
+                                ProfileScreenView(path: $path, profile: profile, viewModel: viewModel)
+                                    .toolbar(.hidden, for: .tabBar)
                             }
 
-                case .Profile(let id):
-                    if let profile = viewModel.users.first(where: { $0.id == id }) {
-                        ProfileScreenView(path: $path, profile: profile, viewModel: viewModel)
+                        case .ReportProfile(let id):
+                            if let profile = viewModel.users.first(where: { $0.id == id }) {
+                                ReportProfileView(path: $path, profile: profile, viewModel: viewModel)
+                                    .toolbar(.hidden, for: .tabBar)
                             }
-                    
-                case .ReportProfile(let id):
-                    if let profile = viewModel.users.first(where: { $0.id == id }) {
-                        ReportProfileView(path: $path, profile: profile, viewModel: viewModel)
+
+                        case .Submit:
+                            SettingUpScreen(title: "Report Submitted", subTitle: "Thanks for reporting. Our Team will review this profile shortly")
+                                .toolbar(.hidden, for: .tabBar)
                     }
-                    
-                case .Submit:
-                    SettingUpScreen(title: "Report Submitted", subTitle: "Thanks for reporting. Our Team will review this profile shortly")
-                }
+                
+                
             }
+                      
         }
         
     }
 }
+

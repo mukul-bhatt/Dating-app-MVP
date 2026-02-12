@@ -27,9 +27,9 @@ struct EditProfileDetailsScreen2: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 20) {
                         
-                        BioSection(viewModel: viewModel)
+                        BioSection(viewModel: viewModel, isFromEditProfile: true)
                         
-                        AddPictures(columns: columns, viewModel: viewModel)
+                        AddPictures(columns: columns, viewModel: viewModel, isFromEditProfile: true)
                     }
                     
                 }

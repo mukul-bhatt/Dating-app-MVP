@@ -13,13 +13,15 @@ import SwiftUI
         
 //        @Binding var bio: String
         @ObservedObject var viewModel: ProfileViewModel
+
+        var isFromEditProfile: Bool = false
         
         var body: some View {
             // 3. Bio Section
             VStack(alignment: .leading, spacing: 10) {
                 Text("Bio")
-                    .font(.headline)
-                    .foregroundColor(.primary)
+                    .font(isFromEditProfile ? .subheadline : .headline)
+                    .foregroundColor(isFromEditProfile ? .secondary : .primary)
                 
                 VStack(alignment: .trailing, spacing: 5) {
                     TextEditor(text: $viewModel.bio)

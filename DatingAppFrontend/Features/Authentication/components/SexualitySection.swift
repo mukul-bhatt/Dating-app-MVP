@@ -22,6 +22,11 @@ import SwiftUI
       var isMultiSelect: Bool = false
       var titleFont: Font = .headline
       
+      // Computed property to get the correct options array
+      private var options: [LookUpOption] {
+          return isMultiSelect ? viewModel.partnerSexualityOptions : viewModel.sexualityOptions
+      }
+      
       // Dynamic helper to check selection state
       private func isSelected(optionId : Int) -> Bool {
                   if isMultiSelect {
@@ -52,7 +57,7 @@ import SwiftUI
                     .foregroundColor(titleFont == .headline ? .primary : .secondary)
                 
                 // Custom Flow Layout Container
-                FlowLayout(items: viewModel.sexualityOptions) { option in
+                FlowLayout(items: options) { option in
                     Button(action: {
                         handleSelection(for: option.id)
                     }) {
@@ -89,10 +94,15 @@ import SwiftUI
                 }
             }
             .onAppear {
-                // Trigger the fetch if the list is empty
-                if viewModel.sexualityOptions.isEmpty {
-//                    Task { await viewModel.fetchMastersOptionsForSexuality() }
-                    Task { await viewModel.loadSexualityOptions() }
+                // Load the correct options based on context
+                if isMultiSelect {
+                    if viewModel.partnerSexualityOptions.isEmpty {
+                        Task { await viewModel.loadPartnerSexualityOptions() }
+                    }
+                } else {
+                    if viewModel.sexualityOptions.isEmpty {
+                        Task { await viewModel.loadSexualityOptions() }
+                    }
                 }
             }
         }

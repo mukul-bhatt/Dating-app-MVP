@@ -18,10 +18,11 @@ class ProfileViewModel: ObservableObject{
     // MARK: - States of Register Form
     @Published  var name = ""
     @Published  var phoneNumber: String = ""
+    @Published  var email: String = ""
+    @Published  var selectedCountryDialCode: String = "91"
     @Published  var selectedGender = ""
     @Published  var dateOfBirth = Date()
     @Published  var hasSelectedDate = false
-    @Published  var selectedCountryDialCode: String = "91"
     @Published  var profileId: Int = 1009
     
     // MARK: - Profile Images
@@ -57,6 +58,10 @@ class ProfileViewModel: ObservableObject{
     @Published var sexualityId: Int? = nil
     @Published var selectedPartnerSexualityIds: Set<Int> = []
     @Published var sexualityOptions : [LookUpOption] = []
+    
+    // MARK: - Partner Preference Options (separate from individual options)
+    @Published var partnerReligionOptions: [LookUpOption] = []
+    @Published var partnerSexualityOptions: [LookUpOption] = []
     
     
     // MARK: - Work, Education & Intentions
@@ -336,7 +341,7 @@ class ProfileViewModel: ObservableObject{
     
     func loadReligionOptions() async {
         do {
-            let response: MasterOptionsResponse = try await NetworkManager.shared.request(endpoint: .getMasterOptions(type: "partner_religion"))
+            let response: MasterOptionsResponse = try await NetworkManager.shared.request(endpoint: .getMasterOptions(type: "your_religion"))
             await MainActor.run {
                 self.religionOptions = response.options
             }
@@ -347,12 +352,35 @@ class ProfileViewModel: ObservableObject{
     
     func loadSexualityOptions() async {
         do {
-            let response: MasterOptionsResponse = try await NetworkManager.shared.request(endpoint: .getMasterOptions(type: "partner_sexuality"))
+            let response: MasterOptionsResponse = try await NetworkManager.shared.request(endpoint: .getMasterOptions(type: "sexuality"))
             await MainActor.run {
                 self.sexualityOptions = response.options
             }
         } catch {
             print("❌ Error loading sexuality options: \(error)")
+        }
+    }
+    
+    // MARK: - Load Partner Preference Options
+    func loadPartnerReligionOptions() async {
+        do {
+            let response: MasterOptionsResponse = try await NetworkManager.shared.request(endpoint: .getMasterOptions(type: "partner_religion"))
+            await MainActor.run {
+                self.partnerReligionOptions = response.options
+            }
+        } catch {
+            print("❌ Error loading partner religion options: \(error)")
+        }
+    }
+    
+    func loadPartnerSexualityOptions() async {
+        do {
+            let response: MasterOptionsResponse = try await NetworkManager.shared.request(endpoint: .getMasterOptions(type: "partner_sexuality"))
+            await MainActor.run {
+                self.partnerSexualityOptions = response.options
+            }
+        } catch {
+            print("❌ Error loading partner sexuality options: \(error)")
         }
     }
     
@@ -443,6 +471,9 @@ class ProfileViewModel: ObservableObject{
             self.jobTitle = profile.job
             self.education = profile.education
             self.height = profile.height
+            self.phoneNumber = profile.contactNumber
+            self.email = profile.email
+            self.selectedCountryDialCode = String(profile.countryCode)
             
             // Date of Birth
             let dateFormatter = DateFormatter()
@@ -452,7 +483,7 @@ class ProfileViewModel: ObservableObject{
                 self.hasSelectedDate = true
             }
             
-            // IDs from lookup values
+            // IDs from lookup values (set AFTER options are loaded)
             self.pronounId = profile.pronouns?.id
             self.sexualityId = profile.sexuality?.id
             self.selectedReligionId = profile.religion?.id
@@ -474,14 +505,8 @@ class ProfileViewModel: ObservableObject{
                 self.maxValue = distanceRange.max
             }
             
-            // Interests - map interest names to IDs
+            // Interests - match interest names to IDs
             if !profile.interests.isEmpty {
-                // Load interests options if not already loaded
-                if self.OptionsForInterests.isEmpty {
-                    await loadOptionsForInterests()
-                }
-                
-                // Match interest names to IDs
                 let interestIds = self.OptionsForInterests
                     .filter { option in profile.interests.contains(option.interestsName) }
                     .map { $0.id }

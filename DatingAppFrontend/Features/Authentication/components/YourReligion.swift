@@ -18,6 +18,11 @@ import SwiftUI
         
         var isMultiSelect: Bool = false // Flag to switch modes
         
+        // Computed property to get the correct options array
+        private var options: [LookUpOption] {
+            return isMultiSelect ? viewModel.partnerReligionOptions : viewModel.religionOptions
+        }
+        
         // 1. Update to accept ID (Int) instead of Name (String)
             private func handleSelection(for id: Int) {
                 if isMultiSelect {
@@ -63,7 +68,7 @@ import SwiftUI
                     .foregroundColor(.primary)
                 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
-                    ForEach(viewModel.religionOptions) { option in
+                    ForEach(options) { option in
                         let name = option.name
                         let isSelected = checkSelection(option.id)
                         
@@ -116,10 +121,15 @@ import SwiftUI
                 }
             }
             .onAppear {
-                // Trigger the fetch if the list is empty
-                if viewModel.religionOptions.isEmpty {
-//                    Task { await viewModel.fetchMasterOptionsForReligion() }
-                    Task { await viewModel.loadReligionOptions() }
+                // Load the correct options based on context
+                if isMultiSelect {
+                    if viewModel.partnerReligionOptions.isEmpty {
+                        Task { await viewModel.loadPartnerReligionOptions() }
+                    }
+                } else {
+                    if viewModel.religionOptions.isEmpty {
+                        Task { await viewModel.loadReligionOptions() }
+                    }
                 }
             }
         }

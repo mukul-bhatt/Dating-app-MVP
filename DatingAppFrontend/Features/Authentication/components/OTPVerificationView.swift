@@ -9,6 +9,7 @@ struct OTPVerificationView: View {
     var screenType : String = "WelcomeBack!"
     var actionForPrimaryButton : () -> Void = { }
     var showInvalidOtpError: Bool
+    var showHeader: Bool = true // New parameter to control header visibility
     
     // Custom Colors
     // Keep background consistent with LoginView
@@ -40,12 +41,13 @@ struct OTPVerificationView: View {
                 
                 VStack(spacing: 10) {
                     
-                    // Logo Section
-                    
-                    AuthHeader(
-                        title: screenType,
-                        subtitle: "Please enter the OTP sent on \(maskedPhoneNumber)"
-                    )
+                    // Logo Section - conditionally shown
+                    if showHeader {
+                        AuthHeader(
+                            title: screenType,
+                            subtitle: "Please enter the OTP sent on \(maskedPhoneNumber)"
+                        )
+                    }
                     
                     
                     // OTP View
@@ -85,7 +87,11 @@ struct OTPVerificationView: View {
                         .onAppear {
                             isRunning = true // Restart if coming back
                         }
-                    Spacer()
+                    
+//                    if showHeader{
+                        Spacer()
+//                    }
+                    
                     
                     if showInvalidOtpError {
                         HStack(spacing: 4) {
