@@ -9,6 +9,8 @@ import SwiftUI
 
 enum EditProfileRoutes: Hashable {
     case editProfile
+    case editProfile2
+    case editProfile3
     case contactDetails 
     case notificationSetting
     case myMatches
@@ -26,24 +28,36 @@ struct EditProfileFlowView: View {
     var body: some View {
         NavigationStack(path: $path){
             EditProfileMain(path: $path, viewModel: profileViewModel)
-                .navigationDestination(for: EditProfileRoutes.self){
-                    switch $0 {
-                    case .editProfile:
-                        EditProfileDetailsScreen(viewModel: profileViewModel)
-                    case .contactDetails:
-                        ContactDetailsView()
-                    case .notificationSetting:
-                        NotificationSettingView()
-                    case .myMatches:
-                        MyMatchesView()
-                    case .privacySettings:
-                        PrivacySettingsView()
-                    case .deleteAccount:
-                        DeleteAccountView()
-                    case .logout:
-                        LogoutView()
+                .navigationDestination(for: EditProfileRoutes.self) { route in
+                    Group {
+                        switch route {
+                        case .editProfile:
+                            EditProfileDetailsScreen(viewModel: profileViewModel, path: $path)
+                        case .editProfile2:
+                            EditProfileDetailsScreen2(viewModel: profileViewModel, path: $path)
+                        case .editProfile3:
+                            EditProfileDetailsScreen3(viewModel: profileViewModel)
+                        case .contactDetails:
+                            ContactDetailsView()
+                        case .notificationSetting:
+                            NotificationSettingView()
+                        case .myMatches:
+                            MyMatchesView()
+                        case .privacySettings:
+                            PrivacySettingsView()
+                        case .deleteAccount:
+                            DeleteAccountView()
+                        case .logout:
+                            LogoutView()
+                        }
                     }
+                    .toolbar(.hidden, for: .tabBar)
                 }
+        }
+        .onAppear {
+            Task {
+                await profileViewModel.loadProfileData()
+            }
         }
     }
 }

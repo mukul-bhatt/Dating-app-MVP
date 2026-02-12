@@ -97,11 +97,11 @@ struct ChatView: View {
     var headerView: some View {
         
         HStack(spacing: 15) {
-//            Button(action: {
-//                dismiss()
-//            }) {
-//                Image(systemName: "arrow.left")
-//            }
+            Button(action: {
+                dismiss()
+            }) {
+                Image(systemName: "arrow.left")
+            }
             
             
             AsyncImage(url: viewModel.receiverImageURL){ image in

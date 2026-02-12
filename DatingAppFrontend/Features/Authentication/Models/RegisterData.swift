@@ -14,6 +14,8 @@ enum AuthNetworkError: Error {
     case unknown
 }
 
+struct EmptyResponse: Codable {}
+
 // Body for register call
 struct Register: Codable {
     let phoneNumber: String

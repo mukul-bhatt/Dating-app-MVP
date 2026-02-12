@@ -11,6 +11,8 @@ import SwiftUI
 struct EditProfileDetailsScreen: View {
     
     @ObservedObject var viewModel: ProfileViewModel
+    @Binding var path: NavigationPath
+    
     @State private var showDatePicker = false
     
     var body: some View {
@@ -64,11 +66,6 @@ struct EditProfileDetailsScreen: View {
                         selectionId: $viewModel.selectedReligionId,
                         options: viewModel.religionOptions
                     )
-                    .onAppear {
-                        if viewModel.religionOptions.isEmpty {
-                            Task { await viewModel.loadReligionOptions() }
-                        }
-                    }
                     
                     // 6. Sexuality
                     EditProfileLookupDropdown(
@@ -76,11 +73,7 @@ struct EditProfileDetailsScreen: View {
                         selectionId: $viewModel.sexualityId,
                         options: viewModel.sexualityOptions
                     )
-                    .onAppear {
-                        if viewModel.sexualityOptions.isEmpty {
-                            Task { await viewModel.loadSexualityOptions() }
-                        }
-                    }
+
                     
                     // 7. Your Pronouns
                     EditProfileLookupDropdown(
@@ -88,12 +81,7 @@ struct EditProfileDetailsScreen: View {
                         selectionId: $viewModel.pronounId,
                         options: viewModel.pronounOptions
                     )
-                    .onAppear {
-                        if viewModel.pronounOptions.isEmpty {
-                            Task { await viewModel.loadOptionsForPronouns() }
-                        }
-                    }
-                    
+
                     // 8. Height
                     EditProfileTextField(
                         label: "Height",
@@ -103,34 +91,49 @@ struct EditProfileDetailsScreen: View {
                     )
                     .keyboardType(.numberPad)
                     
+                    // Preferred Partner Sexuality
+                    SexualitySection(viewModel: viewModel, title: "Preferred Partner's Sexuality", isMultiSelect: true, titleFont: .subheadline)
+
                     // MARK: - Next / Save Button
-                    Button(action: {
-                        viewModel.hasAttemptedSubmit = true
-                        if viewModel.isFormValid {
-                            Task {
-                                try? await viewModel.postFormDataToBackend()
-                            }
-                        }
-                    }) {
-                        Text("Next")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color(red: 0.85, green: 0.25, blue: 0.45))
-                            .cornerRadius(25)
+//                    Button(action: {
+//                        viewModel.hasAttemptedSubmit = true
+//                        if viewModel.isFormValid {
+//                            Task {
+//                                try? await viewModel.postFormDataToBackend()
+//                            }
+//                        }
+//                    }) {
+//                        Text("Next")
+//                            .font(.headline)
+//                            .foregroundColor(.white)
+//                            .frame(maxWidth: .infinity)
+//                            .padding()
+//                            .background(Color.button)
+//                            .cornerRadius(25)
+//                    }
+//                    .padding(.top, 10)
+
+                    PrimaryButton() {
+                        path.append(EditProfileRoutes.editProfile2)
                     }
-                    .padding(.top, 10)
+                        
                 }
                 .padding(.horizontal)
             }
         }
         .onAppear{
             Task{
-                await viewModel.loadLookingForOptions()
-                await viewModel.loadOptionsForPronouns()
-                await viewModel.loadReligionOptions()
-                await viewModel.loadSexualityOptions()
+                if viewModel.religionOptions.isEmpty {
+                    await viewModel.loadReligionOptions()
+                }
+
+                if viewModel.pronounOptions.isEmpty {
+                    await viewModel.loadOptionsForPronouns()
+                }
+
+                if viewModel.sexualityOptions.isEmpty {
+                    await viewModel.loadSexualityOptions()
+                }
             }
             
         }
@@ -142,18 +145,52 @@ struct EditProfileDetailsScreen: View {
         HStack {
             Spacer()
             VStack(spacing: 12) {
-                Image("NiaSharma")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 180, height: 180)
-                    .cornerRadius(20)
+                if let firstImageURL = viewModel.profileImageURLs.first,
+                   let url = URL(string: firstImageURL) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            ProgressView()
+                                .frame(width: 180, height: 180)
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 180, height: 180)
+                                .cornerRadius(20)
+                        case .failure:
+                            Image(systemName: "person.circle.fill")
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 180, height: 180)
+                                .foregroundColor(.gray)
+                                .cornerRadius(20)
+                        @unknown default:
+                            EmptyView()
+                        }
+                    }
+                } else {
+                    Image(systemName: "person.circle.fill")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 180, height: 180)
+                        .foregroundColor(.gray)
+                        .cornerRadius(20)
+                }
                 
-                Text("Nia Sharma, 23")
+                Text("\(viewModel.name), \(calculateAge(from: viewModel.dateOfBirth))")
                     .font(.title3)
                     .fontWeight(.semibold)
             }
             Spacer()
         }
+    }
+    
+    // Helper function to calculate age from date of birth
+    private func calculateAge(from dateOfBirth: Date) -> String {
+        let calendar = Calendar.current
+        let ageComponents = calendar.dateComponents([.year], from: dateOfBirth, to: Date())
+        return "\(ageComponents.year ?? 0)"
     }
 }
 
@@ -176,6 +213,7 @@ struct EditProfileTextField: View {
             HStack {
                 TextField(placeholder, text: $text)
                     .font(.body)
+                    .foregroundStyle(Color.primary)
                 
                 if let suffix = suffix {
                     Text(suffix)
@@ -354,22 +392,8 @@ struct EditProfileLookupDropdown: View {
     }
 }
 
-// MARK: - Progress Indicator
-struct ProgressIndicator: View {
-    let currentStep: Int
-    
-    var body: some View {
-        HStack(spacing: 8) {
-            ForEach(0..<3, id: \.self) { index in
-                Capsule()
-                    .fill(index == currentStep ? Color(red: 0.85, green: 0.25, blue: 0.45) : Color.black.opacity(0.7))
-                    .frame(height: 4)
-            }
-        }
-        .padding(.vertical, 10)
-    }
-}
+
 
 #Preview {
-    EditProfileDetailsScreen(viewModel: ProfileViewModel())
+    EditProfileDetailsScreen(viewModel: ProfileViewModel(), path: .constant(NavigationPath()))
 }

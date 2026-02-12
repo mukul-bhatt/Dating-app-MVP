@@ -18,7 +18,9 @@ import SwiftUI
       
       @ObservedObject var viewModel: ProfileViewModel
      
+      var title: String = "Sexuality"
       var isMultiSelect: Bool = false
+      var titleFont: Font = .headline
       
       // Dynamic helper to check selection state
       private func isSelected(optionId : Int) -> Bool {
@@ -45,9 +47,9 @@ import SwiftUI
         
         var body: some View {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Sexuality")
-                    .font(.headline)
-                    .foregroundColor(.primary)
+                Text(title)
+                    .font(titleFont)
+                    .foregroundColor(titleFont == .headline ? .primary : .secondary)
                 
                 // Custom Flow Layout Container
                 FlowLayout(items: viewModel.sexualityOptions) { option in

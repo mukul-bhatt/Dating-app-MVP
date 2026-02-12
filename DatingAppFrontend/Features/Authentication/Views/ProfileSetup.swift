@@ -49,7 +49,7 @@ struct ProfileSetup: View {
                         YourPronouns(viewModel: viewModel)
                         
                         // Sexuality Section
-                        SexualitySection(viewModel: viewModel)
+                        SexualitySection(viewModel: viewModel, title: "Your Sexuality")
                         
                         // Bio Section
                         BioSection(viewModel: viewModel)
@@ -71,7 +71,7 @@ struct ProfileSetup: View {
                         
                         
                         // Partner's Sexuality
-                        SexualitySection(viewModel: viewModel, isMultiSelect: true)
+                        SexualitySection(viewModel: viewModel, title: "Partner's Sexuality", isMultiSelect: true)
                     }
                 }
                 

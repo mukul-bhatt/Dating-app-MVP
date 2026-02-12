@@ -29,7 +29,6 @@ struct RegisterOtpVerificationView: View {
                 if response.success {
                     await MainActor.run {
                         authViewModel.saveTokenFromResponse(response)
-                        viewModel.updateAuthToken(authViewModel.authToken ?? "")
 //                        path = NavigationPath()
                         path.append(Route.imageSelectionView)
                     }

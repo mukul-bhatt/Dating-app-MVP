@@ -15,8 +15,8 @@ import PhotosUI
         @ObservedObject var viewModel: ProfileViewModel
         
         var body: some View {
-            AddPicturesHeader(title: "Add your pictures", subTitle: "Add a photo so people can see the real you!")
-            ScrollView{
+            VStack(alignment: .leading, spacing: 16) {
+                AddPicturesHeader(title: "Add your pictures", subTitle: "Add a photo so people can see the real you!")
                 
                 LazyVGrid(columns: columns, spacing: 16) {
                     // Wrap button in PhotosPicker
@@ -28,7 +28,6 @@ import PhotosUI
                         ImageCell(image: viewModel.selectedImages[index])
                     }
                 }
-//                .padding(.horizontal, 24)
             }
         }
     }

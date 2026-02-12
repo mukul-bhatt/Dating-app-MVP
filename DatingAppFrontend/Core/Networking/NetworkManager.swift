@@ -113,7 +113,13 @@ actor NetworkManager {
         }
     }
     
-    func upload<T: Decodable>(endpoint: APIEndpoint, parameters: [String: String], images: [UIImage]) async throws -> T {
+    func upload<T: Decodable>(
+        endpoint: APIEndpoint,
+        parameters: [String: String] = [:],
+        images: [UIImage],
+        imageFieldName: String = "proofs",
+        useIndexedFieldNames: Bool = false
+    ) async throws -> T {
         // 1. Construct URL safely using URLComponents
         guard var components = URLComponents(string: baseURL + endpoint.path) else {
             throw URLError(.badURL)
@@ -155,7 +161,8 @@ actor NetworkManager {
         for (index, image) in images.enumerated() {
             if let imageData = image.jpegData(compressionQuality: 0.7) {
                 body.append(Data("--\(boundary)\r\n".utf8))
-                body.append(Data("Content-Disposition: form-data; name=\"proofs\"; filename=\"proof\(index).jpg\"\r\n".utf8))
+                let finalFieldName = useIndexedFieldNames ? (index == 0 ? imageFieldName : "\(imageFieldName)\(index)") : imageFieldName
+                body.append(Data("Content-Disposition: form-data; name=\"\(finalFieldName)\"; filename=\"photo\(index).jpg\"\r\n".utf8))
                 body.append(Data("Content-Type: image/jpeg\r\n\r\n".utf8))
                 body.append(imageData)
                 body.append(Data("\r\n".utf8))

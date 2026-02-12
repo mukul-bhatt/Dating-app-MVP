@@ -12,7 +12,7 @@ struct GenderPickerView: View {
     @Binding var selectedGender: String
     @State private var isExpanded: Bool = false
     
-    let genderOptions = ["Male", "Female", "Other", "Prefer not to say"]
+    let genderOptions = ["Male", "Female", "Others", "Prefer not to say"]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

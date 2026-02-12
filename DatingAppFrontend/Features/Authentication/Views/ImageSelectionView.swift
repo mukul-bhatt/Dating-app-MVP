@@ -71,7 +71,7 @@ struct ImageSelectionView: View {
                         
                         Task {
                             do{
-                                try await viewModel.uploadImageToServer()
+                                try await viewModel.uploadImages()
                                 print("✅ Upload Successful")
                                 
                 

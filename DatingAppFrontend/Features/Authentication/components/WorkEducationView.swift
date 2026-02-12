@@ -110,7 +110,7 @@ struct WorkEducationView: View {
         }
         .onAppear {
             Task {
-                await viewModel.loadRelationshipStatusOptions()
+                await viewModel.loadRelationshipOptions()
                 await viewModel.loadLookingForOptions()
             }
         }

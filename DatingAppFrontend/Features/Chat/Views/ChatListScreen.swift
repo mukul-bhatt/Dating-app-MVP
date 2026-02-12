@@ -86,7 +86,8 @@ struct ChatListScreen: View {
     
     var headerView: some View {
         HStack {
-            Image(systemName: "arrow.left")
+//            Image(systemName: "arrow.left")
+            
             Text("Chats")
                 .font(.title3)
                 .fontWeight(.medium)

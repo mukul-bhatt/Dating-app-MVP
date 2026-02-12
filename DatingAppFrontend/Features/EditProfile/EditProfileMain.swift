@@ -24,18 +24,45 @@ struct EditProfileMain: View {
                 // MARK: - Header
                 header
 
-                ScrollView {
+                ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
                         
                         // MARK: - Profile Image & Info
                         VStack(spacing: 12) {
-                            Image("NiaSharma") // Replace with your asset
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 180, height: 180)
-                                .cornerRadius(20)
+                            if let firstImageURL = viewModel.profileImageURLs.first,
+                               let url = URL(string: firstImageURL) {
+                                AsyncImage(url: url) { phase in
+                                    switch phase {
+                                    case .empty:
+                                        ProgressView()
+                                            .frame(width: 180, height: 180)
+                                    case .success(let image):
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 180, height: 180)
+                                            .cornerRadius(20)
+                                    case .failure:
+                                        Image(systemName: "person.circle.fill")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 180, height: 180)
+                                            .foregroundColor(.gray)
+                                            .cornerRadius(20)
+                                    @unknown default:
+                                        EmptyView()
+                                    }
+                                }
+                            } else {
+                                Image(systemName: "person.circle.fill")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 180, height: 180)
+                                    .foregroundColor(.gray)
+                                    .cornerRadius(20)
+                            }
                             
-                            Text("Nia Sharma, 23")
+                            Text("\(viewModel.name), \(calculateAge(from: viewModel.dateOfBirth))")
                                 .font(.title3)
                                 .fontWeight(.semibold)
                             
@@ -114,6 +141,13 @@ struct EditProfileMain: View {
         .background(Color(red: 0.85, green: 0.25, blue: 0.45))
         .cornerRadius(15)
         .padding(.horizontal)
+    }
+    
+    // Helper function to calculate age from date of birth
+    private func calculateAge(from dateOfBirth: Date) -> String {
+        let calendar = Calendar.current
+        let ageComponents = calendar.dateComponents([.year], from: dateOfBirth, to: Date())
+        return "\(ageComponents.year ?? 0)"
     }
     
     var header: some View {
