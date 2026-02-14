@@ -16,7 +16,7 @@ enum EditProfileRoutes: Hashable {
     case myMatches
     case privacySettings
     case deleteAccount
-    case logout
+//    case logout
 }
 
 
@@ -47,8 +47,7 @@ struct EditProfileFlowView: View {
                             PrivacySettingsView()
                         case .deleteAccount:
                             DeleteAccountView()
-                        case .logout:
-                            LogoutView()
+                        
                         }
                     }
                     .toolbar(.hidden, for: .tabBar)

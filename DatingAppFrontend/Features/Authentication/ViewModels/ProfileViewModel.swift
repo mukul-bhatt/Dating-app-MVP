@@ -29,6 +29,7 @@ class ProfileViewModel: ObservableObject{
     @Published var selectedImages: [UIImage] = []
     @Published var photosPickerItems: [PhotosPickerItem] = []
     @Published var profileImageURLs: [String] = []
+    @Published var profilePicture: String = ""
     
     // MARK: - Basic Details
     @Published var location: String = ""
@@ -463,6 +464,21 @@ class ProfileViewModel: ObservableObject{
             
             let profile = response.data.profile
             
+            // IMPORTANT: Load all options FIRST before setting IDs
+            // This ensures dropdowns can display the selected values
+            if religionOptions.isEmpty {
+                await loadReligionOptions()
+            }
+            if sexualityOptions.isEmpty {
+                await loadSexualityOptions()
+            }
+            if lookingForOptions.isEmpty {
+                await loadLookingForOptions()
+            }
+            if OptionsForInterests.isEmpty {
+                await loadOptionsForInterests()
+            }
+            
             // Basic Info
             self.name = profile.firstName
             self.selectedGender = profile.gender
@@ -515,6 +531,7 @@ class ProfileViewModel: ObservableObject{
             
             // Store profile image URLs
             self.profileImageURLs = profile.imageProfiles
+            self.profilePicture = profile.profilePicture
             
             print("✅ Profile data loaded successfully")
             

@@ -13,6 +13,8 @@ struct EditProfileMain: View {
     @ObservedObject var viewModel: ProfileViewModel
     
     
+    @State private var showLogoutView: Bool = false
+    
     var body: some View {
         
         
@@ -82,7 +84,7 @@ struct EditProfileMain: View {
                         .padding(.top)
                         
                         // MARK: - Subscription Card
-//                       subscriptionCard
+                    //    subscriptionCard
                         
                         // MARK: - Settings List
                         VStack(spacing: 12) {
@@ -102,7 +104,10 @@ struct EditProfileMain: View {
                                 path.append(EditProfileRoutes.deleteAccount)
                             })
                             ProfileMenuRow(icon: "rectangle.portrait.and.arrow.right", title: "Log Out", action: {
-                                path.append(EditProfileRoutes.logout)
+                                withAnimation {
+                                    showLogoutView = true
+                                }
+                                
                             })
                         }
                         .padding(.horizontal)
@@ -111,10 +116,11 @@ struct EditProfileMain: View {
                     .padding(.horizontal)
                 }
             }
-            .overlay(alignment: .bottom) {
-                // Reuse the custom Tab Bar logic from previous screens here
+          
+            if showLogoutView{
+                LogoutView(showLogoutView: $showLogoutView)
             }
-            .edgesIgnoringSafeArea(.bottom)
+           
         }
     }
     
@@ -168,6 +174,7 @@ struct EditProfileMain: View {
                     .padding(10)
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(8)
+                    .opacity(0)
             }
             
             Spacer()
@@ -184,6 +191,7 @@ struct EditProfileMain: View {
                     .padding(10)
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(8)
+                    .opacity(0)
             }
         }
         .padding()
@@ -210,7 +218,7 @@ struct ProfileMenuRow: View {
             .padding()
             .background(AppTheme.foregroundPink)
             .cornerRadius(12)
-            .foregroundColor(.black)
+            .foregroundColor(.white)
         }
         .buttonStyle(PlainButtonStyle())
 }

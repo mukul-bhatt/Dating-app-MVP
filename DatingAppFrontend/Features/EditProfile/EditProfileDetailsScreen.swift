@@ -7,13 +7,17 @@
 
 
 import SwiftUI
+import PhotosUI
 
+@MainActor
 struct EditProfileDetailsScreen: View {
     
     @ObservedObject var viewModel: ProfileViewModel
     @Binding var path: NavigationPath
     
+    @StateObject private var editProfileViewModel = EditProfileViewModel()
     @State private var showDatePicker = false
+
     
     var body: some View {
         ZStack {
@@ -141,48 +145,114 @@ struct EditProfileDetailsScreen: View {
     }
     
     // MARK: - Profile Image
+    @MainActor
     var centerProfileImage: some View {
         HStack {
             Spacer()
             VStack(spacing: 12) {
-                if let firstImageURL = viewModel.profileImageURLs.first,
-                   let url = URL(string: firstImageURL) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .empty:
-                            ProgressView()
-                                .frame(width: 180, height: 180)
-                        case .success(let image):
-                            image
+                let selectedImage = editProfileViewModel.selectedProfilePicture
+                let isUploading = editProfileViewModel.isUploadingProfilePicture
+                let profilePictureURL = viewModel.profilePicture
+                
+                PhotosPicker(selection: $editProfileViewModel.profilePicturePickerItems,
+                            maxSelectionCount: 1,
+                            matching: .images,
+                            photoLibrary: .shared()) {
+                    ZStack(alignment: .bottomTrailing) {
+                        // Profile Image
+                        if let selectedImage = selectedImage {
+                            // Show newly selected image
+                            Image(uiImage: selectedImage)
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: 180, height: 180)
-                                .cornerRadius(20)
-                        case .failure:
+                                .clipShape(RoundedRectangle(cornerRadius: 20))
+                        } else if let url = URL(string: profilePictureURL) {
+                            // Show existing profile image
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                        .frame(width: 180, height: 180)
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 180, height: 180)
+                                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                                case .failure:
+                                    Image(systemName: "person.circle.fill")
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 180, height: 180)
+                                        .foregroundColor(.gray)
+                                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            }
+                        } else {
+                            // Placeholder when no image
                             Image(systemName: "person.circle.fill")
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: 180, height: 180)
                                 .foregroundColor(.gray)
-                                .cornerRadius(20)
-                        @unknown default:
-                            EmptyView()
+                                .clipShape(RoundedRectangle(cornerRadius: 20))
                         }
+                        
+                        // Loading overlay
+                        if isUploading {
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.black.opacity(0.5))
+                                .frame(width: 180, height: 180)
+                            
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(1.5)
+                        }
+                        
+                        // Edit Icon - Always visible
+                        ZStack {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 44, height: 44)
+                                .shadow(color: .black.opacity(0.3), radius: 6, x: 0, y: 3)
+                            
+                            Circle()
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                .frame(width: 44, height: 44)
+                            
+                            Image(systemName: "camera.fill")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(.black)
+                        }
+                        .offset(x: -10, y: -10)
                     }
-                } else {
-                    Image(systemName: "person.circle.fill")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 180, height: 180)
-                        .foregroundColor(.gray)
-                        .cornerRadius(20)
                 }
+                .disabled(editProfileViewModel.isUploadingProfilePicture)
                 
                 Text("\(viewModel.name), \(calculateAge(from: viewModel.dateOfBirth))")
                     .font(.title3)
                     .fontWeight(.semibold)
             }
             Spacer()
+        }
+        .onChange(of: editProfileViewModel.profilePicturePickerItems) { _, newItems in
+            if !newItems.isEmpty {
+                Task {
+                    await editProfileViewModel.loadSelectedProfilePicture(profileViewModel: viewModel)
+                }
+            }
+        }
+        .alert("Upload Error", isPresented: .constant(editProfileViewModel.uploadError != nil)) {
+            Button("OK") {
+                editProfileViewModel.uploadError = nil
+            }
+        } message: {
+            if let error = editProfileViewModel.uploadError {
+                Text(error)
+            }
         }
     }
     
@@ -397,3 +467,4 @@ struct EditProfileLookupDropdown: View {
 #Preview {
     EditProfileDetailsScreen(viewModel: ProfileViewModel(), path: .constant(NavigationPath()))
 }
+

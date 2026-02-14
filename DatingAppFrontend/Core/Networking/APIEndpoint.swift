@@ -24,6 +24,7 @@ enum APIEndpoint {
     case getInterests
     case updateProfile
     case uploadPicture
+    case updateProfilePicture
     case getProfileById
     
     nonisolated var path: String {
@@ -44,6 +45,7 @@ enum APIEndpoint {
         case .getInterests: return "/profile/get-interests"
         case .updateProfile: return "/profile/set-update-profile"
         case .uploadPicture: return "/profile/upload-picture"
+        case .updateProfilePicture: return "/profile/update-profile"
         case .getProfileById: return "/profile/get-profile-by-id"
         }
     }
@@ -60,7 +62,7 @@ enum APIEndpoint {
     nonisolated var method: String {
         switch self {
         case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById: return "GET"
-        case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture: return "POST"
+        case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture, .updateProfilePicture: return "POST"
         }
     }
 }

@@ -18,6 +18,11 @@ struct DiscoverView: View {
     @ObservedObject var viewModel: DiscoverViewModel
     @State var triggerSwipe: SwipeDirection? = nil
     @State private var showFilterModal = false
+
+    var hasProfilesRemaining: Bool {
+        viewModel.currentIndex < viewModel.users.count
+    }
+    
     var body: some View {
         ZStack {
             // Background
@@ -34,7 +39,10 @@ struct DiscoverView: View {
 
                     Spacer()
                     
-                    ActionButtons(viewModel: viewModel, triggerSwipe: $triggerSwipe)
+                    if  hasProfilesRemaining{
+                        ActionButtons(viewModel: viewModel, triggerSwipe: $triggerSwipe)
+                    }
+                    
                     Spacer()
             }
             .padding(.horizontal)

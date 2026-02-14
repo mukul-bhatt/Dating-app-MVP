@@ -7,13 +7,11 @@
 
 import SwiftUI
 
-
-
-
 struct CardStackView: View {
     @ObservedObject var viewModel: DiscoverViewModel
     @Binding var triggerSwipe: SwipeDirection?
     @Binding var path: NavigationPath
+    
     
     var body: some View {
         ZStack{
@@ -21,6 +19,27 @@ struct CardStackView: View {
             if !viewModel.users.isEmpty {
                 ForEach(viewModel.currentIndex..<min(viewModel.currentIndex + 3, viewModel.users.count), id: \.self) { index in
                     let profile = viewModel.users[index]
+                    let cardOffset = index - viewModel.currentIndex
+                    
+                    // Calculate X offset for fan-out effect
+                    let xOffset: CGFloat = {
+                        switch cardOffset {
+                        case 0: return 0 // Top card - centered
+                        case 1: return 30 // Second card - peek right
+                        case 2: return -30 // Third card - peek left
+                        default: return 0
+                        }
+                    }()
+                    
+                    // Calculate rotation angle for tilt effect
+                    let rotationAngle: Double = {
+                        switch cardOffset {
+                        case 0: return 0 // Top card - no tilt
+                        case 1: return 5 // Second card - tilt right
+                        case 2: return -5 // Third card - tilt left
+                        default: return 0
+                        }
+                    }()
                 
                     ProfileCard(
                         profile: profile,
@@ -31,7 +50,10 @@ struct CardStackView: View {
                     )
                     .id(profile.id)
                     .zIndex(Double(viewModel.users.count - index))
-                    .offset(y: CGFloat(index - viewModel.currentIndex) * 10)
+                    // Fan-out stacking effect with rotation
+                    .scaleEffect(1 - (CGFloat(cardOffset) * 0.06)) // Each card 5% smaller
+                    .rotationEffect(.degrees(rotationAngle)) // Tilt cards left/right
+                    .offset(x: xOffset) // Fan out horizontally
                     .disabled(index != viewModel.currentIndex)
                     .onTapGesture {
                         // I need to navigate to Feed Screen
@@ -82,3 +104,4 @@ struct CardStackView: View {
 //#Preview {
 //    CardStackView()
 //}
+

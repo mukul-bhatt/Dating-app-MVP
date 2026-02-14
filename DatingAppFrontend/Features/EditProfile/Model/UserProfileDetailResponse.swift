@@ -47,6 +47,7 @@ struct UserProfileDetail: Codable {
     let preferredRange: String
     let interests: [String]
     let imageProfiles: [String]
+    let profilePicture: String
 }
 
 struct LookupValue: Codable {
