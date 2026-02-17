@@ -31,8 +31,7 @@ struct EditProfileMain: View {
                         
                         // MARK: - Profile Image & Info
                         VStack(spacing: 12) {
-                            if let firstImageURL = viewModel.profileImageURLs.first,
-                               let url = URL(string: firstImageURL) {
+                             if let url = URL(string: viewModel.profilePicture) {
                                 AsyncImage(url: url) { phase in
                                     switch phase {
                                     case .empty:

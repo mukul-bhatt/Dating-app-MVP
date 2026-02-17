@@ -12,7 +12,7 @@ import PhotosUI
 
 actor NetworkManager {
     static let shared = NetworkManager()
-    private let baseURL = "https://prettying-randell-ungrudgingly.ngrok-free.dev/api"
+    private let baseURL = "https://unammoniated-flameproof-emery.ngrok-free.dev/api"
     
     // Dependency Injection: The Network Manager needs access to the Auth Store
     var tokenProvider: AuthViewModel?

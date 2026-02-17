@@ -30,22 +30,60 @@ class NotificationsManager: ObservableObject {
         setupSocketListener()
     }
     
+    func fetchHistoricalNotifications() async {
+        do {
+            let response: AppNotificationViaApi = try await NetworkManager.shared.request(
+                endpoint: .getNotifications(types: "match,like")
+            )
+            
+            if response.success {
+                let historical = response.data.map { item in
+                    AppNotification(
+                        id: item.id,
+                        senderId: item.senderUserId,
+                        senderName: item.firstName,
+                        message: item.notificationBody,
+                        senderImageUrl: URL(string: item.profile),
+                        conversationId: item.conversationId,
+                        timestamp: ISO8601DateFormatter().date(from: item.createdAt) ?? Date(),
+                        notificationType: item.notificationType
+                    )
+                }
+                  
+                await MainActor.run {
+                    // Merge avoiding duplicates (by id)
+                    for notification in historical {
+                        if !self.notifications.contains(where: { $0.id == notification.id }) {
+                            self.notifications.append(notification)
+                        }
+                    }
+                    // Sort by timestamp descending
+                    self.notifications.sort(by: { $0.timestamp > $1.timestamp })
+                }
+            }
+        } catch {
+            print("❌ Error fetching historical notifications: \(error)")
+        }
+    }
+    
     private func setupSocketListener() {
         ChatSocketManager.shared.notificationSubject
             .receive(on: DispatchQueue.main)
             .sink { [weak self] event in
                 guard let self = self else { return }
                 
-                // Only handle "message" type for now
-                if event.data.notificationType == "message" {
+                // Handle various types from WebSocket
+                let type = event.data.notificationType
+                
+                if type == "message" || type == "like" || type == "match" {
                     let incomingConvId = event.data.ConversationId
                     let senderId = event.data.FromUserId
                     
-                    // Logic: Suppress only if we ARE in a chat AND it's THIS chat.
-                    // We check BOTH conversationId and senderId (receiverId for us) 
-                    // because some notifications have null conversationId initially.
-                    let isUserInThisChat = (incomingConvId != nil && incomingConvId == self.activeConversationId) ||
-                                           (senderId == self.activeReceiverId)
+                    // Logic: Suppress only message notifications if we ARE in that chat already
+                    let isUserInThisChat = type == "message" && (
+                        (incomingConvId != nil && incomingConvId == self.activeConversationId) ||
+                        (senderId == self.activeReceiverId)
+                    )
                     
                     if !isUserInThisChat {
                         self.addIncomingNotification(from: event)
@@ -58,23 +96,25 @@ class NotificationsManager: ObservableObject {
     }
     
     private func addIncomingNotification(from event: NotificationEvent) {
-        // Fix: Treat empty or whitespace profile as nil to trigger placeholders
         let profileStr = event.data.Profile.trimmingCharacters(in: .whitespacesAndNewlines)
         let profileUrl = profileStr.isEmpty ? nil : URL(string: profileStr)
         
         let newNotification = AppNotification(
             senderId: event.data.FromUserId,
             senderName: event.data.FromUserName,
-            message: event.data.Message,
+            message: event.data.Message.isEmpty ? event.data.Body : event.data.Message,
             senderImageUrl: profileUrl,
             conversationId: event.data.ConversationId,
-            timestamp: Date()
+            timestamp: Date(),
+            notificationType: event.data.notificationType
         )
         addNotification(newNotification)
     }
     
     func addNotification(_ notification: AppNotification) {
-        // Add to the top of the list
+        // Avoid duplicate ID if socket sends what API already fetched
+        guard !notifications.contains(where: { $0.id == notification.id }) else { return }
+        
         self.notifications.insert(notification, at: 0)
         self.unreadCount += 1
         print("🔔 Global alert added: \(notification.message) | Total unread: \(unreadCount)")
@@ -89,5 +129,30 @@ class NotificationsManager: ObservableObject {
         unreadCount = 0
         activeConversationId = nil
         activeReceiverId = nil
+    }
+
+    // MARK: - Actions
+
+    func likeBack(notification: AppNotification) async {
+        let body = sendLike(toUserId: notification.senderId, action: "Like")
+        
+        do {
+            let response: likeResponse = try await NetworkManager.shared.request(
+                endpoint: .likeProfile,
+                body: body
+            )
+            
+            if response.success {
+                print("✅ Liking back successful: \(response.message)")
+                // Remove notification from list as it's now handled
+                await MainActor.run {
+                    self.notifications.removeAll { $0.id == notification.id }
+                }
+            } else {
+                print("❌ Liking back failed: \(response.message)")
+            }
+        } catch {
+            print("❌ Liking back error: \(error.localizedDescription)")
+        }
     }
 }

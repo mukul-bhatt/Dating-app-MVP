@@ -29,7 +29,7 @@ class ChatSocketManager{
         }
         
         self.currentUserId = userId
-        guard let url = URL(string: "ws://prettying-randell-ungrudgingly.ngrok-free.dev/ws?userId=\(userId)") else{
+        guard let url = URL(string: "ws://unammoniated-flameproof-emery.ngrok-free.dev/ws?userId=\(userId)") else{
             print("❌ Error constructing socket URL")
             return
         }

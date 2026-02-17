@@ -26,7 +26,6 @@ struct ImageSelectionView: View {
     
     var body: some View {
         
-//        NavigationStack{
             // Add Profiles Section
             VStack(spacing: 20){
                 // Header section
@@ -37,6 +36,7 @@ struct ImageSelectionView: View {
                     .fill(.white)
                     .frame(height: 5)
                 
+//                Spacer()
                 
                 AddPictures(columns: columns, viewModel: viewModel)
                 
@@ -61,6 +61,8 @@ struct ImageSelectionView: View {
                         .foregroundColor(.red)
                     }
                 }
+                
+                Spacer()
                 
                 PrimaryButton(){
                     
@@ -112,13 +114,10 @@ struct ImageSelectionView: View {
             }
             
             
-//        }
-//        .navigationDestination(isPresented: $navigateToProfileSetup) {
-//            ProfileSetup(viewModel: viewModel)
-//        }
+
     }
 }
 
-//#Preview {
-//    ImageSelectionView()
-//}
+#Preview{
+    ImageSelectionView(viewModel: ProfileViewModel(), path: .constant(NavigationPath()))
+}

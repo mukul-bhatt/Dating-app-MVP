@@ -31,50 +31,110 @@ struct NotificationsScreen: View {
                 
                 ScrollView {
                     VStack(spacing: 0) {
-                        if notificationsManager.notifications.isEmpty {
+                        let filteredNotifications = notificationsManager.notifications.filter { notification in
+                            if selectedTab == "Matches" {
+                                return notification.notificationType == "match"
+                            }
+                            return true // "All" tab
+                        }
+                        
+                        if filteredNotifications.isEmpty {
                             VStack(spacing: 20) {
                                 Spacer(minLength: 50)
                                 Image(systemName: "bell.slash")
                                     .font(.system(size: 50))
                                     .foregroundColor(.gray.opacity(0.5))
-                                Text("No new notifications")
+                                Text(selectedTab == "All" ? "No new notifications" : "No new matches yet")
                                     .font(.headline)
                                     .foregroundColor(.gray)
                             }
                         } else {
-                            ForEach(notificationsManager.notifications) { notification in
+                            ForEach(filteredNotifications) { notification in
                                 NotificationRow(
                                     imageUrl: notification.senderImageUrl,
-                                    text: "New message from \(notification.senderName): '\(notification.message)'"
+                                    text: getNotificationText(for: notification)
                                 ) {
-                                    NavigationLink {
-                                        ChatView(
-                                            conversationId: notification.conversationId ?? 0,
-                                            receiverId: notification.senderId,
-                                            receiverName: notification.senderName,
-                                            receiverImageURL: notification.senderImageUrl,
-                                            initialMessage: notification.message
-                                        )
-                                    } label: {
-                                        ActionButton(title: "View Message 📧")
-                                    }
+                                    notificationAction(for: notification)
                                 }
                             }
                         }
-                        
-                        // Legacy/Mock rows for other types (Matches, etc)
-//                        if selectedTab == "All" || selectedTab == "Matches" {
-//                             NotificationRow(imageName: "user1", text: "Alex has liked your profile") {
-//                                 ActionButton(title: "Like back ❤️")
-//                             }
-//                        }
                     }
                 }
             }
             .background(AppTheme.backgroundPink)
             .onAppear {
                 notificationsManager.clearUnreadCount()
+                Task {
+                    await notificationsManager.fetchHistoricalNotifications()
+                }
             }
+        }
+    }
+    
+    // MARK: - Helpers
+    
+    private func getNotificationText(for notification: AppNotification) -> String {
+        switch notification.notificationType {
+        case "message":
+            return "New message from \(notification.senderName): '\(notification.message)'"
+        case "like":
+            return "\(notification.senderName) has liked your profile"
+        case "match":
+            return "You matched with \(notification.senderName)! Say hi!"
+        default:
+            return notification.message
+        }
+    }
+    
+    @ViewBuilder
+    private func notificationAction(for notification: AppNotification) -> some View {
+        switch notification.notificationType {
+        case "message":
+            NavigationLink {
+                ChatView(
+                    conversationId: notification.conversationId ?? 0,
+                    receiverId: notification.senderId,
+                    receiverName: notification.senderName,
+                    receiverImageURL: notification.senderImageUrl,
+                    initialMessage: notification.message
+                )
+            } label: {
+                ActionButton(title: "View Message 📧")
+            }
+        case "like":
+            HStack(spacing: 10) {
+                ActionButton(title: "Like back ❤️") {
+                    Task {
+                        await notificationsManager.likeBack(notification: notification)
+                    }
+                }
+                ActionButton(title: "Decline 🙊") {
+                    print("Decline pressed for user \(notification.senderId)")
+                }
+            }
+        case "match":
+            HStack(spacing: 11) {
+                // View Profile action
+                ActionButton(title: "View Profile 🫣") {
+                    print("View Profile pressed for user \(notification.senderId)")
+                    // TODO: Implement profile navigation
+                }
+                
+                // Send Message action via NavigationLink
+                NavigationLink {
+                    ChatView(
+                        conversationId: notification.conversationId ?? 0,
+                        receiverId: notification.senderId,
+                        receiverName: notification.senderName,
+                        receiverImageURL: notification.senderImageUrl,
+                        initialMessage: nil
+                    )
+                } label: {
+                    ActionButton(title: "Send Message �")
+                }
+            }
+        default:
+            EmptyView()
         }
     }
 }
@@ -186,8 +246,19 @@ struct NotificationRow<Content: View>: View {
 struct ActionButton: View {
     let title: String
     let color = AppTheme.foregroundPink
+    var action: (() -> Void)? = nil
     
     var body: some View {
+        if let action = action {
+            Button(action: action) {
+                label
+            }
+        } else {
+            label
+        }
+    }
+    
+    private var label: some View {
         Text(title)
             .font(.system(size: 13, weight: .medium))
             .foregroundColor(.white)
