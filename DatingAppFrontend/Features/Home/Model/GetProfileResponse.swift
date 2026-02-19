@@ -19,7 +19,7 @@ struct GetProfileResponse: Codable {
     }
 }
 
-struct DiscoverProfile: Codable, Identifiable {
+struct DiscoverProfile: Codable, Identifiable, Hashable {
     let id: Int
     let fullName: String
     let gender: String

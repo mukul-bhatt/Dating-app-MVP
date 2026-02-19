@@ -223,26 +223,42 @@ struct SayHiView: View {
     }
 }
 
+
+
 struct MessageBubble: View {
     let message: Message
-    
+
     var body: some View {
-        HStack {
-            if message.isFromMe { Spacer(minLength: 50) }
-            
-            Text(message.text)
-                .padding(14)
-                .background(message.isFromMe ? AppTheme.backgroundPink : AppTheme.foregroundPink)
-                .foregroundColor(message.isFromMe ? .primary : .white)
-                .cornerRadius(15)
-            
-            if !message.isFromMe { Spacer(minLength: 50) }
+        HStack(alignment: .bottom, spacing: 0) {
+            if message.isFromMe {
+                Spacer(minLength: 60)
+            }
+
+            HStack {
+                Text(message.text)
+                    .font(.body)
+                    
+//                    .padding(.trailing, 40) // reserve space for timestamp on last line
+
+                Text(message.timestamp, style: .time)
+                    .padding(.top, 8)
+                    .font(.system(size: 10))
+                    .foregroundColor(message.isFromMe ? .primary.opacity(0.5) : .white.opacity(0.7))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(message.isFromMe ? AppTheme.backgroundPink : AppTheme.foregroundPink)
+            .foregroundColor(message.isFromMe ? .primary : .white)
+            .cornerRadius(15)
+            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+
+            if !message.isFromMe {
+                Spacer(minLength: 60)
+            }
         }
     }
 }
 
-
-
 //#Preview {
-//    ChatView(receiverId: 6002, receiverName: "Nia Sharma", receiverImageURL: URL(string: "https://images.pexels.com/photos/2238433/pexels-photo-2238433.jpeg"))
+//    ChatView(conversationId: 1222, receiverId: 6002, receiverName: "Nia Sharma", receiverImageURL: URL(string: "https://images.pexels.com/photos/2238433/pexels-photo-2238433.jpeg"))
 //}

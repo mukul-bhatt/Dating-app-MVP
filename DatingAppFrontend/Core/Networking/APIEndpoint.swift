@@ -27,6 +27,7 @@ enum APIEndpoint {
     case updateProfilePicture
     case getProfileById
     case getNotifications(types: String)
+    case getProfileFromNotification(targetUserId: Int)
     
     nonisolated var path: String {
         switch self {
@@ -49,6 +50,7 @@ enum APIEndpoint {
         case .updateProfilePicture: return "/profile/update-profile"
         case .getProfileById: return "/profile/get-profile-by-id"
         case .getNotifications: return "/profile/get-notification"
+        case .getProfileFromNotification: return "/profile/profile-from-notification"
         }
     }
     
@@ -58,6 +60,8 @@ enum APIEndpoint {
             return [URLQueryItem(name: "conversationId", value: "\(id)")]
         case .getNotifications(let types):
             return [URLQueryItem(name: "NotificationType", value: types)]
+        case .getProfileFromNotification(let id):
+            return [URLQueryItem(name: "targetUserId", value: "\(id)")]
         default:
             return nil
         }
@@ -65,7 +69,7 @@ enum APIEndpoint {
     
     nonisolated var method: String {
         switch self {
-        case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById, .getNotifications: return "GET"
+        case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById, .getNotifications, .getProfileFromNotification: return "GET"
         case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture, .updateProfilePicture: return "POST"
         }
     }

@@ -18,7 +18,6 @@ struct ImageSelectionView: View {
     
     @ObservedObject var viewModel: ProfileViewModel
     @Binding var path: NavigationPath
-//    @StateObject private var viewModel = ProfileViewModel()
     @State private var navigateToProfileSetup: Bool = false
     @State var showErrorMessage: Bool = false
     let errorMessageForFailedUpload: String = "Images could not be uploaded Please try again"

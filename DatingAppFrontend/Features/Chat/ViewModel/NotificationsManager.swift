@@ -42,15 +42,20 @@ class NotificationsManager: ObservableObject {
                         id: item.id,
                         senderId: item.senderUserId,
                         senderName: item.firstName,
-                        message: item.notificationBody,
+                        body: item.notificationBody,
                         senderImageUrl: URL(string: item.profile),
                         conversationId: item.conversationId,
+                        targetUserId: item.withUserId,
                         timestamp: ISO8601DateFormatter().date(from: item.createdAt) ?? Date(),
                         notificationType: item.notificationType
                     )
                 }
                   
                 await MainActor.run {
+                    // Calculate unread count from historical notifications (where status is true/unread)
+                    let unreadHistorical = response.data.filter { $0.notificationStatus == true }.count
+                    self.unreadCount = unreadHistorical
+                    
                     // Merge avoiding duplicates (by id)
                     for notification in historical {
                         if !self.notifications.contains(where: { $0.id == notification.id }) {
@@ -102,9 +107,10 @@ class NotificationsManager: ObservableObject {
         let newNotification = AppNotification(
             senderId: event.data.FromUserId,
             senderName: event.data.FromUserName,
-            message: event.data.Message.isEmpty ? event.data.Body : event.data.Message,
+            body: event.data.Body,
             senderImageUrl: profileUrl,
             conversationId: event.data.ConversationId,
+            targetUserId: event.data.WithUserId ?? 0,
             timestamp: Date(),
             notificationType: event.data.notificationType
         )
@@ -117,7 +123,7 @@ class NotificationsManager: ObservableObject {
         
         self.notifications.insert(notification, at: 0)
         self.unreadCount += 1
-        print("🔔 Global alert added: \(notification.message) | Total unread: \(unreadCount)")
+        print("🔔 Global alert added: \(notification.body) | Total unread: \(unreadCount)")
     }
     
     func clearUnreadCount() {
@@ -131,10 +137,8 @@ class NotificationsManager: ObservableObject {
         activeReceiverId = nil
     }
 
-    // MARK: - Actions
-
-    func likeBack(notification: AppNotification) async {
-        let body = sendLike(toUserId: notification.senderId, action: "Like")
+    func acceptLikeRequest(notification: AppNotification) async {
+        let body = sendLike(toUserId: notification.senderId, action: "Accept")
         
         do {
             let response: likeResponse = try await NetworkManager.shared.request(
@@ -143,16 +147,57 @@ class NotificationsManager: ObservableObject {
             )
             
             if response.success {
-                print("✅ Liking back successful: \(response.message)")
+                print("✅ Accept successful: \(response.message)")
                 // Remove notification from list as it's now handled
                 await MainActor.run {
                     self.notifications.removeAll { $0.id == notification.id }
+                    if self.unreadCount > 0 {
+                        self.unreadCount -= 1
+                    }
                 }
             } else {
-                print("❌ Liking back failed: \(response.message)")
+                print("❌ Accept failed: \(response.message)")
             }
         } catch {
-            print("❌ Liking back error: \(error.localizedDescription)")
+            print("❌ Accept error: \(error.localizedDescription)")
         }
+    }
+
+    func declineLikeRequest(notification: AppNotification) async {
+        let body = sendLike(toUserId: notification.senderId, action: "Decline")
+        
+        do {
+            let response: likeResponse = try await NetworkManager.shared.request(
+                endpoint: .likeProfile,
+                body: body
+            )
+            
+            if response.success {
+                print("✅ Decline successful: \(response.message)")
+                // Remove notification from list as it's now handled
+                await MainActor.run {
+                    self.notifications.removeAll { $0.id == notification.id }
+                    if self.unreadCount > 0 {
+                        self.unreadCount -= 1
+                    }
+                }
+            } else {
+                print("❌ Decline failed: \(response.message)")
+            }
+        } catch {
+            print("❌ Decline error: \(error.localizedDescription)")
+        }
+    }
+
+    func fetchProfileFromNotification(userId: Int) async throws -> DiscoverProfile {
+        let response: NotificationProfileResponse = try await NetworkManager.shared.request(
+            endpoint: .getProfileFromNotification(targetUserId: userId)
+        )
+        
+        guard response.success else {
+            throw NSError(domain: "NotificationsManager", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to fetch profile"])
+        }
+        
+        return response.data
     }
 }

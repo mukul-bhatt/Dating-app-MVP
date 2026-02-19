@@ -19,14 +19,16 @@ import PhotosUI
             VStack(alignment: .leading, spacing: 16) {
                 AddPicturesHeader(title: "Add your pictures", subTitle: "Add a photo so people can see the real you!", isFromEditProfile: isFromEditProfile)
                 
-                LazyVGrid(columns: columns, spacing: 16) {
-                    // Wrap button in PhotosPicker
-                    PhotosPicker(selection: $viewModel.photosPickerItems, maxSelectionCount: 6, matching: .images) {
-                        AddPictureButton()
-                    }
-                    
-                    ForEach(viewModel.selectedImages.indices, id: \.self) { index in
-                        ImageCell(image: viewModel.selectedImages[index])
+                ScrollView{
+                    LazyVGrid(columns: columns, spacing: 16) {
+                        // Wrap button in PhotosPicker
+                        PhotosPicker(selection: $viewModel.photosPickerItems, maxSelectionCount: 6, matching: .images) {
+                            AddPictureButton()
+                        }
+                        
+                        ForEach(viewModel.selectedImages.indices, id: \.self) { index in
+                            ImageCell(image: viewModel.selectedImages[index])
+                        }
                     }
                 }
             }

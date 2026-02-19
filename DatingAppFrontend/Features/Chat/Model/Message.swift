@@ -11,6 +11,7 @@ struct Message: Identifiable, Sendable {
     let id = UUID()
     let text: String
     let isFromMe: Bool
+    let timestamp: Date
 }
 
 struct SocketTypeEnvelope: Decodable, Sendable {

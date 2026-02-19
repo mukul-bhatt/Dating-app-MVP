@@ -30,8 +30,8 @@ class DiscoverViewModel: ObservableObject {
     @Published var selectedGender: String = ""
     @Published var minAge: Double = 18
     @Published var maxAge: Double = 65
-    @Published var minDistance: Double = 1
-    @Published var maxDistance: Double = 65
+    @Published var minDistance: Double = 0
+    @Published var maxDistance: Double = 500
     
     // Location state
     @Published var latitude: Double?
@@ -40,6 +40,9 @@ class DiscoverViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     var hasFetchedInitialData = false
+    /// Set to true only after the backend confirms it has received the user's real location.
+    /// getUserProfiles() waits on this before fetching, preventing a race condition.
+    private var isLocationSynced = false
     
     init() {
         setupLocationTracking()
@@ -79,8 +82,11 @@ class DiscoverViewModel: ObservableObject {
                     body: request
                 )
                 print("✅ Backend Location Sync Success: \(response.message)")
+                self.isLocationSynced = true
             } catch {
                 print("❌ Backend Location Sync Failed: \(error.localizedDescription)")
+                // Still mark as synced so getUserProfiles() doesn't wait forever
+                self.isLocationSynced = true
             }
         }
     }
@@ -90,8 +96,26 @@ class DiscoverViewModel: ObservableObject {
             isLoading = true
         }
         
-        // Request location before fetching profiles
+        // Request location — the delegate callback will fire syncLocationWithBackend()
+        // which sets isLocationSynced = true once the backend confirms receipt.
         LocationManager.shared.requestLocation()
+        
+        // Wait for the backend to receive the real location before fetching profiles.
+        // This prevents the race condition where profiles are fetched before the
+        // backend knows where the user is (which causes an empty response).
+        // Timeout after 8 seconds so the app doesn't hang if location is unavailable.
+        let timeoutMs = 80 // 80 × 100ms = 8 seconds
+        var waited = 0
+        while !isLocationSynced && waited < timeoutMs {
+            try await Task.sleep(nanoseconds: 100_000_000) // 0.1s
+            waited += 1
+        }
+        
+        if waited >= timeoutMs {
+            print("⚠️ Location sync timed out — fetching profiles anyway")
+        } else {
+            print("✅ Location synced after \(waited * 100)ms — fetching profiles")
+        }
         
         do {
             let response: GetProfileResponse = try await NetworkManager.shared.request(endpoint: .getAllProfiles)

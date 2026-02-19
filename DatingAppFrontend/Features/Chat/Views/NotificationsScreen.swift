@@ -10,10 +10,12 @@ import SwiftUI
 
 struct NotificationsScreen: View {
     @State private var selectedTab = "All"
+    @State private var path = NavigationPath()
+    @StateObject var discoverViewModel = DiscoverViewModel()
     @EnvironmentObject var notificationsManager: NotificationsManager
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             VStack(spacing: 0) {
                 // MARK: - Custom Segmented Picker
                 HStack(spacing: 0) {
@@ -52,7 +54,7 @@ struct NotificationsScreen: View {
                             ForEach(filteredNotifications) { notification in
                                 NotificationRow(
                                     imageUrl: notification.senderImageUrl,
-                                    text: getNotificationText(for: notification)
+                                    text: notification.body
                                 ) {
                                     notificationAction(for: notification)
                                 }
@@ -68,23 +70,15 @@ struct NotificationsScreen: View {
                     await notificationsManager.fetchHistoricalNotifications()
                 }
             }
+            .navigationDestination(for: DiscoverProfile.self) { profile in
+                ProfileScreenView(path: $path, profile: profile, viewModel: discoverViewModel)
+                    .toolbar(.hidden, for: .tabBar)
+            }
         }
     }
     
     // MARK: - Helpers
     
-    private func getNotificationText(for notification: AppNotification) -> String {
-        switch notification.notificationType {
-        case "message":
-            return "New message from \(notification.senderName): '\(notification.message)'"
-        case "like":
-            return "\(notification.senderName) has liked your profile"
-        case "match":
-            return "You matched with \(notification.senderName)! Say hi!"
-        default:
-            return notification.message
-        }
-    }
     
     @ViewBuilder
     private func notificationAction(for notification: AppNotification) -> some View {
@@ -96,41 +90,51 @@ struct NotificationsScreen: View {
                     receiverId: notification.senderId,
                     receiverName: notification.senderName,
                     receiverImageURL: notification.senderImageUrl,
-                    initialMessage: notification.message
+                    initialMessage: notification.body
                 )
             } label: {
                 ActionButton(title: "View Message 📧")
             }
         case "like":
             HStack(spacing: 10) {
-                ActionButton(title: "Like back ❤️") {
+                ActionButton(title: "Accept") {
                     Task {
-                        await notificationsManager.likeBack(notification: notification)
+                        await notificationsManager.acceptLikeRequest(notification: notification)
                     }
                 }
                 ActionButton(title: "Decline 🙊") {
-                    print("Decline pressed for user \(notification.senderId)")
+                    Task {
+                        await notificationsManager.declineLikeRequest(notification: notification)
+                    }
                 }
             }
         case "match":
             HStack(spacing: 11) {
                 // View Profile action
                 ActionButton(title: "View Profile 🫣") {
-                    print("View Profile pressed for user \(notification.senderId)")
-                    // TODO: Implement profile navigation
+                    Task {
+                        do {
+                            // Use targetUserId (withUserId) if available, fallback to senderId
+                            let profileId = notification.targetUserId
+                            let profile = try await notificationsManager.fetchProfileFromNotification(userId: profileId)
+                            path.append(profile)
+                        } catch {
+                            print("❌ Failed to navigate to profile: \(error)")
+                        }
+                    }
                 }
                 
                 // Send Message action via NavigationLink
                 NavigationLink {
                     ChatView(
                         conversationId: notification.conversationId ?? 0,
-                        receiverId: notification.senderId,
+                        receiverId: notification.targetUserId,
                         receiverName: notification.senderName,
                         receiverImageURL: notification.senderImageUrl,
                         initialMessage: nil
                     )
                 } label: {
-                    ActionButton(title: "Send Message �")
+                    ActionButton(title: "Send Message 💬")
                 }
             }
         default:

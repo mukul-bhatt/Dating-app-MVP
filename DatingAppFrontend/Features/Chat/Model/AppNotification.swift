@@ -11,9 +11,10 @@ struct AppNotification: Identifiable, Sendable {
     var id = Int.random(in: 1...Int.max) // Use Int for ID to match API if possible, or keep UUID
     let senderId: Int
     let senderName: String
-    let message: String
+    let body: String
     let senderImageUrl: URL?
     let conversationId: Int?
+    let targetUserId: Int // The ID specifically for profile fetching (e.g. from withUserId or toUserId)
     let timestamp: Date
     let notificationType: String // "message", "like", "match"
 }
@@ -33,8 +34,8 @@ struct NotificationItem: Codable, Identifiable {
     let notificationStatus: Bool
     let notificationBody: String
     let senderUserId: Int
-    let withUserId: Int?
-    let conversationId: Int?
+    let withUserId: Int
+    let conversationId: Int
     let firstName: String
     let lastName: String?
     let profile: String
@@ -52,4 +53,9 @@ struct NotificationItem: Codable, Identifiable {
         case updatedAt = "updated_At"
         case deletedAt = "deleted_At"
     }
+}
+
+struct NotificationProfileResponse: Codable {
+    let success: Bool
+    let data: DiscoverProfile
 }

@@ -62,7 +62,7 @@ class ChatViewModel: ObservableObject
         
         // 1. If we have an initial message (from deep link), show it immediately
         if let firstMsg = initialMessage, !firstMsg.isEmpty {
-            let newMessage = Message(text: firstMsg, isFromMe: false)
+            let newMessage = Message(text: firstMsg, isFromMe: false, timestamp: Date())
             self.messages.append(newMessage)
             self.lastMessageId = newMessage.id
         }
@@ -111,7 +111,7 @@ class ChatViewModel: ObservableObject
         }
 
 //        let text = messageFieldValue
-        let localMessage = Message(text: text, isFromMe: true)
+        let localMessage = Message(text: text, isFromMe: true, timestamp: Date())
         
         // 1. Add to local UI
         messages.append(localMessage)
@@ -143,7 +143,8 @@ class ChatViewModel: ObservableObject
                     // Logic: Backend seems to use toUserId as a source field for history.
                     // If toUserId == myId, then I am the sender.
                     let historicalMessages = response.data.map { msg in
-                        Message(text: msg.content, isFromMe: msg.toUserId == self.userId)
+                        let date = self.parseHistoricalDate(msg.created_At)
+                        return Message(text: msg.content, isFromMe: msg.toUserId == self.userId, timestamp: date)
                     }
                     
                     await MainActor.run {
@@ -179,7 +180,7 @@ class ChatViewModel: ObservableObject
         }
         
         // Convert socket message to our local Message type
-        let newMessage = Message(text: receivedMessage.content, isFromMe: false)
+        let newMessage = Message(text: receivedMessage.content, isFromMe: false, timestamp: receivedMessage.created_At)
         
         // Append to UI list
         DispatchQueue.main.async {
@@ -204,13 +205,35 @@ class ChatViewModel: ObservableObject
             let isFromCurrentReceiver = (senderId == self.receiverId)
             
             if isCurrentConv || isFromCurrentReceiver {
-                let newMessage = Message(text: notification.data.Message, isFromMe: false)
+                let newMessage = Message(text: notification.data.Message, isFromMe: false, timestamp: Date())
                 DispatchQueue.main.async {
                     self.messages.append(newMessage)
                     self.lastMessageId = newMessage.id
                 }
             }
         }
+    }
+
+    private func parseHistoricalDate(_ dateString: String) -> Date {
+        let formatter = DateFormatter()
+        formatter.locale = .init(identifier: "en_US_POSIX")
+        // Same formats as used in ChatSocketManager
+        let formats = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSSS",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
+            "yyyy-MM-dd'T'HH:mm:ss.SS",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "dd MMM yyyy, hh:mm a"
+        ]
+        
+        for format in formats {
+            formatter.dateFormat = format
+            if let date = formatter.date(from: dateString) {
+                return date
+            }
+        }
+        return Date() // Fallback to now
     }
 }
 

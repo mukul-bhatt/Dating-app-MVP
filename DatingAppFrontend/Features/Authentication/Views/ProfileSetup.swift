@@ -41,7 +41,7 @@ struct ProfileSetup: View {
                         YourLocation(viewModel: viewModel)
                         
                         // Distance Slider
-                        RangeSlider(minValue: $viewModel.minValue, maxValue: $viewModel.maxValue, range: 0...65)
+                        RangeSlider(minValue: $viewModel.minValue, maxValue: $viewModel.maxValue, range: 0...500)
                         
                         AddPicturesHeader(title: "About You", subTitle: "Help us know you better")
                         

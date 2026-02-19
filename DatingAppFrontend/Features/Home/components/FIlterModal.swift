@@ -36,7 +36,7 @@ struct FilterModal: View {
                     
                     RangeSlider(minValue: $viewModel.minAge, maxValue: $viewModel.maxAge, range: 18...65, title: "Preferred age Range")
                     
-                    RangeSlider(minValue: $viewModel.minDistance, maxValue: $viewModel.maxDistance, range: 1...65, title: "Distance Range")
+                    RangeSlider(minValue: $viewModel.minDistance, maxValue: $viewModel.maxDistance, range: 0...500, title: "Distance Range")
                 }
                 
                 
