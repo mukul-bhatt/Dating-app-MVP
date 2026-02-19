@@ -12,7 +12,7 @@ import PhotosUI
 struct ReportProfileView: View {
     @Environment(\.dismiss) var dismiss
     @Binding var path: NavigationPath
-    let profile: DiscoverProfile
+    let profileId: Int
     @ObservedObject var viewModel: DiscoverViewModel
     // MARK: - State Variables
     @State private var selectedReason: String = "Hate speech or discrimination"
@@ -214,7 +214,7 @@ struct ReportProfileView: View {
                         Button(action: {
                             Task {
                                 let success = await viewModel.reportProfile(
-                                    ToUserId: profile.id,
+                                    ToUserId: profileId,
                                     reason: selectedReason,
                                     comments: additionalComments,
                                     status: isBlockingUser ? "Blocked" : "Reported",

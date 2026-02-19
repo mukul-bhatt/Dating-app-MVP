@@ -96,6 +96,9 @@ struct EditProfileMain: View {
                             ProfileMenuRow(icon: "heart.fill", title: "My Matches", action: {
                                 path.append(EditProfileRoutes.myMatches)
                             })
+                            ProfileMenuRow(icon: "person.slash.fill", title: "Block list", action: {
+                                path.append(EditProfileRoutes.blockList)
+                            })
                             ProfileMenuRow(icon: "gearshape.fill", title: "Privacy Settings", action: {
                                 path.append(EditProfileRoutes.privacySettings)
                             })

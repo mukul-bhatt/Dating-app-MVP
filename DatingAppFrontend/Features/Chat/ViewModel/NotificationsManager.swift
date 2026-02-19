@@ -40,12 +40,12 @@ class NotificationsManager: ObservableObject {
                 let historical = response.data.map { item in
                     AppNotification(
                         id: item.id,
-                        senderId: item.senderUserId,
+                        senderId: item.senderUserId ?? 0,
                         senderName: item.firstName,
                         body: item.notificationBody,
                         senderImageUrl: URL(string: item.profile),
                         conversationId: item.conversationId,
-                        targetUserId: item.withUserId,
+                        targetUserId: item.withUserId ?? item.senderUserId ?? 0,
                         timestamp: ISO8601DateFormatter().date(from: item.createdAt) ?? Date(),
                         notificationType: item.notificationType
                     )

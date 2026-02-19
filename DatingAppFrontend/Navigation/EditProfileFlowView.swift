@@ -16,6 +16,7 @@ enum EditProfileRoutes: Hashable {
     case myMatches
     case privacySettings
     case deleteAccount
+    case blockList
 //    case logout
 }
 
@@ -47,6 +48,8 @@ struct EditProfileFlowView: View {
                             PrivacySettingsView()
                         case .deleteAccount:
                             DeleteAccountView()
+                        case .blockList:
+                            BlockListView()
                         
                         }
                     }

@@ -33,9 +33,9 @@ struct NotificationItem: Codable, Identifiable {
     let notificationType: String
     let notificationStatus: Bool
     let notificationBody: String
-    let senderUserId: Int
-    let withUserId: Int
-    let conversationId: Int
+    let senderUserId: Int?
+    let withUserId: Int?
+    let conversationId: Int?
     let firstName: String
     let lastName: String?
     let profile: String

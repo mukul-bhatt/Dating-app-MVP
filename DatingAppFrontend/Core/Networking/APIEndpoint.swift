@@ -28,6 +28,11 @@ enum APIEndpoint {
     case getProfileById
     case getNotifications(types: String)
     case getProfileFromNotification(targetUserId: Int)
+    case updateNotificationSetting
+    case getMatches
+    case getNotificationSettings
+    case getPrivacySettings
+    case updatePrivacySettings
     
     nonisolated var path: String {
         switch self {
@@ -51,6 +56,11 @@ enum APIEndpoint {
         case .getProfileById: return "/profile/get-profile-by-id"
         case .getNotifications: return "/profile/get-notification"
         case .getProfileFromNotification: return "/profile/profile-from-notification"
+        case .updateNotificationSetting: return "/profile/update-privacy-notification-setting"
+        case .getMatches: return "/profile/get-matches"
+        case .getNotificationSettings: return "/profile/get-privacy-notification-setting"
+        case .getPrivacySettings: return "/profile/get-privacy-setting"
+        case .updatePrivacySettings: return "/profile/update-privacy-setting"
         }
     }
     
@@ -69,8 +79,8 @@ enum APIEndpoint {
     
     nonisolated var method: String {
         switch self {
-        case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById, .getNotifications, .getProfileFromNotification: return "GET"
-        case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture, .updateProfilePicture: return "POST"
+        case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById, .getNotifications, .getProfileFromNotification, .getMatches, .getNotificationSettings, .getPrivacySettings: return "GET"
+        case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture, .updateProfilePicture, .updateNotificationSetting, .updatePrivacySettings: return "POST"
         }
     }
 }

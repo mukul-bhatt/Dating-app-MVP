@@ -7,19 +7,14 @@
 
 import SwiftUI
 
+
 struct PrivacySettingsView: View {
     @Environment(\.dismiss) var dismiss
-    
-    // State for each privacy setting
-    @State private var displayFullName = "Everyone"
-    @State private var displayAge = "Only my Matches"
-    @State private var displayLocation = "Everyone"
-    @State private var whoCanSeeYou = "Everyone"
-    @State private var activityStatus = "Choose an option"
+    @StateObject private var viewModel = SettingsViewModel()
     
     // Dropdown options
     let privacyOptions = ["Everyone", "Only my Matches", "Nobody"]
-    let activityOptions = ["Everyone", "Only my matches", "Nobody"]
+    let activityOptions = ["Everyone", "Only my Matches", "Nobody"]
     
     var body: some View {
         ZStack {
@@ -60,8 +55,9 @@ struct PrivacySettingsView: View {
                 VStack(spacing: 0) {
                     PrivacySettingRow(
                         title: "Display Full name",
-                        selectedOption: $displayFullName,
-                        options: privacyOptions
+                        selectedOption: $viewModel.displayFullName,
+                        options: privacyOptions,
+                        viewModel: viewModel
                     )
                     
                     Divider()
@@ -69,8 +65,9 @@ struct PrivacySettingsView: View {
                     
                     PrivacySettingRow(
                         title: "Display Age",
-                        selectedOption: $displayAge,
-                        options: privacyOptions
+                        selectedOption: $viewModel.displayAge,
+                        options: privacyOptions,
+                        viewModel: viewModel
                     )
                     
                     Divider()
@@ -78,8 +75,9 @@ struct PrivacySettingsView: View {
                     
                     PrivacySettingRow(
                         title: "Display Location",
-                        selectedOption: $displayLocation,
-                        options: privacyOptions
+                        selectedOption: $viewModel.displayLocation,
+                        options: privacyOptions,
+                        viewModel: viewModel
                     )
                     
                     Divider()
@@ -87,8 +85,9 @@ struct PrivacySettingsView: View {
                     
                     PrivacySettingRow(
                         title: "Who can see you",
-                        selectedOption: $whoCanSeeYou,
-                        options: privacyOptions
+                        selectedOption: $viewModel.whoCanSeeYou,
+                        options: privacyOptions,
+                        viewModel: viewModel
                     )
                     
                     Divider()
@@ -96,13 +95,33 @@ struct PrivacySettingsView: View {
                     
                     PrivacySettingRow(
                         title: "Activity Status",
-                        selectedOption: $activityStatus,
-                        options: activityOptions
+                        selectedOption: $viewModel.activityStatus,
+                        options: activityOptions,
+                        viewModel: viewModel
                     )
                 }
                 
                 Spacer()
             }
+            
+            if viewModel.isLoading || viewModel.isUpdating {
+                Color.black.opacity(0.1).ignoresSafeArea()
+                ProgressView(viewModel.isLoading ? "Loading settings..." : "Updating...")
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    .shadow(radius: 5)
+            }
+        }
+        .onAppear {
+            Task {
+                await viewModel.fetchPrivacySettings()
+            }
+        }
+        .alert("Update Failed", isPresented: $viewModel.showAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(viewModel.errorMessage ?? "An unknown error occurred.")
         }
         .navigationBarHidden(true)
     }
@@ -113,12 +132,16 @@ struct PrivacySettingRow: View {
     let title: String
     @Binding var selectedOption: String
     let options: [String]
+    @ObservedObject var viewModel: SettingsViewModel
     
     var body: some View {
         Menu {
             ForEach(options, id: \.self) { option in
                 Button(action: {
                     selectedOption = option
+                    Task {
+                        await viewModel.updatePrivacySettings()
+                    }
                 }) {
                     HStack {
                         Text(option)

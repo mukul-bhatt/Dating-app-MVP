@@ -9,12 +9,7 @@ import SwiftUI
 
 struct NotificationSettingView: View {
     @Environment(\.dismiss) var dismiss
-    
-    // State for each notification toggle
-    @State private var matchNotification = true
-    @State private var messageNotification = true
-    @State private var emailNotification = true
-    @State private var smsNotification = false
+    @StateObject private var viewModel = SettingsViewModel()
     
     var body: some View {
         ZStack {
@@ -54,22 +49,32 @@ struct NotificationSettingView: View {
                 VStack(spacing: 16) {
                     NotificationToggleRow(
                         title: "Match Notification",
-                        isOn: $matchNotification
+                        isOn: $viewModel.matchNotification,
+                        viewModel: viewModel
                     )
                     
                     NotificationToggleRow(
                         title: "Message Notification",
-                        isOn: $messageNotification
+                        isOn: $viewModel.messageNotification,
+                        viewModel: viewModel
                     )
                     
                     NotificationToggleRow(
                         title: "Email Notification",
-                        isOn: $emailNotification
+                        isOn: $viewModel.emailNotification,
+                        viewModel: viewModel
                     )
                     
                     NotificationToggleRow(
                         title: "SMS Notification",
-                        isOn: $smsNotification
+                        isOn: $viewModel.smsNotification,
+                        viewModel: viewModel
+                    )
+                    
+                    NotificationToggleRow(
+                        title: "Like Notification",
+                        isOn: $viewModel.likeNotification,
+                        viewModel: viewModel
                     )
                 }
                 .padding(.horizontal)
@@ -77,8 +82,32 @@ struct NotificationSettingView: View {
                 
                 Spacer()
             }
+            
+            if viewModel.isUpdating {
+                Color.black.opacity(0.1).ignoresSafeArea()
+                ProgressView()
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    .shadow(radius: 5)
+            }
+        }
+        .onAppear {
+            Task {
+                await viewModel.fetchNotificationSettings()
+            }
         }
         .navigationBarHidden(true)
+        .overlay {
+            if viewModel.isLoading {
+                Color.black.opacity(0.1).ignoresSafeArea()
+                ProgressView("Loading settings...")
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    .shadow(radius: 5)
+            }
+        }
     }
 }
 
@@ -86,6 +115,7 @@ struct NotificationSettingView: View {
 struct NotificationToggleRow: View {
     let title: String
     @Binding var isOn: Bool
+    @ObservedObject var viewModel: SettingsViewModel
     
     var body: some View {
         HStack {
@@ -99,6 +129,13 @@ struct NotificationToggleRow: View {
             Toggle("", isOn: $isOn)
                 .labelsHidden()
                 .tint(Color("ButtonColor"))
+                .onChange(of: isOn) { oldValue, newValue in
+                    let type = title.replacingOccurrences(of: " ", with: "")
+                    Task {
+                        await viewModel.updateNotificationSetting(type: type, show: newValue)
+                    }
+                }
+                
         }
         .padding(.horizontal, 4)
     }
@@ -107,3 +144,11 @@ struct NotificationToggleRow: View {
 #Preview {
     NotificationSettingView()
 }
+
+
+// 7777766666
+
+// delete acount
+//{
+//    "success": true
+//}

@@ -10,6 +10,7 @@ import SwiftUI
 struct DeleteAccountView: View {
     @Environment(\.dismiss) var dismiss
     @State private var selectedReason: String = "Privacy concerns"
+    @State private var showDeleteConfirmation: Bool = false
     
     let deletionReasons = [
         "Privacy concerns",
@@ -86,7 +87,9 @@ struct DeleteAccountView: View {
                     
                     // Delete Button
                     Button(action: {
-                        // Handle account deletion logic
+                        withAnimation {
+                            showDeleteConfirmation = true
+                        }
                     }) {
                         Text("Delete Account")
                             .font(.headline)
@@ -101,6 +104,15 @@ struct DeleteAccountView: View {
                 .padding(.horizontal)
                 
                 Spacer()
+            }
+            
+            if showDeleteConfirmation {
+                DeleteConfirmationView(showDeleteConfirmation: $showDeleteConfirmation, onDelete: {
+                    // Handle actual account deletion logic here
+                    print("Account Deleted with reason: \(selectedReason)")
+                    showDeleteConfirmation = false
+                    dismiss()
+                })
             }
         }
         .navigationBarHidden(true)

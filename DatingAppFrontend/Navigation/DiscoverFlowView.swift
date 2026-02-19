@@ -43,10 +43,8 @@ struct DiscoverFlowView: View {
                             }
 
                         case .ReportProfile(let id):
-                            if let profile = viewModel.users.first(where: { $0.id == id }) {
-                                ReportProfileView(path: $path, profile: profile, viewModel: viewModel)
-                                    .toolbar(.hidden, for: .tabBar)
-                            }
+                            ReportProfileView(path: $path, profileId: id, viewModel: viewModel)
+                                .toolbar(.hidden, for: .tabBar)
 
                         case .Submit:
                             SettingUpScreen(title: "Report Submitted", subTitle: "Thanks for reporting. Our Team will review this profile shortly")

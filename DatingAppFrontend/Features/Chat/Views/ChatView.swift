@@ -19,6 +19,10 @@ struct ChatView: View {
     let receiverName: String?
     let receiverImageURL: URL?
     var initialMessage: String? = nil
+    
+    @State private var isShowingReport = false
+    @State private var reportPath = NavigationPath()
+    @StateObject var discoverViewModel = DiscoverViewModel()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -91,6 +95,24 @@ struct ChatView: View {
             notificationsManager.activeConversationId = nil
             notificationsManager.activeReceiverId = nil
         }
+        .fullScreenCover(isPresented: $isShowingReport) {
+            NavigationStack(path: $reportPath) {
+                ReportProfileView(
+                    path: $reportPath,
+                    profileId: receiverId,
+                    viewModel: discoverViewModel
+                )
+                .navigationDestination(for: DiscoverRoute.self) { route in
+                    switch route {
+                    case .Submit:
+                        SettingUpScreen(title: "Report Submitted", subTitle: "Thanks for reporting. Our Team will review this profile shortly")
+                            .toolbar(.hidden, for: .tabBar)
+                    default:
+                        EmptyView()
+                    }
+                }
+            }
+        }
     }
     
     // Header View with Profile Info
@@ -130,7 +152,7 @@ struct ChatView: View {
                     // Block action
                 }
                 Button("Report user") {
-                    // Report action
+                    isShowingReport = true
                 }
             } label: {
                 Image(systemName: "ellipsis")
