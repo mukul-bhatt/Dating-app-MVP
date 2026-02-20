@@ -10,6 +10,8 @@ import Combine
 
 @MainActor
 class SettingsViewModel: ObservableObject {
+    
+    // Toggle Notifications
     @Published var matchNotification = true
     @Published var messageNotification = true
     @Published var emailNotification = true
@@ -22,6 +24,11 @@ class SettingsViewModel: ObservableObject {
     @Published var displayLocation = "Everyone"
     @Published var whoCanSeeYou = "Everyone"
     @Published var activityStatus = "Everyone"
+    
+    // Contact Details
+    @Published var email = ""
+    @Published var phoneNumber = ""
+    @Published var countryCode = "91"
     
     @Published var isUpdating = false
     @Published var isLoading = false
@@ -164,6 +171,61 @@ class SettingsViewModel: ObservableObject {
         isUpdating = false
     }
     
+    func fetchContactDetails() async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let response: ContactDetailsResponse = try await NetworkManager.shared.request(
+                endpoint: .getContactDetails
+            )
+            
+            if response.success, let contact = response.data.first {
+                self.email = contact.email
+                self.phoneNumber = contact.phoneNumber
+                self.countryCode = contact.countryCode
+                print("✅ Successfully fetched contact details")
+            } else {
+                errorMessage = "Failed to fetch contact details"
+                print("❌ Failed to fetch contact details")
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            print("❌ Error fetching contact details: \(error.localizedDescription)")
+        }
+        
+        isLoading = false
+    }
+    
+    func updateEmail(newEmail: String) async {
+        isUpdating = true
+        errorMessage = nil
+        
+        let body = EmailUpdateRequest(Email: newEmail)
+        
+        do {
+            let response: EmailUpdateResponse = try await NetworkManager.shared.request(
+                endpoint: .updateEmail,
+                body: body
+            )
+            
+            if response.success {
+                self.email = newEmail
+                print("✅ Successfully updated email to \(newEmail)")
+            } else {
+                errorMessage = response.message
+                showAlert = true
+                print("❌ Failed to update email: \(response.message)")
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            showAlert = true
+            print("❌ Error updating email: \(error.localizedDescription)")
+        }
+        
+        isUpdating = false
+    }
+
     private func mapUiToApi(_ value: String) -> String {
         switch value {
         case "Everyone": return "EveryOne"

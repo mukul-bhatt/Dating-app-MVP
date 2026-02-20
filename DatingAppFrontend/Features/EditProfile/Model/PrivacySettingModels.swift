@@ -56,3 +56,5 @@ struct UpdatePrivacySettingResponse: Codable {
     let data: [String]?
     let message: String?
 }
+
+
