@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import SwiftUI
 
 @MainActor
 class SettingsViewModel: ObservableObject {
@@ -34,6 +35,11 @@ class SettingsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showAlert = false
+    
+    // Toast notification
+    @Published var showToast = false
+    @Published var toastMessage = ""
+    @Published var isErrorToast = false
     
     func fetchNotificationSettings() async {
         isLoading = true
@@ -211,19 +217,62 @@ class SettingsViewModel: ObservableObject {
             
             if response.success {
                 self.email = newEmail
+                showToastNotification(message: "Email updated successfully!", isError: false)
                 print("✅ Successfully updated email to \(newEmail)")
             } else {
-                errorMessage = response.message
-                showAlert = true
+                showToastNotification(message: response.message, isError: true)
                 print("❌ Failed to update email: \(response.message)")
             }
         } catch {
-            errorMessage = error.localizedDescription
-            showAlert = true
+            showToastNotification(message: error.localizedDescription, isError: true)
             print("❌ Error updating email: \(error.localizedDescription)")
         }
         
         isUpdating = false
+    }
+    
+    private func showToastNotification(message: String, isError: Bool) {
+        toastMessage = message
+        isErrorToast = isError
+        withAnimation{
+            showToast = true
+        }
+        
+        // Hide after 3 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            withAnimation{
+                self.showToast = false
+            }
+        }
+    }
+
+    func deleteAccount(reason: String) async -> Bool {
+        isUpdating = true
+        errorMessage = nil
+        print("🛠️ Initiating account deletion for reason: \(reason)")
+        
+        do {
+            let response: PrivacySettingResponse = try await NetworkManager.shared.request(
+                endpoint: .deleteAccount
+            )
+            
+            if response.success {
+                print("✅ Successfully deleted account on backend")
+                isUpdating = false
+                return true
+            } else {
+                errorMessage = "Failed to delete account: Backend returned success=false"
+                showAlert = true
+                print("❌ Failed to delete account: Backend returned success=false")
+            }
+        } catch {
+            errorMessage = "Deletion error: \(error.localizedDescription)"
+            showAlert = true
+            print("❌ Error during account deletion request: \(error.localizedDescription)")
+        }
+        
+        isUpdating = false
+        return false
     }
 
     private func mapUiToApi(_ value: String) -> String {
@@ -235,3 +284,4 @@ class SettingsViewModel: ObservableObject {
         }
     }
 }
+

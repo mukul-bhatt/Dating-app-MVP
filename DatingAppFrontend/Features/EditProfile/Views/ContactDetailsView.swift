@@ -197,18 +197,42 @@ struct ContactDetailsView: View {
             }
         }
         .overlay {
-            if settingsViewModel.isUpdating || settingsViewModel.isLoading {
-                ZStack {
-                    Color.black.opacity(0.1).ignoresSafeArea()
-                    ProgressView(settingsViewModel.isLoading ? "Loading contact details..." : "Updating email...")
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(10)
-                        .shadow(radius: 5)
+            ZStack {
+                if settingsViewModel.showToast {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Image(systemName: settingsViewModel.isErrorToast ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+                                .foregroundColor(.white)
+                            Text(settingsViewModel.toastMessage)
+                                .foregroundColor(.white)
+                                .font(.system(size: 14, weight: .medium))
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(settingsViewModel.isErrorToast ? Color.red : Color.green)
+                        .cornerRadius(25)
+                        .shadow(radius: 4)
+                        .padding(.bottom, 50)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                    .zIndex(1)
+                }
+                
+                if settingsViewModel.isUpdating || settingsViewModel.isLoading {
+                    ZStack {
+                        Color.black.opacity(0.1).ignoresSafeArea()
+                        ProgressView(settingsViewModel.isLoading ? "Loading contact details..." : "Updating email...")
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(10)
+                            .shadow(radius: 5)
+                    }
+                    .zIndex(2)
                 }
             }
         }
-        .alert("Update Failed", isPresented: $settingsViewModel.showAlert) {
+        .alert("Error", isPresented: $settingsViewModel.showAlert) {
             Button("OK", role: .cancel) { }
         } message: {
             Text(settingsViewModel.errorMessage ?? "An unknown error occurred.")

@@ -17,6 +17,8 @@ enum EditProfileRoutes: Hashable {
     case privacySettings
     case deleteAccount
     case blockList
+    case matchProfile(DiscoverProfile)
+    case chat(UserMatch)
 //    case logout
 }
 
@@ -43,14 +45,22 @@ struct EditProfileFlowView: View {
                         case .notificationSetting:
                             NotificationSettingView()
                         case .myMatches:
-                            MyMatchesView()
+                            MyMatchesView(path: $path)
                         case .privacySettings:
                             PrivacySettingsView()
                         case .deleteAccount:
                             DeleteAccountView()
                         case .blockList:
                             BlockListView()
-                        
+                        case .matchProfile(let profile):
+                            ProfileScreenView(path: $path, profile: profile, viewModel: DiscoverViewModel())
+                        case .chat(let match):
+                            ChatView(
+                                conversationId: match.conversationId ?? 0,
+                                receiverId: match.matchedUserId,
+                                receiverName: match.fullName,
+                                receiverImageURL: URL(string: match.latestProfileImage ?? "")
+                            )
                         }
                     }
                     .toolbar(.hidden, for: .tabBar)

@@ -12,6 +12,7 @@ import Combine
 class MatchesViewModel: ObservableObject {
     @Published var matches: [UserMatch] = []
     @Published var isLoadingMatches: Bool = false
+    @Published var isFetchingProfile: Bool = false
     @Published var errorMessage: String? = nil
     
     // MARK: - Fetch Matches
@@ -35,5 +36,29 @@ class MatchesViewModel: ObservableObject {
         }
         
         isLoadingMatches = false
+    }
+    
+    // MARK: - Fetch Full Profile
+    func fetchFullProfile(profileId: Int) async -> DiscoverProfile? {
+        isFetchingProfile = true
+        errorMessage = nil
+        
+        do {
+            let response: NotificationProfileResponse = try await NetworkManager.shared.request(
+                endpoint: .getProfileFromNotification(targetUserId: profileId)
+            )
+            
+            isFetchingProfile = false
+            if response.success {
+                return response.data
+            } else {
+                self.errorMessage = "Failed to fetch profile details"
+                return nil
+            }
+        } catch {
+            isFetchingProfile = false
+            self.errorMessage = "Error loading profile: \(error.localizedDescription)"
+            return nil
+        }
     }
 }

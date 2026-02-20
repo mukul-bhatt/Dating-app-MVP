@@ -9,6 +9,9 @@ import SwiftUI
 
 struct DeleteAccountView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @StateObject var viewModel = SettingsViewModel()
+    
     @State private var selectedReason: String = "Privacy concerns"
     @State private var showDeleteConfirmation: Bool = false
     
@@ -105,15 +108,43 @@ struct DeleteAccountView: View {
                 
                 Spacer()
             }
+            .blur(radius: viewModel.isUpdating ? 3 : 0)
+            .disabled(viewModel.isUpdating)
             
             if showDeleteConfirmation {
                 DeleteConfirmationView(showDeleteConfirmation: $showDeleteConfirmation, onDelete: {
-                    // Handle actual account deletion logic here
-                    print("Account Deleted with reason: \(selectedReason)")
-                    showDeleteConfirmation = false
-                    dismiss()
+                    Task {
+                        let success = await viewModel.deleteAccount(reason: selectedReason)
+                        if success {
+                            authViewModel.logout()
+                        }
+                        showDeleteConfirmation = false
+                    }
                 })
             }
+            
+            // Loading Overlay
+            if viewModel.isUpdating {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                        .tint(.white)
+                    Text("Deleting Account...")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                }
+                .padding(32)
+                .background(Color.black.opacity(0.7))
+                .cornerRadius(16)
+            }
+        }
+        .alert("Error", isPresented: $viewModel.showAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(viewModel.errorMessage ?? "An unknown error occurred")
         }
         .navigationBarHidden(true)
     }

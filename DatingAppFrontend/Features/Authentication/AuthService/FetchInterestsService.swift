@@ -8,7 +8,7 @@
 import Foundation
 
 class FetchInterestsService{
-    let baseUrl = "https://prettying-randell-ungrudgingly.ngrok-free.dev/api"
+    let baseUrl = NetworkConfig.baseURL
     
     func fetchOptionsForInterests(endpoint: String, token: String) async throws -> [InterestOption]{
         guard let url = URL(string: baseUrl + endpoint) else{

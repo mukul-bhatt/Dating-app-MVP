@@ -23,7 +23,7 @@ struct UserMatchResponse: Codable {
 }
 
 // MARK: - User Match
-struct UserMatch: Codable, Identifiable {
+struct UserMatch: Codable, Identifiable, Hashable {
     var id: Int? { matchedUserId }
     
     let matchedUserId: Int

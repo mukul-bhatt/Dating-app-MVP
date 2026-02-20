@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MyMatchesView: View {
     @Environment(\.dismiss) var dismiss
+    @Binding var path: NavigationPath
     @StateObject var viewModel = MatchesViewModel()
     
     // Grid layout
@@ -104,7 +105,7 @@ struct MyMatchesView: View {
                     } else {
                         LazyVGrid(columns: columns, spacing: 16) {
                             ForEach(viewModel.matches) { match in
-                                MatchCard(match: match)
+                                MatchCard(match: match, path: $path, viewModel: viewModel)
                             }
                         }
                         .padding(.horizontal)
@@ -113,6 +114,23 @@ struct MyMatchesView: View {
                 }
             }
         }
+        // Overlay for profile fetching spinner
+        .overlay(
+            Group {
+                if viewModel.isFetchingProfile {
+                    ZStack {
+                        Color.white.opacity(0.4)
+                            .ignoresSafeArea()
+                        
+                        ProgressView()
+                            .padding(20)
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .shadow(color: Color.black.opacity(0.1), radius: 10)
+                    }
+                }
+            }
+        )
         .navigationBarHidden(true)
         .task {
             await viewModel.fetchMatches()
@@ -132,9 +150,11 @@ struct MatchProfile: Identifiable {
 // Card Component
 struct MatchCard: View {
     let match: UserMatch
+    @Binding var path: NavigationPath
+    @ObservedObject var viewModel: MatchesViewModel
     
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 6) {
             // Profile Image
             AsyncImage(url: URL(string: match.latestProfileImage ?? "")) { image in
                 image
@@ -172,13 +192,13 @@ struct MatchCard: View {
             
             // Send Message Button
             Button(action: {
-                // Handle message action
+                path.append(EditProfileRoutes.chat(match))
             }) {
                 Text("Send Message")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                    .padding()
                     .background(AppTheme.foregroundPink)
                     .cornerRadius(8)
             }
@@ -188,9 +208,16 @@ struct MatchCard: View {
         .background(Color.white)
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .onTapGesture {
+            Task {
+                if let profile = await viewModel.fetchFullProfile(profileId: match.matchedUserId) {
+                    path.append(EditProfileRoutes.matchProfile(profile))
+                }
+            }
+        }
     }
 }
 
 #Preview {
-    MyMatchesView()
+    MyMatchesView(path: .constant(NavigationPath()))
 }

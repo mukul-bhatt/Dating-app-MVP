@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 
+@MainActor
 class AuthViewModel: ObservableObject {
     @Published var authToken: String?
     @Published var refreshToken: String?
@@ -15,7 +16,7 @@ class AuthViewModel: ObservableObject {
     @Published var profileId: Int?
     @Published var userMobile: String?
     
-    private let baseUrl = "https://prettying-randell-ungrudgingly.ngrok-free.dev/api"
+    private let baseUrl = NetworkConfig.baseURL
     private let tokenKey = "authToken"
     private let refreshTokenKey = "refreshToken"
     private let profileIdKey = "profileId"

@@ -39,6 +39,7 @@ struct DiscoverProfile: Codable, Identifiable, Hashable {
     let relationshipText: String
     let distanceInKM: String
     let profileImagesArray: [String]
+    let profilePicture: String?
 }
 
 
@@ -66,7 +67,8 @@ extension DiscoverProfile {
             "https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg",
             "https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg",
             "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg"
-        ]
+        ],
+        profilePicture: nil
     )
     
     // An array of mocks for testing lists/scrollviews
@@ -91,7 +93,8 @@ extension DiscoverProfile {
             religionText: "Sikh",
             relationshipText: "Single",
             distanceInKM: "12.0",
-            profileImagesArray: ["https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg"]
+            profileImagesArray: ["https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg"],
+            profilePicture: nil
         )
     ]
 }

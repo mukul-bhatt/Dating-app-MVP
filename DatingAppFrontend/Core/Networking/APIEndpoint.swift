@@ -35,6 +35,7 @@ enum APIEndpoint {
     case updatePrivacySettings
     case updateEmail
     case getContactDetails
+    case deleteAccount
     
     nonisolated var path: String {
         switch self {
@@ -65,6 +66,7 @@ enum APIEndpoint {
         case .updatePrivacySettings: return "/profile/update-privacy-setting"
         case .updateEmail: return "/auth/update-email"
         case .getContactDetails: return "/profile/get-contact-details"
+        case .deleteAccount: return "/profile/delete-account"
         }
     }
     
@@ -83,7 +85,7 @@ enum APIEndpoint {
     
     nonisolated var method: String {
         switch self {
-        case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById, .getNotifications, .getProfileFromNotification, .getMatches, .getNotificationSettings, .getPrivacySettings, .getContactDetails: return "GET"
+        case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById, .getNotifications, .getProfileFromNotification, .getMatches, .getNotificationSettings, .getPrivacySettings, .getContactDetails, .deleteAccount: return "GET"
         case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture, .updateProfilePicture, .updateNotificationSetting, .updatePrivacySettings, .updateEmail: return "POST"
         }
     }
