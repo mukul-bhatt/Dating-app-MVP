@@ -13,8 +13,8 @@ import Combine
 
 class ChatViewModel: ObservableObject
 {
-    @Published var lastMessageId: UUID?
-    @Published var messages: [Message] = []
+    @Published var lastMessageId: String? // Changed to String to support both UUID and Int IDs
+    @Published var groupedMessages: [DateGroup] = []
     @Published var messageFieldValue: String = ""
     
     // Track current session details
@@ -27,8 +27,7 @@ class ChatViewModel: ObservableObject
     private var cancellables = Set<AnyCancellable>()
 
     init() {
-        // Mock messages removed to support dynamic history and empty states
-        self.messages = []
+        self.groupedMessages = []
     }
 
     func sendGreeting() {
@@ -62,9 +61,18 @@ class ChatViewModel: ObservableObject
         
         // 1. If we have an initial message (from deep link), show it immediately
         if let firstMsg = initialMessage, !firstMsg.isEmpty {
-            let newMessage = Message(text: firstMsg, isFromMe: false, timestamp: Date())
-            self.messages.append(newMessage)
-            self.lastMessageId = newMessage.id
+            let chatMsg = ChatMessage(
+                id: Int.random(in: 100000...999999),
+                type: "text",
+                toUserId: receiverId,
+                conversationId: resolvedConvId,
+                isRead: false,
+                readAt: "",
+                status: "sent",
+                content: firstMsg,
+                createdAt: ISO8601DateFormatter().string(from: Date())
+            )
+            self.appendToGroups(chatMsg)
         }
 
         // 2. Fetch History (only if conversation actually exists)
@@ -110,13 +118,22 @@ class ChatViewModel: ObservableObject
             return
         }
 
-//        let text = messageFieldValue
-        let localMessage = Message(text: text, isFromMe: true, timestamp: Date())
+        let tempId = Int.random(in: 100000...999999)
+        let chatMsg = ChatMessage(
+            id: tempId,
+            type: "text",
+            toUserId: receiverId,
+            conversationId: conversationId,
+            isRead: false,
+            readAt: "",
+            status: "sending",
+            content: text,
+            createdAt: ISO8601DateFormatter().string(from: Date())
+        )
         
         // 1. Add to local UI
-        messages.append(localMessage)
+        appendToGroups(chatMsg)
         messageFieldValue = ""
-        self.lastMessageId = localMessage.id
         
         // 2. Send via Socket
         let socketMessage = SocketChatMessage(
@@ -136,25 +153,16 @@ class ChatViewModel: ObservableObject
     func fetchMessageHistory(conversationId: Int) {
         Task {
             do {
-                let response: MessageHistoryResponse = try await NetworkManager.shared.request(endpoint: .getMessages(conversationId: conversationId))
+                let response: ConversationResponse = try await NetworkManager.shared.request(endpoint: .fetchConversationsByGroup(conversationId: conversationId))
                 
                 if response.success {
-                    // Convert historical messages to our UI Message type
-                    // Logic: Backend seems to use toUserId as a source field for history.
-                    // If toUserId == myId, then I am the sender.
-                    let historicalMessages = response.data.map { msg in
-                        let date = self.parseHistoricalDate(msg.created_At)
-                        return Message(text: msg.content, isFromMe: msg.toUserId == self.userId, timestamp: date)
-                    }
-                    
                     await MainActor.run {
-                        print("📜 Loaded \(historicalMessages.count) historical messages")
-                        // Replace current messages with history
-                        self.messages = historicalMessages
+                        print("📜 Loaded \(response.data.count) date groups")
+                        self.groupedMessages = response.data
                         
                         // Scroll to bottom if there are messages
-                        if let lastMessage = historicalMessages.last {
-                            self.lastMessageId = lastMessage.id
+                        if let lastGroup = response.data.last, let lastMsg = lastGroup.messages.last {
+                            self.lastMessageId = "\(lastMsg.id)"
                         }
                     }
                 }
@@ -179,13 +187,21 @@ class ChatViewModel: ObservableObject
             self.conversationId = receivedMessage.conversationId
         }
         
-        // Convert socket message to our local Message type
-        let newMessage = Message(text: receivedMessage.content, isFromMe: false, timestamp: receivedMessage.created_At)
+        let chatMsg = ChatMessage(
+            id: Int.random(in: 100000...999999),
+            type: receivedMessage.type,
+            toUserId: self.userId ?? 0,
+            conversationId: receivedMessage.conversationId,
+            isRead: false,
+            readAt: "",
+            status: "delivered",
+            content: receivedMessage.content,
+            createdAt: ISO8601DateFormatter().string(from: receivedMessage.created_At)
+        )
         
         // Append to UI list
         DispatchQueue.main.async {
-            self.messages.append(newMessage)
-            self.lastMessageId = newMessage.id
+            self.appendToGroups(chatMsg)
         }
     }
     
@@ -205,16 +221,65 @@ class ChatViewModel: ObservableObject
             let isFromCurrentReceiver = (senderId == self.receiverId)
             
             if isCurrentConv || isFromCurrentReceiver {
-                let newMessage = Message(text: notification.data.Message, isFromMe: false, timestamp: Date())
+                let chatMsg = ChatMessage(
+                    id: Int.random(in: 100000...999999),
+                    type: "text",
+                    toUserId: self.userId ?? 0,
+                    conversationId: incomingConvId ?? self.conversationId ?? 0,
+                    isRead: false,
+                    readAt: "",
+                    status: "delivered",
+                    content: notification.data.Message,
+                    createdAt: ISO8601DateFormatter().string(from: Date())
+                )
                 DispatchQueue.main.async {
-                    self.messages.append(newMessage)
-                    self.lastMessageId = newMessage.id
+                    self.appendToGroups(chatMsg)
                 }
             }
         }
     }
 
-    private func parseHistoricalDate(_ dateString: String) -> Date {
+    private func appendToGroups(_ message: ChatMessage) {
+        // WhatsApp style: check if "Today" exists
+        let todayLabel = "Today"
+        
+        if let index = groupedMessages.firstIndex(where: { $0.dateGroup.lowercased() == todayLabel.lowercased() }) {
+            var updatedGroup = groupedMessages[index]
+            var messages = updatedGroup.messages
+            messages.append(message)
+            updatedGroup = DateGroup(dateGroup: updatedGroup.dateGroup, messageDate: updatedGroup.messageDate, messages: messages)
+            groupedMessages[index] = updatedGroup
+        } else {
+            // Create Today group
+            let formatter = DateFormatter()
+            formatter.dateFormat = "dd MMM yyyy"
+            let todayDateStr = formatter.string(from: Date())
+            let newGroup = DateGroup(dateGroup: todayLabel, messageDate: todayDateStr, messages: [message])
+            groupedMessages.append(newGroup)
+        }
+        
+        self.lastMessageId = "\(message.id)"
+    }
+
+    func blockUser(status: String = "Blocked") async -> Bool {
+        guard let receiverId = receiverId else {
+            print("❌ Cannot block user: Missing receiverId")
+            return false
+        }
+        
+        let requestBody = BlockUserRequest(toUserId: "\(receiverId)", status: status)
+        
+        do {
+            let response: BlockUserResponse = try await NetworkManager.shared.request(endpoint: .blockProfile, body: requestBody)
+            print("🚫 Block User API Response: \(response)")
+            return response.success
+        } catch {
+            print("❌ Failed to block user: \(error)")
+            return false
+        }
+    }
+
+    func parseHistoricalDate(_ dateString: String) -> Date {
         let formatter = DateFormatter()
         formatter.locale = .init(identifier: "en_US_POSIX")
         // Same formats as used in ChatSocketManager
@@ -224,6 +289,7 @@ class ChatViewModel: ObservableObject
             "yyyy-MM-dd'T'HH:mm:ss.SSS",
             "yyyy-MM-dd'T'HH:mm:ss.SS",
             "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd HH:mm:ss",
             "dd MMM yyyy, hh:mm a"
         ]
         

@@ -14,9 +14,20 @@ struct CardStackView: View {
     
     
     var body: some View {
-        ZStack{
-            // Only render the next 3 cards
-            if !viewModel.users.isEmpty {
+        ZStack {
+            if viewModel.isLoading {
+                ProgressView()
+                    .tint(foregroundPink)
+                    .scaleEffect(1.5)
+            } else if viewModel.users.isEmpty && viewModel.hasFetchedInitialData {
+                Text("No profiles to show")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            } else {
+                // Only render the next 3 cards
                 ForEach(viewModel.currentIndex..<min(viewModel.currentIndex + 3, viewModel.users.count), id: \.self) { index in
                     let profile = viewModel.users[index]
                     let cardOffset = index - viewModel.currentIndex
@@ -58,18 +69,19 @@ struct CardStackView: View {
                     .onTapGesture {
                         // I need to navigate to Feed Screen
                         path.append(DiscoverRoute.Feed(profileId: profile.id))
-                        
                     }
                 }
                 
                 // Show "No more profiles" when done
-                if viewModel.currentIndex >= viewModel.users.count {
+                if viewModel.currentIndex >= viewModel.users.count && !viewModel.users.isEmpty {
                     Text("No more profiles")
-                        .font(.title)
+                        .font(.title2)
+                        .fontWeight(.semibold)
                         .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding()
                 }
             }
-            
         }
         .navigationBarHidden(true)
         .onAppear {

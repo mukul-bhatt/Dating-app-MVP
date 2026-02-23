@@ -109,3 +109,53 @@ struct NotificationData: Decodable, Sendable {
         case Profile = "Profile"
     }
 }
+
+
+
+// MARK: - Conversations By Group Response
+struct ConversationResponse: Codable {
+    let success: Bool
+    let message: String
+    let isBlocked: Bool
+    let data: [DateGroup]
+}
+
+// MARK: - Date Group
+struct DateGroup: Codable, Identifiable {
+    let id = UUID()   // for SwiftUI lists
+
+    let dateGroup: String
+    let messageDate: String
+    let messages: [ChatMessage]
+
+    enum CodingKeys: String, CodingKey {
+        case dateGroup
+        case messageDate
+        case messages
+    }
+}
+
+// MARK: - Message
+struct ChatMessage: Codable, Identifiable {
+    let id: Int
+    let type: String
+    let toUserId: Int
+    let conversationId: Int
+    let isRead: Bool
+    let readAt: String
+    let status: String
+    let content: String
+    let createdAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case type
+        case toUserId
+        case conversationId
+        case isRead
+        case readAt
+        case status
+        case content
+        case createdAt = "created_At"
+    }
+}

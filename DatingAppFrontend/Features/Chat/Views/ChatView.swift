@@ -21,96 +21,124 @@ struct ChatView: View {
     var initialMessage: String? = nil
     
     @State private var isShowingReport = false
+    @State private var isShowingBlockPopup = false
     @State private var reportPath = NavigationPath()
     @StateObject var discoverViewModel = DiscoverViewModel()
 
     var body: some View {
-        VStack(spacing: 0) {
-            // MARK: - Custom Header
-            headerView
-            
-            // MARK: - Chat Bubble List
-            GeometryReader { geometry in
-                ScrollViewReader { proxy in
-                    ScrollView(showsIndicators: false) {
-                        VStack(spacing: 0) {
-                            if viewModel.messages.isEmpty {
-                                Spacer(minLength: 120)
-                                SayHiView(viewModel: viewModel)
-                                Spacer()
-                            } else {
-                                // This Spacer forces the messages to the bottom
-                                Spacer(minLength: 0)
-                                
-                                VStack(spacing: 16) {
-                                    ForEach(viewModel.messages) { message in
-                                        MessageBubble(message: message)
-                                            .id(message.id)
+        ZStack {
+            VStack(spacing: 0) {
+                // MARK: - Custom Header
+                headerView
+                
+                // MARK: - Chat Bubble List
+                GeometryReader { geometry in
+                    ScrollViewReader { proxy in
+                        ScrollView(showsIndicators: false) {
+                            VStack(spacing: 0) {
+                                if viewModel.groupedMessages.isEmpty {
+                                    Spacer(minLength: 120)
+                                    SayHiView(viewModel: viewModel)
+                                    Spacer()
+                                } else {
+                                    // This Spacer forces the messages to the bottom
+                                    Spacer(minLength: 0)
+                                    
+                                    VStack(spacing: 24) {
+                                        ForEach(viewModel.groupedMessages) { group in
+                                            VStack(spacing: 16) {
+                                                // Date Header
+                                                DateHeaderView(date: group.dateGroup)
+                                                
+                                                ForEach(group.messages) { message in
+                                                    MessageBubble(message: message, isFromMe: message.toUserId == receiverId)
+                                                        .id("\(message.id)")
+                                                }
+                                            }
+                                        }
                                     }
+                                    .padding()
                                 }
-                                .padding()
+                            }
+                            .frame(minWidth: geometry.size.width, minHeight: geometry.size.height)
+                        }
+                        .background(Color.white)
+                        .onChange(of: viewModel.lastMessageId) { oldValue, newValue in
+                            if let newValue = newValue {
+                                withAnimation {
+                                    proxy.scrollTo(newValue, anchor: .bottom)
+                                }
                             }
                         }
-                        .frame(minWidth: geometry.size.width, minHeight: geometry.size.height)
                     }
-                    .background(Color.white)
-                    .onChange(of: viewModel.lastMessageId) { oldValue, newValue in
-                        if let newValue = newValue {
-                            withAnimation {
-                                proxy.scrollTo(newValue, anchor: .bottom)
-                            }
+                }
+                
+                
+                // MARK: - Input Field
+                inputArea
+            }
+            .navigationBarBackButtonHidden(true)
+            .toolbar(.hidden, for: .tabBar)
+            .onAppear{
+                print("👁️ ChatView appeared for convId: \(conversationId)")
+                // Connect using the current user's profileId and passed receiver info
+                if let myId = authViewModel.profileId {
+                    viewModel.connect(
+                        userId: myId, 
+                        conversationId: conversationId, 
+                        receiverId: receiverId, 
+                        name: receiverName, 
+                        imageURL: receiverImageURL,
+                        initialMessage: initialMessage,
+                        notificationsManager: notificationsManager
+                    )
+                } else {
+                    print("⚠️ authViewModel.profileId is missing in ChatView")
+                }
+                // Track focus for global notifications
+                notificationsManager.activeConversationId = conversationId
+                notificationsManager.activeReceiverId = receiverId
+            }
+            .onDisappear {
+                // Clear focus
+                notificationsManager.activeConversationId = nil
+                notificationsManager.activeReceiverId = nil
+            }
+            .fullScreenCover(isPresented: $isShowingReport) {
+                NavigationStack(path: $reportPath) {
+                    ReportProfileView(
+                        path: $reportPath,
+                        profileId: receiverId,
+                        viewModel: discoverViewModel
+                    )
+                    .navigationDestination(for: DiscoverRoute.self) { route in
+                        switch route {
+                        case .Submit:
+                            SettingUpScreen(title: "Report Submitted", subTitle: "Thanks for reporting. Our Team will review this profile shortly")
+                                .toolbar(.hidden, for: .tabBar)
+                        default:
+                            EmptyView()
                         }
                     }
                 }
             }
             
-            
-            // MARK: - Input Field
-            inputArea
-        }
-        .navigationBarBackButtonHidden(true)
-        .toolbar(.hidden, for: .tabBar)
-        .onAppear{
-            print("👁️ ChatView appeared for convId: \(conversationId)")
-            // Connect using the current user's profileId and passed receiver info
-            if let myId = authViewModel.profileId {
-                viewModel.connect(
-                    userId: myId, 
-                    conversationId: conversationId, 
-                    receiverId: receiverId, 
-                    name: receiverName, 
-                    imageURL: receiverImageURL,
-                    initialMessage: initialMessage,
-                    notificationsManager: notificationsManager
-                )
-            } else {
-                print("⚠️ authViewModel.profileId is missing in ChatView")
-            }
-            // Track focus for global notifications
-            notificationsManager.activeConversationId = conversationId
-            notificationsManager.activeReceiverId = receiverId
-        }
-        .onDisappear {
-            // Clear focus
-            notificationsManager.activeConversationId = nil
-            notificationsManager.activeReceiverId = nil
-        }
-        .fullScreenCover(isPresented: $isShowingReport) {
-            NavigationStack(path: $reportPath) {
-                ReportProfileView(
-                    path: $reportPath,
-                    profileId: receiverId,
-                    viewModel: discoverViewModel
-                )
-                .navigationDestination(for: DiscoverRoute.self) { route in
-                    switch route {
-                    case .Submit:
-                        SettingUpScreen(title: "Report Submitted", subTitle: "Thanks for reporting. Our Team will review this profile shortly")
-                            .toolbar(.hidden, for: .tabBar)
-                    default:
-                        EmptyView()
+            if isShowingBlockPopup {
+                BlockUserView(
+                    userName: viewModel.receiverName,
+                    isPresented: $isShowingBlockPopup,
+                    onBlock: { report in
+                        Task {
+                            let success = await viewModel.blockUser(status: "Blocked")
+                            if success {
+                                await MainActor.run {
+                                    isShowingBlockPopup = false
+                                    dismiss() // Navigate back to inbox after blocking
+                                }
+                            }
+                        }
                     }
-                }
+                )
             }
         }
     }
@@ -149,7 +177,7 @@ struct ChatView: View {
             
             Menu {
                 Button("Block user") {
-                    // Block action
+                    isShowingBlockPopup = true
                 }
                 Button("Report user") {
                     isShowingReport = true
@@ -202,6 +230,21 @@ struct ChatView: View {
     }
 }
 
+struct DateHeaderView: View {
+    let date: String
+    
+    var body: some View {
+        Text(date)
+            .font(.system(size: 12, weight: .medium))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(8)
+            .foregroundColor(.gray)
+            .padding(.vertical, 8)
+    }
+}
+
 struct SayHiView: View {
     @ObservedObject var viewModel: ChatViewModel
     
@@ -248,33 +291,33 @@ struct SayHiView: View {
 
 
 struct MessageBubble: View {
-    let message: Message
+    let message: ChatMessage
+    let isFromMe: Bool
+    @StateObject private var helper = ChatViewModel() // For parsing dates
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 0) {
-            if message.isFromMe {
+            if isFromMe {
                 Spacer(minLength: 60)
             }
 
             HStack {
-                Text(message.text)
+                Text(message.content)
                     .font(.body)
                     
-//                    .padding(.trailing, 40) // reserve space for timestamp on last line
-
-                Text(message.timestamp, style: .time)
+                Text(helper.parseHistoricalDate(message.createdAt), style: .time)
                     .padding(.top, 8)
                     .font(.system(size: 10))
-                    .foregroundColor(message.isFromMe ? .primary.opacity(0.5) : .white.opacity(0.7))
+                    .foregroundColor(isFromMe ? .primary.opacity(0.5) : .white.opacity(0.7))
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(message.isFromMe ? AppTheme.backgroundPink : AppTheme.foregroundPink)
-            .foregroundColor(message.isFromMe ? .primary : .white)
+            .background(isFromMe ? AppTheme.backgroundPink : AppTheme.foregroundPink)
+            .foregroundColor(isFromMe ? .primary : .white)
             .cornerRadius(15)
             .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
 
-            if !message.isFromMe {
+            if !isFromMe {
                 Spacer(minLength: 60)
             }
         }

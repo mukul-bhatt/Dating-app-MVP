@@ -226,17 +226,11 @@ class DiscoverViewModel: ObservableObject {
         }
         
         do {
-            let response: PreferenceUpdateResponse = try await NetworkManager.shared.request(endpoint: .search(query: query))
-            
+            let response: GetProfileResponse = try await NetworkManager.shared.request(endpoint: .search(query: query))
+//            let response: GetProfileResponse = try await NetworkManager.shared.request(endpoint: .getAllProfiles)
             await MainActor.run {
-                if let newProfileData = response.data {
-                    self.users = newProfileData
-                    self.hasFetchedInitialData = true 
-                    print("✅ Preference update successful: \(response.message). Received \(newProfileData.count) profiles.")
-                } else {
-                    print("⚠️ No new data to update in response")
-                    self.users = []
-                }
+                self.users = response.data
+                self.hasFetchedInitialData = true
                 self.isLoading = false
             }
         } catch {
@@ -248,3 +242,4 @@ class DiscoverViewModel: ObservableObject {
         }
     }
 }
+

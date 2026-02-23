@@ -36,6 +36,8 @@ enum APIEndpoint {
     case updateEmail
     case getContactDetails
     case deleteAccount
+    case blockProfile
+    case fetchConversationsByGroup(conversationId: Int)
     
     nonisolated var path: String {
         switch self {
@@ -47,7 +49,7 @@ enum APIEndpoint {
         case .likeProfile: return "/profile/add-like"
         case .dislikeProfile: return "/profile/unlike"
         case .reportProfile: return "/profile/report-profile"
-        case .search(let query): return "/profile/search\(query)"
+        case .search(let query): return "/profile/get-filtered-users/\(query)"
         case .updateLocation: return "/profile/update-location"
         case .getInbox: return "/profile/get-inbox"
         case .getMessages: return "/profile/get-messages"
@@ -67,6 +69,8 @@ enum APIEndpoint {
         case .updateEmail: return "/auth/update-email"
         case .getContactDetails: return "/profile/get-contact-details"
         case .deleteAccount: return "/profile/delete-account"
+        case .blockProfile: return "/profile/block-profile"
+        case .fetchConversationsByGroup: return "/profile/get-messages-by-group"
         }
     }
     
@@ -76,8 +80,8 @@ enum APIEndpoint {
             return [URLQueryItem(name: "conversationId", value: "\(id)")]
         case .getNotifications(let types):
             return [URLQueryItem(name: "NotificationType", value: types)]
-        case .getProfileFromNotification(let id):
-            return [URLQueryItem(name: "targetUserId", value: "\(id)")]
+        case .fetchConversationsByGroup(let id):
+            return [URLQueryItem(name: "ConversationId", value: "\(id)")]
         default:
             return nil
         }
@@ -85,8 +89,8 @@ enum APIEndpoint {
     
     nonisolated var method: String {
         switch self {
-        case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById, .getNotifications, .getProfileFromNotification, .getMatches, .getNotificationSettings, .getPrivacySettings, .getContactDetails, .deleteAccount: return "GET"
-        case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture, .updateProfilePicture, .updateNotificationSetting, .updatePrivacySettings, .updateEmail: return "POST"
+        case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById, .getNotifications, .getProfileFromNotification, .getMatches, .getNotificationSettings, .getPrivacySettings, .getContactDetails, .deleteAccount, .fetchConversationsByGroup: return "GET"
+        case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture, .updateProfilePicture, .updateNotificationSetting, .updatePrivacySettings, .updateEmail, .blockProfile: return "POST"
         }
     }
 }
