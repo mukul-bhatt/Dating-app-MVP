@@ -11,6 +11,7 @@ struct NativeTabView: View {
     @State private var path = NavigationPath()
     @StateObject var viewModel = DiscoverViewModel()
     @EnvironmentObject var notificationsManager: NotificationsManager
+    @EnvironmentObject var authViewModel: AuthViewModel
     
     var body: some View {
         
@@ -41,6 +42,15 @@ struct NativeTabView: View {
                 }
         }
         .tint(.pink)
+        .onAppear {
+            if let userId = authViewModel.profileId {
+                print("🔌 NativeTabView: Connecting socket for user \(userId)")
+                ChatSocketManager.shared.connect(userId: userId)
+            }
+        }
+        .fullScreenCover(isPresented: $notificationsManager.showMatchScreen) {
+            MatchView(matchData: notificationsManager.latestMatch)
+        }
     }
 }
 

@@ -10,7 +10,19 @@ import SwiftUI
 
 struct MatchView: View {
     @Environment(\.dismiss) var dismiss
-    let matchedUserName: String = "Nia"
+    let matchData: NotificationData?
+    
+    // Fallback if no data (for preview/manual testing)
+    var matchedUserName: String {
+        matchData?.WithUserName ?? "Someone"
+    }
+    
+    var matchedUserProfileURL: URL? {
+        if let profileStr = matchData?.Profile.trimmingCharacters(in: .whitespacesAndNewlines), !profileStr.isEmpty {
+            return URL(string: profileStr)
+        }
+        return nil
+    }
     
     // MARK: - Colors
     let brandPink = AppTheme.foregroundPink
@@ -35,12 +47,12 @@ struct MatchView: View {
                 
                 // 4. Overlapping Profile Images
                 HStack(spacing: -30) {
-                    // Your Profile
-                    CircularProfileImage(imageName: "Image8", size: 160)
+                    // Your Profile (Placeholder or from Auth)
+                    CircularProfileImage(imageName: "NiaSharma", size: 160)
                         .offset(y: -20)
                     
                     // Matched User Profile
-                    CircularProfileImage(imageName: "Image4", size: 160)
+                    CircularProfileImage(imageURL: matchedUserProfileURL, size: 160)
                         .offset(y: 40)
                 }
                 .padding(.vertical, 20)
@@ -90,17 +102,32 @@ struct MatchView: View {
 // MARK: - Supporting Views
 
 struct CircularProfileImage: View {
-    let imageName: String
+    var imageName: String? = nil
+    var imageURL: URL? = nil
     let size: CGFloat
     
     var body: some View {
-        Image(imageName) // Use your asset names
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .frame(width: size, height: size)
-            .clipShape(Circle())
-            .overlay(Circle().stroke(Color.white, lineWidth: 4))
-            .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+        Group {
+            if let url = imageURL {
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    ProgressView()
+                }
+            } else if let name = imageName {
+                Image(name)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                Color.gray
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+        .overlay(Circle().stroke(Color.white, lineWidth: 4))
+        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
     }
 }
 
@@ -198,5 +225,5 @@ struct MatchBackground: View {
 }
 
 #Preview {
-    MatchView()
+    MatchView(matchData: nil)
 }

@@ -83,10 +83,6 @@ struct ChatListScreen: View {
         .onAppear {
             viewModel.notificationsManager = notificationsManager
             
-            if let myId = authViewModel.profileId {
-                ChatSocketManager.shared.connect(userId: myId)
-            }
-            
             viewModel.fetchInbox()
         }
     }

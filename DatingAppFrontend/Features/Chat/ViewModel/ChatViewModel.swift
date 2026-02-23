@@ -106,8 +106,7 @@ class ChatViewModel: ObservableObject
             }
             .store(in: &cancellables)
         
-        // 2. Connect via Manager
-        ChatSocketManager.shared.connect(userId: userId)
+        // Removed: ChatSocketManager.shared.connect(userId: userId)
     }
     
     func sendMessage() {

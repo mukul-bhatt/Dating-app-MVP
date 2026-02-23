@@ -81,7 +81,7 @@ struct NotificationEvent: Decodable, Sendable {
 }
 
 struct NotificationData: Decodable, Sendable {
-    let notificationType: String
+    let notificationType: String?
     let type: String
     let FromUserId: Int
     let FromUserName: String

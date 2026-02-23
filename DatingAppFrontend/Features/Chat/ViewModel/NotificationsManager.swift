@@ -24,6 +24,10 @@ class NotificationsManager: ObservableObject {
     /// Cached inbox items for resolving conversation IDs during deep linking
     @Published var inboxItems: [InboxItem] = []
     
+    /// Properties for handling the match screen
+    @Published var showMatchScreen: Bool = false
+    @Published var latestMatch: NotificationData? = nil
+    
     private var cancellables = Set<AnyCancellable>()
     
     init() {
@@ -81,6 +85,13 @@ class NotificationsManager: ObservableObject {
                 let type = event.data.notificationType
                 
                 if type == "message" || type == "like" || type == "match" {
+                    // 🚀 Handle real-time match screen
+                    if type == "match" {
+                        print("🔥 Real-time MATCH received!")
+                        self.latestMatch = event.data
+                        self.showMatchScreen = true
+                    }
+                    
                     let incomingConvId = event.data.ConversationId
                     let senderId = event.data.FromUserId
                     
@@ -112,7 +123,7 @@ class NotificationsManager: ObservableObject {
             conversationId: event.data.ConversationId,
             targetUserId: event.data.WithUserId ?? 0,
             timestamp: Date(),
-            notificationType: event.data.notificationType
+            notificationType: event.data.notificationType ?? ""
         )
         addNotification(newNotification)
     }
