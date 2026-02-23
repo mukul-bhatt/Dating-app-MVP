@@ -189,7 +189,7 @@ class ChatViewModel: ObservableObject
         }
     }
     
-    func handleSentAcknowledgment(_ socketMessage: SocketChatMessage) {
+    func handleSentAcknowledgment(_ socketMessage: SentAckEvent) {
         // This is an echo/ack of our own message
         print("✅ Message successfully processed by server")
         // We could update a 'delivered' status here if we had one

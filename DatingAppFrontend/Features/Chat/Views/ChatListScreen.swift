@@ -12,66 +12,74 @@ struct ChatListScreen: View {
     @StateObject var viewModel = ChatListViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var notificationsManager: NotificationsManager
+    @Binding var path: NavigationPath
     
     var body: some View {
-        NavigationStack {
-            ZStack{
+        ZStack{
+            AppTheme.backgroundPink.ignoresSafeArea()
+            
+            VStack{
+                // MARK: - Header
+                headerView
                 
-                AppTheme.backgroundPink.ignoresSafeArea()
-                
-                VStack{
-                    // MARK: - Header
-                    headerView
-                    // Spacer()
-                    VStack(alignment: .leading, spacing: 20) {
-                        Text("Online")
-                            .font(.headline)
-                            .padding(.horizontal)
-                            .padding(.top)
-                        
-                        // MARK: - Online Stories Row
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 15) {
-                                ForEach(viewModel.onlineUsers) { user in
-                                    NavigationLink {
-                                        ChatView(conversationId: 0, receiverId: user.userId, receiverName: user.name, receiverImageURL: user.profileImage)
-                                    } label: {
-                                        OnlineCircleView(user: user)
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("Online")
+                        .font(.headline)
+                        .padding(.horizontal)
+                        .padding(.top)
+                    
+                    // MARK: - Online Stories Row
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 15) {
+                            ForEach(viewModel.onlineUsers) { user in
+                                OnlineCircleView(user: user)
+                                    .onTapGesture {
+                                        Task {
+                                            if let profile = await viewModel.fetchFullProfile(profileId: user.userId) {
+                                                path.append(ChatRoute.profile(profile))
+                                            }
+                                        }
                                     }
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                        
-                        ScrollView {
-                            // MARK: - Chat List
-                            VStack(spacing: 0) {
-                                ForEach(viewModel.inboxItems) { inboxItem in
-                                    NavigationLink {
-                                        ChatView(
-                                            conversationId: inboxItem.conversationId,
-                                            receiverId: inboxItem.profileId,
-                                            receiverName: inboxItem.userName,
-                                            receiverImageURL: inboxItem.profile
-                                        )
-                                    } label: {
-                                        ChatRowView(item: inboxItem)
-                                    }
-                                    
-                                    Divider()
-                                        .padding(.leading, 80)
-                                        .padding(.trailing)
-                                }
                             }
                         }
-                        .refreshable {
-                            viewModel.fetchInbox()
+                        .padding(.horizontal)
+                    }
+                    
+                    ScrollView {
+                        // MARK: - Chat List
+                        VStack(spacing: 0) {
+                            ForEach(viewModel.inboxItems) { inboxItem in
+                                ChatRowView(item: inboxItem, path: $path, viewModel: viewModel)
+                                
+                                Divider()
+                                    .padding(.leading, 80)
+                                    .padding(.trailing)
+                            }
                         }
-                        
+                    }
+                    .refreshable {
+                        viewModel.fetchInbox()
                     }
                 }
             }
         }
+        // Overlay for profile fetching spinner
+        .overlay(
+            Group {
+                if viewModel.isFetchingProfile {
+                    ZStack {
+                        Color.white.opacity(0.4)
+                            .ignoresSafeArea()
+                        
+                        ProgressView()
+                            .padding(20)
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .shadow(color: Color.black.opacity(0.1), radius: 10)
+                    }
+                }
+            }
+        )
         .onAppear {
             viewModel.notificationsManager = notificationsManager
             
@@ -80,7 +88,6 @@ struct ChatListScreen: View {
             }
             
             viewModel.fetchInbox()
-            
         }
     }
     
@@ -131,9 +138,12 @@ struct OnlineCircleView: View {
 
 struct ChatRowView: View {
     let item: InboxItem
+    @Binding var path: NavigationPath
+    @ObservedObject var viewModel: ChatListViewModel
     
     var body: some View {
         HStack(spacing: 15) {
+            // Avatar with Tap Gesture to view profile
             AsyncImage(url: item.profile) { image in
                 image
                     .resizable()
@@ -145,7 +155,15 @@ struct ChatRowView: View {
                     .frame(width: 55, height: 55)
                     .foregroundColor(.gray.opacity(0.3))
             }
+            .onTapGesture {
+                Task {
+                    if let profile = await viewModel.fetchFullProfile(profileId: item.profileId) {
+                        path.append(ChatRoute.profile(profile))
+                    }
+                }
+            }
             
+            // Content with Tap Gesture to open chat
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.userName)
                     .font(.system(size: 16, weight: .bold))
@@ -154,6 +172,11 @@ struct ChatRowView: View {
                     .font(.system(size: 14))
                     .foregroundColor(.gray)
                     .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                path.append(ChatRoute.chat(item))
             }
             
             Spacer()
@@ -168,5 +191,5 @@ struct ChatRowView: View {
 
 
 #Preview{
-    ChatListScreen()
+    ChatListScreen(path: .constant(NavigationPath()))
 }

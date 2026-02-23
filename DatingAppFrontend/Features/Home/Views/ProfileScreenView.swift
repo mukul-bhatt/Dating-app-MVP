@@ -205,7 +205,7 @@ struct HeaderView: View {
                             Capsule().fill(position == index ? AppTheme.foregroundPink : .white).frame(height: 4)
                         }
                     }
-                    .padding(.top, 10)
+                    .padding(.vertical, 8)
                 }
                 
                 TabView(selection: $position){

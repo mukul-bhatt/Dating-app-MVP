@@ -12,7 +12,7 @@ struct InboxResponse: Codable, Sendable {
     let data: [InboxItem]
 }
 
-struct InboxItem: Codable, Identifiable, Sendable {
+struct InboxItem: Codable, Identifiable, Sendable, Hashable, Equatable {
     let conversationId: Int
     let profileId: Int
     let userName: String

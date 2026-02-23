@@ -13,7 +13,7 @@ class ChatSocketManager{
     static let shared = ChatSocketManager()
     
     // Combine Subjects for multi-subscriber support
-    let chatMessageSubject = PassthroughSubject<SocketChatMessage, Never>()
+    let chatMessageSubject = PassthroughSubject<SentAckEvent, Never>()
     let receivedMessageSubject = PassthroughSubject<SocketReceivedMessage, Never>()
     let notificationSubject = PassthroughSubject<NotificationEvent, Never>()
     let matchStatusSubject = PassthroughSubject<MatchStatusEvent, Never>()
@@ -126,8 +126,8 @@ class ChatSocketManager{
                                 
                             } else {
                                 // Likely a Sent Acknowledgment (e.g., from self)
-                                let ackMessage = try decoder.decode(SocketChatMessage.self, from: data)
-                                print("✅ Sent Ack received for message: \(ackMessage.Message)")
+                                let ackMessage = try decoder.decode(SentAckEvent.self, from: data)
+                                print("✅ Sent Ack received for message: \(ackMessage.Message ?? "")")
                                 self.chatMessageSubject.send(ackMessage)
                             }
 

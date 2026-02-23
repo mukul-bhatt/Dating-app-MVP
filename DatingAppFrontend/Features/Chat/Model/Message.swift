@@ -28,6 +28,7 @@ struct SocketChatMessage: Codable, Sendable {
     let MessageType: String
     let SentAt: Date
 
+    // These keys are used when WE encode to send to the server
     enum CodingKeys: String, CodingKey {
         case ConversationId = "conversationId"
         case SenderId = "senderId"
@@ -36,6 +37,15 @@ struct SocketChatMessage: Codable, Sendable {
         case MessageType = "type"
         case SentAt = "sentAt"
     }
+}
+
+// Used for decoding the server's PascalCase acknowledgment
+struct SentAckEvent: Decodable, Sendable {
+    let ConversationId: Int?
+    let SenderId: Int?
+    let ReceiverId: Int?
+    let Message: String?
+    let MessageType: String?
 }
 
 struct SocketReceivedMessage: Decodable, Sendable {

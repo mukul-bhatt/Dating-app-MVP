@@ -21,7 +21,7 @@ struct NativeTabView: View {
                     Image("HeartIcon_tabBar")
                 }
 //          ProfileScreenView(profile: viewModel.users[0])
-            ChatListScreen()
+            ChatFlowView(discoverViewModel: viewModel)
                 .tabItem {
                     Image("ChatIcon")
                 }

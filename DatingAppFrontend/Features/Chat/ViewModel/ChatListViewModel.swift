@@ -11,6 +11,8 @@ import Combine
 class ChatListViewModel: ObservableObject {
     @Published var onlineUsers: [MatchStatusUser] = []
     @Published var inboxItems: [InboxItem] = []
+    @Published var isFetchingProfile: Bool = false
+    @Published var errorMessage: String? = nil
     var notificationsManager: NotificationsManager?
     private var cancellables = Set<AnyCancellable>()
     
@@ -69,6 +71,34 @@ class ChatListViewModel: ObservableObject {
             } catch {
                 print("❌ Failed to fetch inbox: \(error)")
             }
+        }
+    }
+    
+    func fetchFullProfile(profileId: Int) async -> DiscoverProfile? {
+        await MainActor.run {
+            isFetchingProfile = true
+            errorMessage = nil
+        }
+        
+        do {
+            let response: NotificationProfileResponse = try await NetworkManager.shared.request(
+                endpoint: .getProfileFromNotification(targetUserId: profileId)
+            )
+            
+            await MainActor.run {
+                isFetchingProfile = false
+                if !response.success {
+                    self.errorMessage = "Failed to fetch profile details"
+                }
+            }
+            
+            return response.success ? response.data : nil
+        } catch {
+            await MainActor.run {
+                isFetchingProfile = false
+                self.errorMessage = "Error loading profile: \(error.localizedDescription)"
+            }
+            return nil
         }
     }
 }
