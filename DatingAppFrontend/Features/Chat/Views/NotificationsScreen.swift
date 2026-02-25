@@ -74,6 +74,21 @@ struct NotificationsScreen: View {
                 ProfileScreenView(path: $path, profile: profile, viewModel: discoverViewModel)
                     .toolbar(.hidden, for: .tabBar)
             }
+            .navigationDestination(for: ChatRoute.self) { route in
+                switch route {
+                case .chat(let item):
+                    ChatView(
+                        conversationId: item.conversationId,
+                        receiverId: item.profileId,
+                        receiverName: item.userName,
+                        receiverImageURL: item.profile
+                    )
+                    .toolbar(.hidden, for: .tabBar)
+                case .profile(let profile):
+                    ProfileScreenView(path: $path, profile: profile, viewModel: discoverViewModel)
+                        .toolbar(.hidden, for: .tabBar)
+                }
+            }
         }
     }
     
@@ -113,8 +128,10 @@ struct NotificationsScreen: View {
                 // View Profile action
                 ActionButton(title: "View Profile 🫣") {
                     Task {
+                        // De-clutter: Call delete notification first
+                        await notificationsManager.deleteNotification(notificationId: notification.id)
+                        
                         do {
-                            // Use targetUserId (withUserId) if available, fallback to senderId
                             let profileId = notification.targetUserId
                             let profile = try await notificationsManager.fetchProfileFromNotification(userId: profileId)
                             path.append(profile)
@@ -124,17 +141,25 @@ struct NotificationsScreen: View {
                     }
                 }
                 
-                // Send Message action via NavigationLink
-                NavigationLink {
-                    ChatView(
-                        conversationId: notification.conversationId ?? 0,
-                        receiverId: notification.targetUserId,
-                        receiverName: notification.senderName,
-                        receiverImageURL: notification.senderImageUrl,
-                        initialMessage: nil
-                    )
-                } label: {
-                    ActionButton(title: "Send Message 💬")
+                // Send Message action via NavigationPath (ChatRoute)
+                ActionButton(title: "Send Message 💬") {
+                    Task {
+                        // De-clutter: Call delete notification first
+                        await notificationsManager.deleteNotification(notificationId: notification.id)
+                        
+                        let item = InboxItem(
+                            conversationId: notification.conversationId ?? 0,
+                            profileId: notification.targetUserId,
+                            userName: notification.senderName,
+                            firstName: "",
+                            lastName: "",
+                            lastMessage: "",
+                            lastMessageTime: "",
+                            profile: notification.senderImageUrl,
+                            isBlocked: false
+                        )
+                        path.append(ChatRoute.chat(item))
+                    }
                 }
             }
         default:

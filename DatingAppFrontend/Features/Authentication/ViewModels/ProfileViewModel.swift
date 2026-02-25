@@ -11,6 +11,7 @@ import Combine
 
 class ProfileViewModel: ObservableObject{
     @Published var hasAttemptedSubmit: Bool = false
+    @Published var isImageUploading: Bool = false
     
     
     @Published var refreshToken: String = ""
@@ -430,6 +431,13 @@ class ProfileViewModel: ObservableObject{
     }
     
     func uploadImages() async throws {
+        await MainActor.run { isImageUploading = true }
+        defer {
+            Task { @MainActor in
+                isImageUploading = false
+            }
+        }
+        
         // Use the centralized NetworkManager's upload method
         let _: EmptyResponse = try await NetworkManager.shared.upload(
             endpoint: .uploadPicture,
@@ -642,9 +650,8 @@ class ProfileViewModel: ObservableObject{
             Settings: SettingsBlock(
                 Location: location,
                 PreferredRange: "\(Int(minValue))-\(Int(maxValue))",
-                Latitude: 15.67995,
-                Longitude: 80.72211
-            ),
+                Latitude: 28.63278,
+                Longitude: 77.21972            ),
             
             Preferences: PreferencesBlock(
                 PreferredAge: "\(Int(minValueForAge))-\(Int(maxValueForAge))",

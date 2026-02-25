@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import SwiftUI
 
 @MainActor
 class NotificationsManager: ObservableObject {
@@ -20,6 +21,8 @@ class NotificationsManager: ObservableObject {
     
     /// Count of unread notifications for tab badge
     @Published var unreadCount: Int = 0
+    @Published var unreadMessageCount: Int = 0
+
     
     /// Cached inbox items for resolving conversation IDs during deep linking
     @Published var inboxItems: [InboxItem] = []
@@ -27,6 +30,10 @@ class NotificationsManager: ObservableObject {
     /// Properties for handling the match screen
     @Published var showMatchScreen: Bool = false
     @Published var latestMatch: NotificationData? = nil
+    
+    /// Navigation Properties for central control
+    @Published var selectedTab: Int = 0
+    @Published var chatPath = NavigationPath()
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -82,7 +89,7 @@ class NotificationsManager: ObservableObject {
                 guard let self = self else { return }
                 
                 // Handle various types from WebSocket
-                let type = event.data.notificationType
+                let type = event.data.notificationType ?? event.data.type
                 
                 if type == "message" || type == "like" || type == "match" {
                     // 🚀 Handle real-time match screen
@@ -105,11 +112,53 @@ class NotificationsManager: ObservableObject {
                         self.addIncomingNotification(from: event)
                     } else {
                         print("🙈 Notification suppressed: User is focusing on sender #\(senderId)")
+                        // Even if suppressed, the server-side count might have changed (e.g. message arrived)
+                        self.requestUnreadCounts()
                     }
                 }
             }
             .store(in: &cancellables)
+            
+        // 🚀 Observe foreground events to ensure counts are fresh when user returns
+        NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                print("📱 App foregrounded, requesting counts...")
+                self?.requestUnreadCounts()
+            }
+            .store(in: &cancellables)
+
+
+        ChatSocketManager.shared.connectionStatusSubject
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isConnected in
+                if isConnected {
+                    print("🔗 Socket connected, requesting unread counts...")
+                    self?.requestUnreadCounts()
+                }
+            }
+            .store(in: &cancellables)
+            
+        ChatSocketManager.shared.countEventSubject
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] payload in
+                if payload.type == "unread_count" {
+                    print("🔔 Updating unreadCount to: \(payload.count)")
+                    self?.unreadCount = payload.count
+                } else if payload.type == "unread_message_count" {
+                    print("💬 Updating unreadMessageCount to: \(payload.count)")
+                    self?.unreadMessageCount = payload.count
+                }
+            }
+            .store(in: &cancellables)
     }
+    
+    func requestUnreadCounts() {
+        print("🔄 Requesting fresh counts from WebSocket...")
+        ChatSocketManager.shared.sendRawMessage("unreadCount")
+        ChatSocketManager.shared.sendRawMessage("unreadMessageCount")
+    }
+
     
     private func addIncomingNotification(from event: NotificationEvent) {
         let profileStr = event.data.Profile.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -123,7 +172,7 @@ class NotificationsManager: ObservableObject {
             conversationId: event.data.ConversationId,
             targetUserId: event.data.WithUserId ?? 0,
             timestamp: Date(),
-            notificationType: event.data.notificationType ?? ""
+            notificationType: event.data.notificationType ?? event.data.type
         )
         addNotification(newNotification)
     }
@@ -133,13 +182,21 @@ class NotificationsManager: ObservableObject {
         guard !notifications.contains(where: { $0.id == notification.id }) else { return }
         
         self.notifications.insert(notification, at: 0)
-        self.unreadCount += 1
-        print("🔔 Global alert added: \(notification.body) | Total unread: \(unreadCount)")
+        
+        // Instead of local increment, request accurate state from server
+        requestUnreadCounts()
+        print("🔔 Global alert added: \(notification.body). Requesting fresh counts.")
     }
     
     func clearUnreadCount() {
+        // We still reset locally for instant UI feedback
         self.unreadCount = 0
+        self.unreadMessageCount = 0
+        
+        // But also notify the server if possible, or request fresh (empty) counts
+        requestUnreadCounts()
     }
+
 
     func clearAll() {
         notifications.removeAll()
@@ -210,5 +267,63 @@ class NotificationsManager: ObservableObject {
         }
         
         return response.data
+    }
+    
+    func deleteNotification(notificationId: Int) async {
+        let body = DeleteNotificationRequest(notificationId: String(notificationId))
+        
+        do {
+            let response: DeleteNotificationResponse = try await NetworkManager.shared.request(
+                endpoint: .deleteNotification,
+                body: body
+            )
+            
+            if response.success {
+                print("✅ Notification deleted successfully: \(notificationId)")
+                await MainActor.run {
+                    self.notifications.removeAll { $0.id == notificationId }
+                    // Recalculate unreadCount based on remaining notifications that are unread
+                    // Note: AppNotification currently doesn't store unread status, 
+                    // but we can decrement if it was in the list.
+                    // The API fetchHistoricalNotifications calculates it from NotificationItem.notificationStatus.
+                }
+            } else {
+                print("❌ Notification deletion failed: \(response.data.message)")
+            }
+        } catch {
+            print("❌ Notification deletion error: \(error.localizedDescription)")
+        }
+    }
+    
+    // MARK: - Navigation Control
+    
+    func openChatForMatch(data: NotificationData) {
+        // 1. Dismiss match screen
+        self.showMatchScreen = false
+        
+        // 2. Clear current chat path to ensure a fresh push
+        self.chatPath = NavigationPath()
+        
+        // 3. Construct InboxItem from NotificationData
+        let item = InboxItem(
+            conversationId: data.ConversationId ?? 0,
+            profileId: data.WithUserId ?? 0,
+            userName: data.WithUserName,
+            firstName: "", // Optional in ChatView
+            lastName: "",  // Optional in ChatView
+            lastMessage: "",
+            lastMessageTime: "",
+            profile: URL(string: data.Profile),
+            isBlocked: false
+        )
+        
+        // 4. Switch to Chat Tab (index 1)
+        self.selectedTab = 1
+        
+        // 5. Append Route to Path
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.chatPath.append(ChatRoute.chat(item))
+            print("🔀 Navigating to Chat for user: \(data.WithUserName)")
+        }
     }
 }

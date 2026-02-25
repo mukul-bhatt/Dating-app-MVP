@@ -18,9 +18,13 @@ class ChatSocketManager{
     let notificationSubject = PassthroughSubject<NotificationEvent, Never>()
     let matchStatusSubject = PassthroughSubject<MatchStatusEvent, Never>()
     let typingEventSubject = PassthroughSubject<SocketTypingPayload, Never>()
+    let connectionStatusSubject = PassthroughSubject<Bool, Never>()
+    let countEventSubject = PassthroughSubject<SocketCountPayload, Never>()
+
     
     private var webSocketTask: URLSessionWebSocketTask?
-
+    
+    
     private var currentUserId: Int?
     let session = URLSession(configuration: .default)
     
@@ -40,8 +44,10 @@ class ChatSocketManager{
         
         webSocketTask?.resume()
         print("🟢 Socket connecting for userId: \(userId)...")
+        connectionStatusSubject.send(true)
         listen()
     }
+    
     
     func listen(){
         webSocketTask?.receive { [weak self] result in
@@ -57,22 +63,22 @@ class ChatSocketManager{
                     case .string(let text):
                         print("Raw socket response:", text)
                         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-
+                        
                         guard trimmed.first == "{" else {
                             print("💓 Heartbeat:", trimmed)
                             return
                         }
-
+                        
                         guard let data = trimmed.data(using: .utf8) else { return }
-
+                        
                         do {
-
+                            
                             let decoder = JSONDecoder()
-
+                            
                             let formatter = DateFormatter()
                             formatter.locale = .init(identifier: "en_US_POSIX")
                             formatter.timeZone = TimeZone(secondsFromGMT: 0)
-
+                            
                             decoder.dateDecodingStrategy = .custom { decoder in
                                 let container = try decoder.singleValueContainer()
                                 let dateString = try container.decode(String.self)
@@ -94,22 +100,22 @@ class ChatSocketManager{
                                 }
                                 throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateString)")
                             }
-
+                            
                             // 👇 Step 1: check if there's a `type`
                             let envelope = try decoder.decode(SocketTypeEnvelope.self, from: data)
-
+                            
                             if envelope.type == "notification" {
-
+                                
                                 let notification = try decoder.decode(NotificationEvent.self, from: data)
                                 print("🔔 Notification:", notification.data.Message)
                                 self.notificationSubject.send(notification)
-
+                                
                             } else if envelope.type == "match_status_list" {
                                 
                                 let matchStatus = try decoder.decode(MatchStatusEvent.self, from: data)
                                 print("🔥 Match Status List Update: \(matchStatus.users.count) users")
                                 self.matchStatusSubject.send(matchStatus)
-
+                                
                             } else if envelope.type == "match_status" {
                                 
                                 let single = try decoder.decode(MatchStatusSingleEvent.self, from: data)
@@ -120,14 +126,22 @@ class ChatSocketManager{
                                 let event = MatchStatusEvent(type: "match_status", users: [user])
                                 self.matchStatusSubject.send(event)
                                 
+                            } else if envelope.type == "unread_count" || envelope.type == "unread_message_count" {
+                                
+                                let countPayload = try decoder.decode(SocketCountPayload.self, from: data)
+                                print("🔔 Received \(envelope.type ?? "count"): \(countPayload.count)")
+                                self.countEventSubject.send(countPayload)
+                                
                             } else if envelope.MessageType == "typing" || envelope.MessageType == "typing_stop" {
+
+
                                 
                                 let typingPayload = try decoder.decode(SocketTypingPayload.self, from: data)
                                 print("⌨️ Received typing status: \(typingPayload.MessageType) from user \(typingPayload.ReceiverId)")
                                 self.typingEventSubject.send(typingPayload)
                                 
                             } else if let msgType = envelope.type, !msgType.isEmpty {
-
+                                
                                 // If it has a 'type' (e.g., "Text"), it's likely a regular incoming message
                                 let receivedMessage = try decoder.decode(SocketReceivedMessage.self, from: data)
                                 print("📩 Received message from other:", receivedMessage.content)
@@ -139,18 +153,18 @@ class ChatSocketManager{
                                 print("✅ Sent Ack received for message: \(ackMessage.Message ?? "")")
                                 self.chatMessageSubject.send(ackMessage)
                             }
-
+                            
                         } catch {
                             print("❌ Decode error:", error)
                         }
-
-
+                        
+                        
                     case .data(let data):
                         print("🔹 Received Data: \(data)")
                     @unknown default:
                         break
                     }
-
+                    
                 case .failure(let error):
                     print("❌ Socket error: \(error). Reconnecting in 3 seconds...")
                     self.webSocketTask = nil
@@ -166,9 +180,9 @@ class ChatSocketManager{
     }
     
     func disconnect() {
-            webSocketTask?.cancel(with: .goingAway, reason: nil)
-            webSocketTask = nil
-        }
+        webSocketTask?.cancel(with: .goingAway, reason: nil)
+        webSocketTask = nil
+    }
     
     func sendMessage(payload: Encodable) {
         do {
@@ -195,6 +209,15 @@ class ChatSocketManager{
         }
     }
     
+    func sendRawMessage(_ message: String) {
+        let socketMessage = URLSessionWebSocketTask.Message.string(message)
+        webSocketTask?.send(socketMessage) { error in
+            if let error = error {
+                print("❌ Failed to send raw message '\(message)': \(error)")
+            } else {
+                print("✅ Raw message sent: \(message)")
+            }
+        }
+    }
 }
-
-
+    

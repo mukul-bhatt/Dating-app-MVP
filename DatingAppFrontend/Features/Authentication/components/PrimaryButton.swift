@@ -29,6 +29,7 @@ import SwiftUI
 
 struct PrimaryButton: View {
     var buttonText: String = "Next"
+    var isLoading: Bool = false
     var action: (() -> Void)? = nil  // Optional action
     
     
@@ -38,6 +39,7 @@ struct PrimaryButton: View {
             Button(action: action) {
                 buttonContent
             }
+            .disabled(isLoading)
             .padding(.bottom, 20)
             
         } else {
@@ -49,13 +51,22 @@ struct PrimaryButton: View {
     
     // Extracted button styling
     private var buttonContent: some View {
-        Text(buttonText)
-            .font(.headline)
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color("ButtonColor"))
-            .cornerRadius(30)
+        HStack {
+            if isLoading {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .padding(.trailing, 8)
+            }
+            
+            Text(isLoading ? "Please wait..." : buttonText)
+                .font(.headline)
+        }
+        .foregroundColor(.white)
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color("ButtonColor"))
+        .cornerRadius(30)
+        .opacity(isLoading ? 0.8 : 1.0)
     }
 }
 #Preview{

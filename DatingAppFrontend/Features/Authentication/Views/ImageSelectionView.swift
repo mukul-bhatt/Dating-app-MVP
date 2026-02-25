@@ -63,7 +63,7 @@ struct ImageSelectionView: View {
                 
                 Spacer()
                 
-                PrimaryButton(){
+                PrimaryButton(isLoading: viewModel.isImageUploading){
                     
                     if viewModel.isImageSelectionValid{
                         

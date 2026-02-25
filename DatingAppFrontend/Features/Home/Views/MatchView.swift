@@ -10,6 +10,7 @@ import SwiftUI
 
 struct MatchView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var notificationsManager: NotificationsManager
     let matchData: NotificationData?
     
     // Fallback if no data (for preview/manual testing)
@@ -68,7 +69,11 @@ struct MatchView: View {
                 // 6. Action Buttons
                 VStack(spacing: 16) {
                     Button(action: {
-                        // Navigate to Chat
+                        if let data = matchData {
+                            notificationsManager.openChatForMatch(data: data)
+                        } else {
+                            dismiss()
+                        }
                     }) {
                         Text("Say Hi!")
                             .font(.headline)

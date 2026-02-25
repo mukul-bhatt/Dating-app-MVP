@@ -156,7 +156,7 @@ struct MatchCard: View {
     var body: some View {
         VStack(spacing: 6) {
             // Profile Image
-            AsyncImage(url: URL(string: match.latestProfileImage ?? "")) { image in
+            AsyncImage(url: URL(string: match.profilePicture ?? "")) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)

@@ -129,9 +129,11 @@ class ChatViewModel: ObservableObject
             }
             .store(in: &cancellables)
         
-        // Removed: ChatSocketManager.shared.connect(userId: userId)
-
+        // Request fresh counts as entering a chat often changes unread status
+        notificationsManager?.requestUnreadCounts()
     }
+
+
     
     func sendMessage() {
         let text = messageFieldValue

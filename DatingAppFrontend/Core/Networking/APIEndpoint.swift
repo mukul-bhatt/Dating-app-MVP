@@ -38,6 +38,11 @@ enum APIEndpoint {
     case deleteAccount
     case blockProfile
     case fetchConversationsByGroup(conversationId: Int)
+    case deleteMessage
+    case sendMessage
+    case getBlacklistedUsers
+    case unblockUser
+    case deleteNotification
     
     nonisolated var path: String {
         switch self {
@@ -71,6 +76,11 @@ enum APIEndpoint {
         case .deleteAccount: return "/profile/delete-account"
         case .blockProfile: return "/profile/block-profile"
         case .fetchConversationsByGroup: return "/profile/get-messages-by-group"
+        case .deleteMessage: return "/profile/delete-message"
+        case .sendMessage: return "/profile/send-message"
+        case .getBlacklistedUsers: return "/profile/blacklisted-users"
+        case .unblockUser: return "/profile/unblock-profile"
+        case .deleteNotification: return "/profile/delete-notification"
         }
     }
     
@@ -82,6 +92,8 @@ enum APIEndpoint {
             return [URLQueryItem(name: "NotificationType", value: types)]
         case .fetchConversationsByGroup(let id):
             return [URLQueryItem(name: "ConversationId", value: "\(id)")]
+        case .getProfileFromNotification(let id):
+            return [URLQueryItem(name: "targetUserId", value: "\(id)")]
         default:
             return nil
         }
@@ -89,8 +101,8 @@ enum APIEndpoint {
     
     nonisolated var method: String {
         switch self {
-        case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById, .getNotifications, .getProfileFromNotification, .getMatches, .getNotificationSettings, .getPrivacySettings, .getContactDetails, .deleteAccount, .fetchConversationsByGroup: return "GET"
-        case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture, .updateProfilePicture, .updateNotificationSetting, .updatePrivacySettings, .updateEmail, .blockProfile: return "POST"
+        case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById, .getNotifications, .getProfileFromNotification, .getMatches, .getNotificationSettings, .getPrivacySettings, .getContactDetails, .deleteAccount, .fetchConversationsByGroup, .getBlacklistedUsers: return "GET"
+        case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture, .updateProfilePicture, .updateNotificationSetting, .updatePrivacySettings, .updateEmail, .blockProfile, .deleteMessage, .sendMessage, .unblockUser, .deleteNotification: return "POST"
         }
     }
 }

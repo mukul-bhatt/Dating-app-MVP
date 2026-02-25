@@ -27,6 +27,12 @@ struct SocketTypingPayload: Codable {
     let IsTyping: Bool
 }
 
+struct SocketCountPayload: Codable {
+    let type: String
+    let count: Int
+}
+
+
 
 
 

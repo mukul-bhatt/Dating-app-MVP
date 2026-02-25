@@ -14,7 +14,7 @@ enum ChatRoute: Hashable, Equatable {
 }
 
 struct ChatFlowView: View {
-    @State private var path = NavigationPath()
+    @Binding var path: NavigationPath
     @ObservedObject var discoverViewModel: DiscoverViewModel
     
     var body: some View {

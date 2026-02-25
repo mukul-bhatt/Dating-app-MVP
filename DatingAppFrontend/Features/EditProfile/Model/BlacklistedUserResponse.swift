@@ -1,32 +1,28 @@
 //
-//  UserMatchResponse.swift
+//  BlacklistedUserResponse.swift
 //  DatingAppFrontend
 //
-//  Created by Antigravity on 19/02/26.
+//  Created by Antigravity on 24/02/26.
 //
 
 import Foundation
 
-// MARK: - User Matches Response
-struct UserMatchResponse: Codable {
+// MARK: - Blacklisted Users Response
+struct BlacklistedUserResponse: Codable {
     let success: Bool
-    let userId: Int?
-    let totalMatches: Int?
-    let data: [UserMatch]
-
-    enum CodingKeys: String, CodingKey {
-        case success
-        case userId = "user_id"
-        case totalMatches = "total_matches"
-        case data
-    }
+    let message: String
+    let data: [BlacklistedUser]
 }
 
-// MARK: - User Match
-struct UserMatch: Codable, Identifiable, Hashable {
-    var id: Int? { matchedUserId }
+// MARK: - Blacklisted User
+struct BlacklistedUser: Codable, Identifiable, Hashable {
+    var id: Int { blacklistedUserId }
     
-    let matchedUserId: Int
+    let toUserId: Int
+    let status: String?
+    let fromUserId: Int
+    let createdAt: String?
+    let blacklistedUserId: Int
     let latestProfileImage: String?
     let profilePicture: String?
     let fullName: String?
@@ -37,8 +33,6 @@ struct UserMatch: Codable, Identifiable, Hashable {
     let sexuality: String?
     let gender: String?
     let conversationId: Int?
-    let matchId: Int? // Represented by 'id' in JSON which is null here but likely intended
-    let matchUserId: Int? // Represented by 'userId' in JSON which is null here
     let contactNumber: String?
     let countryCode: String?
     let dateOfBirth: String?
@@ -55,14 +49,17 @@ struct UserMatch: Codable, Identifiable, Hashable {
     let provider: String?
     let providerId: String?
     let coverImage: String?
-    let status: String?
-    let createdAt: String?
     let updatedAt: String?
     let deletedAt: String?
 
     enum CodingKeys: String, CodingKey {
-        case matchedUserId
-        case latestProfileImage, profilePicture
+        case toUserId
+        case status
+        case fromUserId
+        case createdAt = "created_At"
+        case blacklistedUserId
+        case latestProfileImage
+        case profilePicture
         case fullName
         case age
         case location
@@ -71,8 +68,6 @@ struct UserMatch: Codable, Identifiable, Hashable {
         case sexuality
         case gender
         case conversationId
-        case matchId = "id"
-        case matchUserId = "userId"
         case contactNumber
         case countryCode
         case dateOfBirth
@@ -89,9 +84,19 @@ struct UserMatch: Codable, Identifiable, Hashable {
         case provider
         case providerId
         case coverImage
-        case status
-        case createdAt = "created_At"
         case updatedAt = "updated_At"
         case deletedAt = "deleted_At"
     }
+}
+
+// MARK: - Unblock Request
+struct UnblockRequest: Codable {
+    let toUserId: String
+    let status: String
+}
+
+// MARK: - Generic Response
+struct GenericResponse: Codable {
+    let success: Bool
+    let message: String?
 }

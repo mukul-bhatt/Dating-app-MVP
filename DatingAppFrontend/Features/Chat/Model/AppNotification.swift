@@ -59,3 +59,17 @@ struct NotificationProfileResponse: Codable {
     let success: Bool
     let data: DiscoverProfile
 }
+
+struct DeleteNotificationRequest: Codable {
+    let notificationId: String
+}
+
+struct DeleteNotificationResponse: Codable {
+    let success: Bool
+    let data: DeleteNotificationData
+}
+
+struct DeleteNotificationData: Codable {
+    let status: String
+    let message: String
+}
