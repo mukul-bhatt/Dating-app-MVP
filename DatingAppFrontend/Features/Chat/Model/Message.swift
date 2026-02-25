@@ -16,7 +16,17 @@ struct Message: Identifiable, Sendable {
 
 struct SocketTypeEnvelope: Decodable, Sendable {
     let type: String?
+    let MessageType: String?
 }
+
+
+struct SocketTypingPayload: Codable {
+    let MessageType: String // "typing" or "typing_stop"
+    let ConversationId: Int
+    let ReceiverId: Int
+    let IsTyping: Bool
+}
+
 
 
 
@@ -158,4 +168,28 @@ struct ChatMessage: Codable, Identifiable {
         case content
         case createdAt = "created_At"
     }
+}
+
+// MARK: - API Responses
+struct BasicResponse: Codable {
+    let success: Bool
+    let message: String?
+}
+
+struct SendMessageResponse: Codable {
+    let success: Bool
+    let message: String
+}
+
+// MARK: - API Requests
+struct SendMessageRequest: Codable {
+    let ConversationId: String
+    let MessageType: String
+    let Content: String
+    let ReceiverId: String
+}
+
+struct DeleteMessageRequest: Codable {
+    let MessageIds: [Int]
+    let ConversationId: String
 }

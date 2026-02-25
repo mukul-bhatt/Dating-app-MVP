@@ -7,6 +7,8 @@
 
 import Foundation
 import Combine
+import PhotosUI
+import SwiftUI
 
 
 
@@ -16,6 +18,20 @@ class ChatViewModel: ObservableObject
     @Published var lastMessageId: String? // Changed to String to support both UUID and Int IDs
     @Published var groupedMessages: [DateGroup] = []
     @Published var messageFieldValue: String = ""
+    @Published var isBlockedByMe: Bool = false
+    @Published var isBlockedByThem: Bool = false
+    @Published var isReceiverTyping: Bool = false
+
+    
+    // Photo Selection
+    @Published var selectedPhotoItem: PhotosPickerItem? {
+        didSet {
+            if let item = selectedPhotoItem {
+                handlePhotoSelection(item)
+            }
+        }
+    }
+    @Published var selectedImage: UIImage?
     
     // Track current session details
     private var userId: Int?
@@ -106,7 +122,15 @@ class ChatViewModel: ObservableObject
             }
             .store(in: &cancellables)
         
+        ChatSocketManager.shared.typingEventSubject
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] payload in
+                self?.handleTypingEvent(payload)
+            }
+            .store(in: &cancellables)
+        
         // Removed: ChatSocketManager.shared.connect(userId: userId)
+
     }
     
     func sendMessage() {
@@ -121,7 +145,7 @@ class ChatViewModel: ObservableObject
         let chatMsg = ChatMessage(
             id: tempId,
             type: "text",
-            toUserId: receiverId,
+            toUserId: userId, // Set to me (sender)
             conversationId: conversationId,
             isRead: false,
             readAt: "",
@@ -134,17 +158,28 @@ class ChatViewModel: ObservableObject
         appendToGroups(chatMsg)
         messageFieldValue = ""
         
-        // 2. Send via Socket
-        let socketMessage = SocketChatMessage(
-            ConversationId: conversationId,
-            SenderId: userId,
-            ReceiverId: receiverId,
-            Message: text,
-            MessageType: "text",
-            SentAt: Date()
+        // 2. Send via REST (as per user instruction)
+        let restRequest = SendMessageRequest(
+            ConversationId: "\(conversationId)",
+            MessageType: "Text",
+            Content: text,
+            ReceiverId: "\(receiverId)"
         )
         
-        ChatSocketManager.shared.sendMessage(payload: socketMessage)
+        Task {
+            do {
+                let response: SendMessageResponse = try await NetworkManager.shared.request(endpoint: .sendMessage, body: restRequest)
+                if !response.success {
+                    if response.message == "You cant send message to this user" {
+                        await MainActor.run {
+                            self.isBlockedByThem = true
+                        }
+                    }
+                }
+            } catch {
+                print("❌ Failed to send message via REST: \(error)")
+            }
+        }
     }
     
     // MARK: - Socket Handlers
@@ -158,6 +193,7 @@ class ChatViewModel: ObservableObject
                     await MainActor.run {
                         print("📜 Loaded \(response.data.count) date groups")
                         self.groupedMessages = response.data
+                        self.isBlockedByMe = response.isBlocked
                         
                         // Scroll to bottom if there are messages
                         if let lastGroup = response.data.last, let lastMsg = lastGroup.messages.last {
@@ -189,7 +225,7 @@ class ChatViewModel: ObservableObject
         let chatMsg = ChatMessage(
             id: Int.random(in: 100000...999999),
             type: receivedMessage.type,
-            toUserId: self.userId ?? 0,
+            toUserId: receivedMessage.fromUserId, // Set to the sender
             conversationId: receivedMessage.conversationId,
             isRead: false,
             readAt: "",
@@ -211,7 +247,8 @@ class ChatViewModel: ObservableObject
     }
     
     func handleIncomingNotification(_ notification: NotificationEvent) {
-        if notification.data.notificationType == "message" {
+        let type = notification.data.notificationType ?? notification.data.type
+        if type == "message" {
             let incomingConvId = notification.data.ConversationId
             let senderId = notification.data.FromUserId
             
@@ -223,7 +260,7 @@ class ChatViewModel: ObservableObject
                 let chatMsg = ChatMessage(
                     id: Int.random(in: 100000...999999),
                     type: "text",
-                    toUserId: self.userId ?? 0,
+                    toUserId: senderId, // Set to the sender
                     conversationId: incomingConvId ?? self.conversationId ?? 0,
                     isRead: false,
                     readAt: "",
@@ -237,6 +274,35 @@ class ChatViewModel: ObservableObject
             }
         }
     }
+    
+    func handleTypingEvent(_ payload: SocketTypingPayload) {
+        // Ensure the typing event is for this conversation and from the current receiver
+        // Note: ReceiverId in the outgoing payload from the other party is 'us', 
+        // so we check if the sender of that typing event is our current receiverId.
+        guard payload.ConversationId == self.conversationId || payload.ReceiverId == self.receiverId else {
+            return
+        }
+        
+        // Update typing status
+        withAnimation {
+            self.isReceiverTyping = payload.IsTyping
+        }
+        
+        // Auto-stop if we don't get a stop event (safety)
+        if payload.IsTyping {
+            // Cancel any previous safety timer
+            // For simplicity, we just use a dispatch after. 
+            // If they are actually typing, it will keep resetting isReceiverTyping to true anyway.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+                if self?.isReceiverTyping == true {
+                    withAnimation {
+                        self?.isReceiverTyping = false
+                    }
+                }
+            }
+        }
+    }
+
 
     private func appendToGroups(_ message: ChatMessage) {
         // WhatsApp style: check if "Today" exists
@@ -271,9 +337,60 @@ class ChatViewModel: ObservableObject
         do {
             let response: BlockUserResponse = try await NetworkManager.shared.request(endpoint: .blockProfile, body: requestBody)
             print("🚫 Block User API Response: \(response)")
+            
+            if response.success {
+                await MainActor.run {
+                    self.isBlockedByMe = true
+                }
+            }
+            
             return response.success
         } catch {
             print("❌ Failed to block user: \(error)")
+            return false
+        }
+    }
+
+    func unblockUser() async -> Bool {
+        guard let receiverId = receiverId else { return false }
+        
+        let requestBody = UnblockRequest(toUserId: "\(receiverId)", status: "Unblock")
+        
+        do {
+            let response: GenericResponse = try await NetworkManager.shared.request(
+                endpoint: .unblockUser,
+                body: requestBody
+            )
+            
+            if response.success {
+                await MainActor.run {
+                    self.isBlockedByMe = false
+                }
+                return true
+            }
+            return false
+        } catch {
+            print("❌ Failed to unblock user: \(error)")
+            return false
+        }
+    }
+
+    func deleteChat() async -> Bool {
+        guard let conversationId = self.conversationId else { return false }
+        
+        let body = DeleteMessageRequest(MessageIds: [], ConversationId: "\(conversationId)")
+        
+        do {
+            let response: BasicResponse = try await NetworkManager.shared.request(endpoint: .deleteMessage, body: body)
+            if response.success {
+                await MainActor.run {
+                    self.groupedMessages = []
+                }
+                return true
+            }
+            return false
+        } catch {
+            print("❌ Failed to delete chat: \(error)")
             return false
         }
     }
@@ -299,6 +416,22 @@ class ChatViewModel: ObservableObject
             }
         }
         return Date() // Fallback to now
+    }
+    
+    private func handlePhotoSelection(_ item: PhotosPickerItem) {
+        Task {
+            if let data = try? await item.loadTransferable(type: Data.self),
+               let image = UIImage(data: data) {
+                await MainActor.run {
+                    self.selectedImage = image
+                }
+            }
+        }
+    }
+    
+    func clearSelectedImage() {
+        self.selectedPhotoItem = nil
+        self.selectedImage = nil
     }
 }
 

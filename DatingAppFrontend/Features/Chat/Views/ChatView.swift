@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 struct ChatView: View {
     
@@ -24,6 +25,17 @@ struct ChatView: View {
     @State private var isShowingBlockPopup = false
     @State private var reportPath = NavigationPath()
     @StateObject var discoverViewModel = DiscoverViewModel()
+    @StateObject private var typingViewModel: TypingViewModel
+
+    init(conversationId: Int, receiverId: Int, receiverName: String?, receiverImageURL: URL?, initialMessage: String? = nil) {
+        self.conversationId = conversationId
+        self.receiverId = receiverId
+        self.receiverName = receiverName
+        self.receiverImageURL = receiverImageURL
+        self.initialMessage = initialMessage
+        self._typingViewModel = StateObject(wrappedValue: TypingViewModel(conversationId: conversationId, receiverId: receiverId))
+    }
+
 
     var body: some View {
         ZStack {
@@ -51,13 +63,19 @@ struct ChatView: View {
                                                 DateHeaderView(date: group.dateGroup)
                                                 
                                                 ForEach(group.messages) { message in
-                                                    MessageBubble(message: message, isFromMe: message.toUserId == receiverId)
+                                                    MessageBubble(message: message, isFromMe: message.toUserId == authViewModel.profileId)
                                                         .id("\(message.id)")
                                                 }
                                             }
                                         }
+                                        
+                                        if viewModel.isReceiverTyping {
+                                            TypingIndicatorView()
+                                                .id("typing_indicator")
+                                        }
                                     }
                                     .padding()
+
                                 }
                             }
                             .frame(minWidth: geometry.size.width, minHeight: geometry.size.height)
@@ -70,12 +88,26 @@ struct ChatView: View {
                                 }
                             }
                         }
+                        .onChange(of: viewModel.isReceiverTyping) { oldValue, newValue in
+                            if newValue {
+                                withAnimation {
+                                    proxy.scrollTo("typing_indicator", anchor: .bottom)
+                                }
+                            }
+                        }
+
                     }
                 }
                 
                 
-                // MARK: - Input Field
-                inputArea
+                // MARK: - Input Field / Blocked State
+                if viewModel.isBlockedByMe {
+                    blockedByMeView
+                } else if viewModel.isBlockedByThem {
+                    blockedByThemView
+                } else {
+                    inputArea
+                }
             }
             .navigationBarBackButtonHidden(true)
             .toolbar(.hidden, for: .tabBar)
@@ -99,7 +131,11 @@ struct ChatView: View {
                 notificationsManager.activeConversationId = conversationId
                 notificationsManager.activeReceiverId = receiverId
             }
+            .onChange(of: viewModel.messageFieldValue) { oldValue, newValue in
+                typingViewModel.handleTextChange(newValue)
+            }
             .onDisappear {
+
                 // Clear focus
                 notificationsManager.activeConversationId = nil
                 notificationsManager.activeReceiverId = nil
@@ -133,7 +169,7 @@ struct ChatView: View {
                             if success {
                                 await MainActor.run {
                                     isShowingBlockPopup = false
-                                    dismiss() // Navigate back to inbox after blocking
+                                    // No dismiss() here - stay in ChatView to show blocked UI
                                 }
                             }
                         }
@@ -145,14 +181,12 @@ struct ChatView: View {
     
     // Header View with Profile Info
     var headerView: some View {
-        
         HStack(spacing: 15) {
             Button(action: {
                 dismiss()
             }) {
                 Image(systemName: "arrow.left")
             }
-            
             
             AsyncImage(url: viewModel.receiverImageURL){ image in
                 image
@@ -166,7 +200,6 @@ struct ChatView: View {
                     .foregroundColor(.gray.opacity(0.3))
             }
 
-            
             Text(viewModel.receiverName)
                 .font(.headline)
             
@@ -177,7 +210,9 @@ struct ChatView: View {
             
             Menu {
                 Button("Block user") {
-                    isShowingBlockPopup = true
+                    withAnimation {
+                        isShowingBlockPopup = true
+                    }
                 }
                 Button("Report user") {
                     isShowingReport = true
@@ -191,42 +226,133 @@ struct ChatView: View {
         .foregroundColor(.white)
         .background(AppTheme.foregroundPink)
     }
-    
     // Bottom Input Bar
     var inputArea: some View {
-        
+        VStack(spacing: 0) {
+            // Image Preview
+            if let selectedImage = viewModel.selectedImage {
+                HStack {
+                    ZStack(alignment: .topTrailing) {
+                        Image(uiImage: selectedImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 100, height: 100)
+                            .cornerRadius(12)
+                            .clipped()
+                        
+                        Button(action: {
+                            viewModel.clearSelectedImage()
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.white)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                        .offset(x: 10, y: -10)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 10)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            
             HStack {
                 HStack {
-                    
                     Button(action:{}) {
                         Image(systemName: "face.smiling")
                             .foregroundColor(.primary)
                     }
                     
-                    
                     TextField("Type Something", text: $viewModel.messageFieldValue)
                         .foregroundColor(.gray)
+                    
                     Spacer()
-                    Image(systemName: "paperclip").rotationEffect(.degrees(-224))
-                    Image(systemName: "camera")
+                    
+                    Image(systemName: "paperclip")
+                        .rotationEffect(.degrees(-224))
+                    
+                    PhotosPicker(selection: $viewModel.selectedPhotoItem, matching: .images) {
+                        Image(systemName: "camera")
+                            .foregroundColor(.primary)
+                    }
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 10)
                 .background(AppTheme.backgroundPink)
                 .cornerRadius(25)
-            
-            Button(action: {
-                viewModel.sendMessage()
-            }) {
-                Image(systemName: "paperplane.fill")
-                    .foregroundColor(.black.opacity(0.7))
-                    .padding(12)
-                    .background(AppTheme.backgroundPink)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.white, lineWidth: 1))
+                
+                Button(action: {
+                    viewModel.sendMessage()
+                }) {
+                    Image(systemName: "paperplane.fill")
+                        .foregroundColor(.black.opacity(0.7))
+                        .padding(12)
+                        .background(AppTheme.backgroundPink)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.white, lineWidth: 1))
+                }
             }
+            .padding()
         }
-        .padding()
+    }
+    
+    // MARK: - Blocked States UI
+    
+    var blockedByMeView: some View {
+        VStack(spacing: 16) {
+            Divider()
+            HStack(spacing: 20) {
+                Button(action: {
+                    Task {
+                        await viewModel.deleteChat()
+                    }
+                }) {
+                    Text("Delete Chat")
+                        .font(.headline)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
+                        .background(Color.white)
+                        .cornerRadius(30)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 30)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                }
+                
+                Button(action: {
+                    Task {
+                        await viewModel.unblockUser()
+                    }
+                }) {
+                    Text("Unblock User")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
+                        .background(AppTheme.foregroundPink)
+                        .cornerRadius(30)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 20)
+        }
+        .background(Color.white)
+    }
+    
+    var blockedByThemView: some View {
+        VStack(spacing: 0) {
+            Divider()
+            Text("You can no longer reply to this conversation, they unmatched you :(")
+                .font(.system(size: 14))
+                .foregroundColor(.black.opacity(0.6))
+                .multilineTextAlignment(.center)
+                .padding(.vertical, 30)
+                .padding(.horizontal, 40)
+                .frame(maxWidth: .infinity)
+        }
+        .background(Color.white)
     }
 }
 
@@ -274,7 +400,7 @@ struct SayHiView: View {
             Button(action: {
                 viewModel.sendGreeting()
             }) {
-                Text("Say Hi! 👋")
+                Text("Say Hi!")
                     .font(.headline)
                     .foregroundColor(.white)
                     .padding(.horizontal, 30)
@@ -308,12 +434,12 @@ struct MessageBubble: View {
                 Text(helper.parseHistoricalDate(message.createdAt), style: .time)
                     .padding(.top, 8)
                     .font(.system(size: 10))
-                    .foregroundColor(isFromMe ? .primary.opacity(0.5) : .white.opacity(0.7))
+                    .foregroundColor(isFromMe ? .white.opacity(0.5) : .primary.opacity(0.7))
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(isFromMe ? AppTheme.backgroundPink : AppTheme.foregroundPink)
-            .foregroundColor(isFromMe ? .primary : .white)
+            .background(isFromMe ? AppTheme.foregroundPink : AppTheme.backgroundPink)
+            .foregroundColor(isFromMe ? .white : .primary)
             .cornerRadius(15)
             .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
 

@@ -17,8 +17,10 @@ class ChatSocketManager{
     let receivedMessageSubject = PassthroughSubject<SocketReceivedMessage, Never>()
     let notificationSubject = PassthroughSubject<NotificationEvent, Never>()
     let matchStatusSubject = PassthroughSubject<MatchStatusEvent, Never>()
+    let typingEventSubject = PassthroughSubject<SocketTypingPayload, Never>()
     
     private var webSocketTask: URLSessionWebSocketTask?
+
     private var currentUserId: Int?
     let session = URLSession(configuration: .default)
     
@@ -118,7 +120,14 @@ class ChatSocketManager{
                                 let event = MatchStatusEvent(type: "match_status", users: [user])
                                 self.matchStatusSubject.send(event)
                                 
+                            } else if envelope.MessageType == "typing" || envelope.MessageType == "typing_stop" {
+                                
+                                let typingPayload = try decoder.decode(SocketTypingPayload.self, from: data)
+                                print("⌨️ Received typing status: \(typingPayload.MessageType) from user \(typingPayload.ReceiverId)")
+                                self.typingEventSubject.send(typingPayload)
+                                
                             } else if let msgType = envelope.type, !msgType.isEmpty {
+
                                 // If it has a 'type' (e.g., "Text"), it's likely a regular incoming message
                                 let receivedMessage = try decoder.decode(SocketReceivedMessage.self, from: data)
                                 print("📩 Received message from other:", receivedMessage.content)
