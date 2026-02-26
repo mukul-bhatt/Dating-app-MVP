@@ -144,6 +144,7 @@ struct NotificationsScreen: View {
                             lastMessage: "",
                             lastMessageTime: "",
                             profile: notification.senderImageUrl,
+                            profilePicture: notification.senderImageUrl,
                             isBlocked: false,
                             unreadCount: 0
                         )

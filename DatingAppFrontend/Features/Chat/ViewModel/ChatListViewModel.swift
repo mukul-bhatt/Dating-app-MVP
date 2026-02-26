@@ -65,6 +65,9 @@ class ChatListViewModel: ObservableObject {
     
     func fetchInbox() {
         Task {
+            // Also refresh online users via WebSocket
+            fetchOnlineUsers()
+            
             do {
                 let response: InboxResponse = try await NetworkManager.shared.request(endpoint: .getInbox)
                 if response.success {

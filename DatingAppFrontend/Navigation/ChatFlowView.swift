@@ -27,7 +27,7 @@ struct ChatFlowView: View {
                             conversationId: item.conversationId,
                             receiverId: item.profileId,
                             receiverName: item.userName,
-                            receiverImageURL: item.profile
+                            receiverImageURL: item.profilePicture
                         )
                         .toolbar(.hidden, for: .tabBar)
                         

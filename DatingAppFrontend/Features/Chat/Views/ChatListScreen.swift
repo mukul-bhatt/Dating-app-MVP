@@ -142,7 +142,7 @@ struct ChatRowView: View {
     var body: some View {
         HStack(spacing: 15) {
             // Avatar with Tap Gesture to view profile
-            AsyncImage(url: item.profile) { image in
+            AsyncImage(url: item.profilePicture ?? item.profile) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)

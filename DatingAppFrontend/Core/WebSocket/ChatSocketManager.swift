@@ -35,7 +35,7 @@ class ChatSocketManager{
         }
         
         self.currentUserId = userId
-        guard let url = URL(string: "ws://semiconcealed-alani-uncordial.ngrok-free.dev/ws?userId=\(userId)") else{
+        guard let url = URL(string: "wss://semiconcealed-alani-uncordial.ngrok-free.dev/ws?userId=\(userId)&token=") else{
             print("❌ Error constructing socket URL")
             return
         }

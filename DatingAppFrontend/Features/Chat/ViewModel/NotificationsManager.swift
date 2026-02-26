@@ -99,7 +99,10 @@ class NotificationsManager: ObservableObject {
                         self.showMatchScreen = true
                     }
                     
-                    self.addIncomingNotification(from: event)
+                    // 🔄 Refresh historical notifications from API to ensure consistent IDs and avoid duplication
+                    Task {
+                        await self.fetchHistoricalNotifications()
+                    }
                 }
             }
             .store(in: &cancellables)
@@ -299,6 +302,7 @@ class NotificationsManager: ObservableObject {
             lastMessage: "",
             lastMessageTime: "",
             profile: URL(string: data.Profile),
+            profilePicture: URL(string: data.Profile),
             isBlocked: false,
             unreadCount: 0
         )
