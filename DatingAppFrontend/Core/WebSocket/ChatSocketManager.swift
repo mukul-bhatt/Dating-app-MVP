@@ -22,6 +22,7 @@ class ChatSocketManager{
     let countEventSubject = PassthroughSubject<SocketCountPayload, Never>()
 
     
+    private var webSocketTask: URLSessionWebSocketTask?
     private var currentUserId: Int?
     var tokenProvider: AuthViewModel? // Added token provider
     let session = URLSession(configuration: .default)
