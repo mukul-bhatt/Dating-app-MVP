@@ -63,6 +63,12 @@ class EditProfileViewModel: ObservableObject {
                     // Clear selected image after updating URL
                     self.selectedProfilePicture = nil
                     self.profilePicturePickerItems = []
+                    
+                    // Sync with AuthViewModel (Source of Truth)
+                    if let url = URL(string: response.data.imageUrl) {
+                        profileViewModel.authViewModel?.profilePictureURL = url
+                    }
+                    
                     print("✅ Profile picture updated to: \(response.data.imageUrl)")
                 }
             } else {

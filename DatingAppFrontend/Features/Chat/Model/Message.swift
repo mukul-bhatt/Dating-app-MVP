@@ -17,20 +17,20 @@ struct Message: Identifiable, Sendable {
 struct SocketTypeEnvelope: Decodable, Sendable {
     let type: String?
     let MessageType: String?
+    let messageType: String?
 }
 
 
+// Used for SENDING typing events
 struct SocketTypingPayload: Codable {
     let MessageType: String // "typing" or "typing_stop"
     let ConversationId: Int
-    let FromUserId: Int?
     let ReceiverId: Int
     let IsTyping: Bool
 
-    init(MessageType: String, ConversationId: Int, FromUserId: Int? = nil, ReceiverId: Int, IsTyping: Bool) {
+    init(MessageType: String, ConversationId: Int, ReceiverId: Int, IsTyping: Bool) {
         self.MessageType = MessageType
         self.ConversationId = ConversationId
-        self.FromUserId = FromUserId
         self.ReceiverId = ReceiverId
         self.IsTyping = IsTyping
     }
@@ -38,9 +38,37 @@ struct SocketTypingPayload: Codable {
     enum CodingKeys: String, CodingKey {
         case MessageType
         case ConversationId
-        case FromUserId
-        case ReceiverId = "RecieverId" // Handling backend typo
+        case ReceiverId // Correct spelling for sending
         case IsTyping
+    }
+}
+
+// Used for DECODING typing events from server
+struct SocketIncomingTypingPayload: Decodable {
+    let MessageType: String
+    let ConversationId: Int
+    let FromUserId: Int
+    let RecieverId: Int
+    let IsTyping: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case MessageType
+        case messageType // Add this to check for camelCase
+        case ConversationId
+        case FromUserId
+        case RecieverId
+        case IsTyping
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        // Try PascalCase first, then camelCase
+        self.MessageType = try container.decodeIfPresent(String.self, forKey: .MessageType) ?? 
+                          container.decode(String.self, forKey: .messageType)
+        self.ConversationId = try container.decode(Int.self, forKey: .ConversationId)
+        self.FromUserId = try container.decode(Int.self, forKey: .FromUserId)
+        self.RecieverId = try container.decode(Int.self, forKey: .RecieverId)
+        self.IsTyping = try container.decode(Bool.self, forKey: .IsTyping)
     }
 }
 

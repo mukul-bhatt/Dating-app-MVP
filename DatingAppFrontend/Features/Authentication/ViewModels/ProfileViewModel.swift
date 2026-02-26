@@ -12,6 +12,7 @@ import Combine
 class ProfileViewModel: ObservableObject{
     @Published var hasAttemptedSubmit: Bool = false
     @Published var isImageUploading: Bool = false
+    var authViewModel: AuthViewModel?
     
     
     @Published var refreshToken: String = ""

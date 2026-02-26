@@ -25,7 +25,12 @@ struct MatchStatusUser: Codable, Sendable, Identifiable {
     let name: String?
     let isOnline: Bool
     let lastSeen: Date
-    let profileImage: URL?
+    let profileImage: String?
+
+    var profileImageURL: URL? {
+        guard let profileImage = profileImage, !profileImage.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
+        return URL(string: profileImage.trimmingCharacters(in: .whitespaces))
+    }
 
     // Conform to Identifiable for SwiftUI lists
     var id: Int { userId }

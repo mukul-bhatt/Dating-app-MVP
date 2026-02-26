@@ -12,6 +12,7 @@ class TypingViewModel: ObservableObject {
     private let conversationId: Int
     private let receiverId: Int
     private var isCurrentlyTyping: Bool = false
+    private var lastSentTime: Date = Date.distantPast
     private var typingTimer: Timer?
     
     init(conversationId: Int, receiverId: Int) {
@@ -24,8 +25,17 @@ class TypingViewModel: ObservableObject {
     func handleTextChange(_ text: String) {
         let isTextNotEmpty = !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         
-        if isTextNotEmpty && !isCurrentlyTyping {
-            sendTypingStatus(isTyping: true)
+        if isTextNotEmpty {
+            // Heartbeat logic: If we are already typing, re-send every 3 seconds
+            // to tickle the receiver's safety timer.
+            if !isCurrentlyTyping {
+                sendTypingStatus(isTyping: true)
+                lastSentTime = Date()
+            } else if Date().timeIntervalSince(lastSentTime) > 3.0 {
+                // Re-send heartbeat even though isCurrentlyTyping is already true
+                sendTypingStatus(isTyping: true, force: true)
+                lastSentTime = Date()
+            }
         }
         
         // Reset timer regardless of text state to ensure typing_stop goes out eventually
@@ -36,8 +46,10 @@ class TypingViewModel: ObservableObject {
     }
     
     /// Sends the typing status via the ChatSocketManager
-    private func sendTypingStatus(isTyping: Bool) {
-        guard isCurrentlyTyping != isTyping else { return }
+    private func sendTypingStatus(isTyping: Bool, force: Bool = false) {
+        if !force {
+            guard isCurrentlyTyping != isTyping else { return }
+        }
         
         self.isCurrentlyTyping = isTyping
         let status = isTyping ? "typing" : "typing_stop"

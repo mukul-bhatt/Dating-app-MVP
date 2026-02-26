@@ -15,6 +15,7 @@ class AuthViewModel: ObservableObject {
     @Published var isAuthenticated: Bool = false
     @Published var profileId: Int?
     @Published var userMobile: String?
+    @Published var profilePictureURL: URL?
     
     private let baseUrl = NetworkConfig.baseURL
     private let tokenKey = "authToken"
@@ -24,11 +25,11 @@ class AuthViewModel: ObservableObject {
     
     init() {
         Task {
-             loadTokensFromStorage()
+            loadTokensFromStorage()
             
             // 2. ✅ LINK THE MANAGER (Add this line)
             await NetworkManager.shared.setTokenProvider(self)
-            await ChatSocketManager.shared.setTokenProvider(self)
+            ChatSocketManager.shared.setTokenProvider(self)
             print("✅ NetworkManager and ChatSocketManager linked to AuthViewModel")
         }
     }
@@ -36,24 +37,24 @@ class AuthViewModel: ObservableObject {
     // MARK: - Load Tokens from Storage
     
     private func loadTokensFromStorage() {
-            self.authToken = UserDefaults.standard.string(forKey: tokenKey)
-            self.refreshToken = UserDefaults.standard.string(forKey: refreshTokenKey)
-            self.profileId = UserDefaults.standard.integer(forKey: profileIdKey)
-            self.userMobile = UserDefaults.standard.string(forKey: userMobileKey)
-            
-            // User is authenticated if both tokens exist
-            self.isAuthenticated = authToken != nil && refreshToken != nil
-            
-            if isAuthenticated {
-                print("✅ Tokens loaded from storage")
-            } else {
-                print("ℹ️ No tokens found - user needs to login")
-            }
+        self.authToken = UserDefaults.standard.string(forKey: tokenKey)
+        self.refreshToken = UserDefaults.standard.string(forKey: refreshTokenKey)
+        self.profileId = UserDefaults.standard.integer(forKey: profileIdKey)
+        self.userMobile = UserDefaults.standard.string(forKey: userMobileKey)
+        
+        // User is authenticated if both tokens exist
+        self.isAuthenticated = authToken != nil && refreshToken != nil
+        
+        if isAuthenticated {
+            print("✅ Tokens loaded from storage")
+        } else {
+            print("ℹ️ No tokens found - user needs to login")
         }
+    }
     
     // MARK: - Refresh token using refresh token ⭐
     // AuthViewModel.swift
-
+    
     func refreshAuthToken() async throws {
         // 1. Ensure both tokens exist before attempting a refresh
         guard let currentToken = self.authToken,
@@ -61,12 +62,12 @@ class AuthViewModel: ObservableObject {
             await MainActor.run { logout() }
             throw AuthNetworkError.unauthorized
         }
-
+        
         let endpoint = "/auth/refresh-token"
         guard let url = URL(string: baseUrl + endpoint) else {
             throw URLError(.badURL)
         }
-
+        
         // 2. Prepare the request
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -82,7 +83,7 @@ class AuthViewModel: ObservableObject {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
-
+        
         // 5. Handle the response
         if httpResponse.statusCode == 200 {
             // Decode using your RefreshTokenResponse model
@@ -147,4 +148,29 @@ class AuthViewModel: ObservableObject {
         
         print("🚪 Logged out")
     }
+        
+        // MARK: - Fetch Current User Profile
+        func fetchCurrentUserProfile() async {
+            guard isAuthenticated else { return }
+            
+            do {
+                let response: UserProfileDetailResponse = try await NetworkManager.shared.request(endpoint: .getProfileById)
+                
+                if response.success {
+                    let profile = response.data.profile
+                    if let url = URL(string: profile.profilePicture) {
+                        await MainActor.run {
+                            self.profilePictureURL = url
+                            print("✅ AuthViewModel: Profile picture updated to: \(profile.profilePicture)")
+                        }
+                    }
+                } else {
+                    print("❌ AuthViewModel: Failed to fetch profile: \(response.message)")
+                }
+            } catch {
+                print("❌ AuthViewModel: Error fetching profile: \(error.localizedDescription)")
+            }
+        }
+        
+
 }

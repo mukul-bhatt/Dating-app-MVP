@@ -112,7 +112,7 @@ struct OnlineCircleView: View {
     
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            AsyncImage(url: user.profileImage) { image in
+            AsyncImage(url: user.profileImageURL) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -142,7 +142,7 @@ struct ChatRowView: View {
     var body: some View {
         HStack(spacing: 15) {
             // Avatar with Tap Gesture to view profile
-            AsyncImage(url: item.profilePicture ?? item.profile) { image in
+            AsyncImage(url: item.profilePictureURL) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)

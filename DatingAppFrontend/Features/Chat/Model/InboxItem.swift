@@ -20,10 +20,14 @@ struct InboxItem: Codable, Identifiable, Sendable, Hashable, Equatable {
     let lastName: String
     let lastMessage: String
     let lastMessageTime: String
-    let profile: URL?
-    let profilePicture: URL?
+    let profilePicture: String?
     let isBlocked: Bool
     let unreadCount: Int
+    
+    var profilePictureURL: URL? {
+        guard let profilePicture = profilePicture, !profilePicture.isEmpty else { return nil }
+        return URL(string: profilePicture)
+    }
     
     var id: Int { conversationId }
 }

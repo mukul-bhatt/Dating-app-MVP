@@ -52,6 +52,11 @@ struct NativeTabView: View {
             if let userId = authViewModel.profileId {
                 print("🔌 NativeTabView: Connecting socket for user \(userId)")
                 ChatSocketManager.shared.connect(userId: userId)
+                
+                // Fetch current user profile to get global profile picture
+                Task {
+                    await authViewModel.fetchCurrentUserProfile()
+                }
             }
         }
         .fullScreenCover(isPresented: $notificationsManager.showMatchScreen) {

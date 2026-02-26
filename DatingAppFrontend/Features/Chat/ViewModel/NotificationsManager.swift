@@ -127,6 +127,14 @@ class NotificationsManager: ObservableObject {
             }
             .store(in: &cancellables)
             
+        ChatSocketManager.shared.receivedMessageSubject
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                print("📩 Message received via socket, triggering global count refresh...")
+                self?.requestUnreadCounts()
+            }
+            .store(in: &cancellables)
+            
         ChatSocketManager.shared.countEventSubject
             .receive(on: DispatchQueue.main)
             .sink { [weak self] payload in
@@ -301,8 +309,7 @@ class NotificationsManager: ObservableObject {
             lastName: "",  // Optional in ChatView
             lastMessage: "",
             lastMessageTime: "",
-            profile: URL(string: data.Profile),
-            profilePicture: URL(string: data.Profile),
+            profilePicture: data.Profile,
             isBlocked: false,
             unreadCount: 0
         )

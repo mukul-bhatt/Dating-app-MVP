@@ -49,7 +49,7 @@ struct NotificationsScreen: View {
                                 Text(selectedTab == "All" ? "No new notifications" : "No new matches yet")
                                     .font(.headline)
                                     .foregroundColor(.gray)
-                            }
+                             }
                         } else {
                             ForEach(filteredNotifications) { notification in
                                 NotificationRow(
@@ -81,7 +81,7 @@ struct NotificationsScreen: View {
                         conversationId: item.conversationId,
                         receiverId: item.profileId,
                         receiverName: item.userName,
-                        receiverImageURL: item.profile
+                        receiverImageURL: item.profilePictureURL
                     )
                     .toolbar(.hidden, for: .tabBar)
                 case .profile(let profile):
@@ -143,8 +143,7 @@ struct NotificationsScreen: View {
                             lastName: "",
                             lastMessage: "",
                             lastMessageTime: "",
-                            profile: notification.senderImageUrl,
-                            profilePicture: notification.senderImageUrl,
+                            profilePicture: notification.senderImageUrl?.absoluteString,
                             isBlocked: false,
                             unreadCount: 0
                         )

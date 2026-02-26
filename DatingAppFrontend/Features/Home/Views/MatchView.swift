@@ -11,6 +11,7 @@ import SwiftUI
 struct MatchView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var notificationsManager: NotificationsManager
+    @EnvironmentObject var authViewModel: AuthViewModel
     let matchData: NotificationData?
     
     // Fallback if no data (for preview/manual testing)
@@ -48,8 +49,8 @@ struct MatchView: View {
                 
                 // 4. Overlapping Profile Images
                 HStack(spacing: -30) {
-                    // Your Profile (Placeholder or from Auth)
-                    CircularProfileImage(imageName: "NiaSharma", size: 160)
+                    // Your Profile (Source of Truth in AuthViewModel)
+                    CircularProfileImage(imageURL: authViewModel.profilePictureURL, size: 160)
                         .offset(y: -20)
                     
                     // Matched User Profile
@@ -231,4 +232,6 @@ struct MatchBackground: View {
 
 #Preview {
     MatchView(matchData: nil)
+        .environmentObject(NotificationsManager())
+        .environmentObject(AuthViewModel())
 }

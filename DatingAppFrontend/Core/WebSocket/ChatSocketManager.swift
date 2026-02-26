@@ -17,7 +17,7 @@ class ChatSocketManager{
     let receivedMessageSubject = PassthroughSubject<SocketReceivedMessage, Never>()
     let notificationSubject = PassthroughSubject<NotificationEvent, Never>()
     let matchStatusSubject = PassthroughSubject<MatchStatusEvent, Never>()
-    let typingEventSubject = PassthroughSubject<SocketTypingPayload, Never>()
+    let typingEventSubject = PassthroughSubject<SocketIncomingTypingPayload, Never>()
     let connectionStatusSubject = PassthroughSubject<Bool, Never>()
     let countEventSubject = PassthroughSubject<SocketCountPayload, Never>()
 
@@ -40,7 +40,7 @@ class ChatSocketManager{
         self.currentUserId = userId
         
         let token = tokenProvider?.authToken ?? ""
-        guard let url = URL(string: "wss://semiconcealed-alani-uncordial.ngrok-free.dev/ws?userId=\(userId)&token=\(token)") else {
+        guard let url = URL(string: "wss://unbiliously-strangulatory-braylee.ngrok-free.dev/ws?userId=\(userId)&token=\(token)") else {
             print("❌ Error constructing socket URL")
             return
         }
@@ -94,7 +94,8 @@ class ChatSocketManager{
                                     "yyyy-MM-dd'T'HH:mm:ss.SSS",
                                     "yyyy-MM-dd'T'HH:mm:ss.SS",
                                     "yyyy-MM-dd'T'HH:mm:ss",
-                                    "dd MMM yyyy, hh:mm a"
+                                    "dd MMM yyyy, hh:mm a",
+                                    "HH:mm"
                                 ]
                                 
                                 for format in formats {
@@ -108,6 +109,7 @@ class ChatSocketManager{
                             
                             // 👇 Step 1: check if there's a `type`
                             let envelope = try decoder.decode(SocketTypeEnvelope.self, from: data)
+                            print("📩 Envelope:", envelope)
                             
                             if envelope.type == "notification" {
                                 
@@ -137,13 +139,16 @@ class ChatSocketManager{
                                 print("🔔 Received \(envelope.type ?? "count"): \(countPayload.count)")
                                 self.countEventSubject.send(countPayload)
                                 
-                            } else if envelope.MessageType == "typing" || envelope.MessageType == "typing_stop" {
-
-
+                            } else if envelope.type == "typing" || envelope.type == "typing_stop" || 
+                                         envelope.MessageType == "typing" || envelope.MessageType == "typing_stop" ||
+                                         envelope.messageType == "typing" || envelope.messageType == "typing_stop" {
                                 
-                                let typingPayload = try decoder.decode(SocketTypingPayload.self, from: data)
-                                print("⌨️ Received typing status: \(typingPayload.MessageType) from user \(typingPayload.ReceiverId)")
-                                self.typingEventSubject.send(typingPayload)
+                                let incomingPayload = try decoder.decode(SocketIncomingTypingPayload.self, from: data)
+                                print("⌨️ Received typing status: \(incomingPayload.MessageType) from user \(incomingPayload.FromUserId)")
+                                
+                                // Map to outgoing model for viewmodels or just send the incoming one
+                                // Considering user said "use different models", I'll update the subject and viewmodels
+                                self.typingEventSubject.send(incomingPayload)
                                 
                             } else if let msgType = envelope.type, !msgType.isEmpty {
                                 

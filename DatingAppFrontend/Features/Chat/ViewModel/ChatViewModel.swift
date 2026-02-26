@@ -21,6 +21,8 @@ class ChatViewModel: ObservableObject
     @Published var isBlockedByMe: Bool = false
     @Published var isBlockedByThem: Bool = false
     @Published var isReceiverTyping: Bool = false
+    
+    private var typingSafetyWorkItem: DispatchWorkItem?
 
     
     // Photo Selection
@@ -64,7 +66,7 @@ class ChatViewModel: ObservableObject
                 
                 // Also pick up the image if missing
                 if resolvedImageUrl == nil {
-                    resolvedImageUrl = existing.profile
+                    resolvedImageUrl = existing.profilePictureURL
                 }
             }
         }
@@ -160,23 +162,30 @@ class ChatViewModel: ObservableObject
 
     
     func sendMessage() {
-        let text = messageFieldValue
-        guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let text = messageFieldValue.trimmingCharacters(in: .whitespaces)
+        let image = selectedImage
+        
+        // Guard: Need at least text or an image
+        guard !text.isEmpty || image != nil else { return }
+        
         guard let userId = userId, let conversationId = conversationId, let receiverId = receiverId else {
             print("❌ Cannot send message: Missing session info")
             return
         }
 
+        // Logic for messageType as per user feedback
+        let messageType = (image != nil) ? "Image" : "Text"
+        
         let tempId = Int.random(in: 100000...999999)
         let chatMsg = ChatMessage(
             id: tempId,
-            type: "text",
-            toUserId: userId, // Set to me (sender)
+            type: messageType.lowercased(),
+            toUserId: userId,
             conversationId: conversationId,
             isRead: false,
             readAt: "",
             status: "sending",
-            content: text,
+            content: text.isEmpty ? (image != nil ? "Sent an image" : "") : text,
             createdAt: ISO8601DateFormatter().string(from: Date())
         )
         
@@ -184,17 +193,30 @@ class ChatViewModel: ObservableObject
         appendToGroups(chatMsg)
         messageFieldValue = ""
         
-        // 2. Send via REST (as per user instruction)
-        let restRequest = SendMessageRequest(
-            ConversationId: "\(conversationId)",
-            MessageType: "Text",
-            Content: text,
-            ReceiverId: "\(receiverId)"
-        )
+        // Capturing the current image and clearing it from UI immediately
+        let originalSelectedImage = self.selectedImage
+        self.clearSelectedImage()
+        
+        // 2. Send via Multipart REST
+        let parameters: [String: String] = [
+            "ConversationId": "\(conversationId)",
+            "MessageType": messageType,
+            "Content": text,
+            "ReceiverId": "\(receiverId)"
+        ]
+        
+        let imagesToUpload = [originalSelectedImage].compactMap { $0 }
         
         Task {
             do {
-                let response: SendMessageResponse = try await NetworkManager.shared.request(endpoint: .sendMessage, body: restRequest)
+                // Using upload instead of request for multipart support
+                let response: SendMessageResponse = try await NetworkManager.shared.upload(
+                    endpoint: .sendMessage,
+                    parameters: parameters,
+                    images: imagesToUpload,
+                    imageFieldName: "FileName"
+                )
+                
                 if !response.success {
                     if response.message == "You cant send message to this user" {
                         await MainActor.run {
@@ -203,7 +225,7 @@ class ChatViewModel: ObservableObject
                     }
                 }
             } catch {
-                print("❌ Failed to send message via REST: \(error)")
+                print("❌ Failed to send message via multipart REST: \(error)")
             }
         }
     }
@@ -305,11 +327,12 @@ class ChatViewModel: ObservableObject
         }
     }
     
-    func handleTypingEvent(_ payload: SocketTypingPayload) {
+    func handleTypingEvent(_ payload: SocketIncomingTypingPayload) {
         // Ensure the typing event is for this conversation and from the current receiver
-        // Note: ReceiverId in the outgoing payload from the other party is 'us', 
-        // so we check if the sender of that typing event is our current receiverId.
-        guard payload.ConversationId == self.conversationId || payload.ReceiverId == self.receiverId else {
+        let isFromOurReceiver = (payload.FromUserId == self.receiverId)
+        let isCorrectConversation = (payload.ConversationId == self.conversationId)
+        
+        guard isCorrectConversation && isFromOurReceiver else {
             return
         }
         
@@ -318,18 +341,18 @@ class ChatViewModel: ObservableObject
             self.isReceiverTyping = payload.IsTyping
         }
         
+        // Cancel any existing safety timer
+        typingSafetyWorkItem?.cancel()
+        
         // Auto-stop if we don't get a stop event (safety)
         if payload.IsTyping {
-            // Cancel any previous safety timer
-            // For simplicity, we just use a dispatch after. 
-            // If they are actually typing, it will keep resetting isReceiverTyping to true anyway.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
-                if self?.isReceiverTyping == true {
-                    withAnimation {
-                        self?.isReceiverTyping = false
-                    }
+            let workItem = DispatchWorkItem { [weak self] in
+                withAnimation {
+                    self?.isReceiverTyping = false
                 }
             }
+            self.typingSafetyWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0, execute: workItem)
         }
     }
 

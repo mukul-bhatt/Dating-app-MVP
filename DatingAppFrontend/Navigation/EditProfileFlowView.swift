@@ -27,6 +27,12 @@ struct EditProfileFlowView: View {
     
     @State var path = NavigationPath()
     @StateObject var profileViewModel = ProfileViewModel()
+    @EnvironmentObject var authViewModel: AuthViewModel
+    
+    init() {
+        // Note: @EnvironmentObject is not available here, 
+        // we'll set it in .onAppear or via .task
+    }
     
     var body: some View {
         NavigationStack(path: $path){
@@ -67,6 +73,9 @@ struct EditProfileFlowView: View {
                 }
         }
         .onAppear {
+            // Inject AuthViewModel for data syncing
+            profileViewModel.authViewModel = authViewModel
+            
             Task {
                 await profileViewModel.loadProfileData()
             }
