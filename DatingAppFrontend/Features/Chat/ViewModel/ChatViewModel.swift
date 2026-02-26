@@ -177,7 +177,7 @@ class ChatViewModel: ObservableObject
         let messageType = (image != nil) ? "Image" : "Text"
         
         let tempId = Int.random(in: 100000...999999)
-        let chatMsg = ChatMessage(
+        var chatMsg = ChatMessage(
             id: tempId,
             type: messageType.lowercased(),
             toUserId: userId,
@@ -188,6 +188,7 @@ class ChatViewModel: ObservableObject
             content: text.isEmpty ? (image != nil ? "Sent an image" : "") : text,
             createdAt: ISO8601DateFormatter().string(from: Date())
         )
+        chatMsg.localImage = image
         
         // 1. Add to local UI
         appendToGroups(chatMsg)

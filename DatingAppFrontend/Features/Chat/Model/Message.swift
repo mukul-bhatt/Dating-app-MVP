@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PhotosUI
 
 struct Message: Identifiable, Sendable {
     let id = UUID()
@@ -209,6 +210,9 @@ struct ChatMessage: Codable, Identifiable {
     let status: String
     let content: String
     let createdAt: String
+    
+    // Non-codable property for local preview
+    var localImage: UIImage? = nil
 
     enum CodingKeys: String, CodingKey {
         case id

@@ -427,14 +427,64 @@ struct MessageBubble: View {
                 Spacer(minLength: 60)
             }
 
-            HStack {
-                Text(message.content)
-                    .font(.body)
+            VStack(alignment: .trailing, spacing: 4) {
+                if message.type == "image" {
+                    VStack(alignment: .leading, spacing: 8) {
+                        if let localImage = message.localImage {
+                            Image(uiImage: localImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: 250, maxHeight: 300)
+                                .cornerRadius(12)
+                        } else if let url = URL(string: message.content) {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                        .frame(width: 200, height: 200)
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(maxWidth: 250, maxHeight: 300)
+                                        .cornerRadius(12)
+                                case .failure:
+                                    Image(systemName: "photo")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 100, height: 100)
+                                        .foregroundColor(.gray)
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            }
+                        } else {
+                            Text(message.content)
+                                .font(.body)
+                        }
+                        
+                        // Caption
+                        if !message.content.isEmpty && message.content != "Sent an image" && URL(string: message.content) == nil {
+                            Text(message.content)
+                                .font(.body)
+                                .padding(.top, 4)
+                        }
+                    }
                     
-                Text(helper.parseHistoricalDate(message.createdAt), style: .time)
-                    .padding(.top, 8)
-                    .font(.system(size: 10))
-                    .foregroundColor(isFromMe ? .white.opacity(0.5) : .primary.opacity(0.7))
+                    HStack(spacing: 4) {
+                        Spacer(minLength: 0)
+                        timestampAndStatus
+                    }
+                    .padding(.top, 2)
+                    
+                } else {
+                    HStack(alignment: .bottom, spacing: 8) {
+                        Text(message.content)
+                            .font(.body)
+                        
+                        timestampAndStatus
+                    }
+                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -445,6 +495,26 @@ struct MessageBubble: View {
 
             if !isFromMe {
                 Spacer(minLength: 60)
+            }
+        }
+    }
+
+    private var timestampAndStatus: some View {
+        HStack(spacing: 4) {
+            Text(helper.parseHistoricalDate(message.createdAt), style: .time)
+                .font(.system(size: 10))
+                .foregroundColor(isFromMe ? .white.opacity(0.5) : .primary.opacity(0.7))
+            
+            if isFromMe {
+                if message.status == "sending" {
+                    Image(systemName: "clock")
+                        .font(.system(size: 8))
+                        .foregroundColor(.white.opacity(0.5))
+                } else if message.status == "sent" || message.status == "delivered" {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 8))
+                        .foregroundColor(.white.opacity(0.5))
+                }
             }
         }
     }
