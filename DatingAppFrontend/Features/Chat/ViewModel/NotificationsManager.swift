@@ -91,7 +91,7 @@ class NotificationsManager: ObservableObject {
                 // Handle various types from WebSocket
                 let type = event.data.notificationType ?? event.data.type
                 
-                if type == "message" || type == "like" || type == "match" {
+                if type == "like" || type == "match" {
                     // 🚀 Handle real-time match screen
                     if type == "match" {
                         print("🔥 Real-time MATCH received!")
@@ -99,22 +99,7 @@ class NotificationsManager: ObservableObject {
                         self.showMatchScreen = true
                     }
                     
-                    let incomingConvId = event.data.ConversationId
-                    let senderId = event.data.FromUserId
-                    
-                    // Logic: Suppress only message notifications if we ARE in that chat already
-                    let isUserInThisChat = type == "message" && (
-                        (incomingConvId != nil && incomingConvId == self.activeConversationId) ||
-                        (senderId == self.activeReceiverId)
-                    )
-                    
-                    if !isUserInThisChat {
-                        self.addIncomingNotification(from: event)
-                    } else {
-                        print("🙈 Notification suppressed: User is focusing on sender #\(senderId)")
-                        // Even if suppressed, the server-side count might have changed (e.g. message arrived)
-                        self.requestUnreadCounts()
-                    }
+                    self.addIncomingNotification(from: event)
                 }
             }
             .store(in: &cancellables)
@@ -314,7 +299,8 @@ class NotificationsManager: ObservableObject {
             lastMessage: "",
             lastMessageTime: "",
             profile: URL(string: data.Profile),
-            isBlocked: false
+            isBlocked: false,
+            unreadCount: 0
         )
         
         // 4. Switch to Chat Tab (index 1)

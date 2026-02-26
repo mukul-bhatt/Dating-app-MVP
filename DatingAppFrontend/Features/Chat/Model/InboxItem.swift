@@ -22,6 +22,7 @@ struct InboxItem: Codable, Identifiable, Sendable, Hashable, Equatable {
     let lastMessageTime: String
     let profile: URL?
     let isBlocked: Bool
+    let unreadCount: Int
     
     var id: Int { conversationId }
 }

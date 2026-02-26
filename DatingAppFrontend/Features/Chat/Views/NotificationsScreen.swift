@@ -98,18 +98,6 @@ struct NotificationsScreen: View {
     @ViewBuilder
     private func notificationAction(for notification: AppNotification) -> some View {
         switch notification.notificationType {
-        case "message":
-            NavigationLink {
-                ChatView(
-                    conversationId: notification.conversationId ?? 0,
-                    receiverId: notification.senderId,
-                    receiverName: notification.senderName,
-                    receiverImageURL: notification.senderImageUrl,
-                    initialMessage: notification.body
-                )
-            } label: {
-                ActionButton(title: "View Message 📧")
-            }
         case "like":
             HStack(spacing: 10) {
                 ActionButton(title: "Accept") {
@@ -156,7 +144,8 @@ struct NotificationsScreen: View {
                             lastMessage: "",
                             lastMessageTime: "",
                             profile: notification.senderImageUrl,
-                            isBlocked: false
+                            isBlocked: false,
+                            unreadCount: 0
                         )
                         path.append(ChatRoute.chat(item))
                     }

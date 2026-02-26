@@ -59,6 +59,7 @@ struct ChatListScreen: View {
                     }
                     .refreshable {
                         viewModel.fetchInbox()
+                        viewModel.fetchOnlineUsers()
                     }
                 }
             }
@@ -84,6 +85,7 @@ struct ChatListScreen: View {
             viewModel.notificationsManager = notificationsManager
             
             viewModel.fetchInbox()
+            viewModel.fetchOnlineUsers()
         }
     }
     
@@ -177,9 +179,20 @@ struct ChatRowView: View {
             
             Spacer()
             
-            Text(item.lastMessageTime)
-                .font(.system(size: 12))
-                .foregroundColor(.secondary)
+            VStack(alignment: .trailing, spacing: 5) {
+                Text(item.lastMessageTime)
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                
+                if item.unreadCount > 0 {
+                    Text("\(item.unreadCount)")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(6)
+                        .background(AppTheme.foregroundPink)
+                        .clipShape(Circle())
+                }
+            }
         }
         .padding()
     }

@@ -19,6 +19,12 @@ class ChatListViewModel: ObservableObject {
     init() {
         setupSocketCallbacks()
         fetchInbox()
+        fetchOnlineUsers()
+    }
+    
+    func fetchOnlineUsers() {
+        print("🔄 Requesting online users from WebSocket...")
+        ChatSocketManager.shared.sendRawMessage("onlineUser")
     }
     
     func setupSocketCallbacks() {

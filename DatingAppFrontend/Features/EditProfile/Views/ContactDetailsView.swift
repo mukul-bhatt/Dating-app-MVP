@@ -186,7 +186,6 @@ struct ContactDetailsView: View {
                     // Loading Overlay Restricted to Content Area
                     if settingsViewModel.isUpdating || settingsViewModel.isLoading {
                         ZStack {
-                            Color.black.opacity(0.1)
                             ProgressView(settingsViewModel.isLoading ? "Loading contact details..." : "Updating email...")
                                 .padding()
                                 .background(Color.white)

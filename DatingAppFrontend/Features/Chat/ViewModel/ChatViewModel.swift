@@ -39,6 +39,7 @@ class ChatViewModel: ObservableObject
     private var receiverId: Int?
     @Published var receiverName: String = "Nia Sharma" // default placeholder
     @Published var receiverImageURL: URL?
+    @Published var errorMessage: String? = nil
     
     private var cancellables = Set<AnyCancellable>()
 
@@ -94,6 +95,8 @@ class ChatViewModel: ObservableObject
         // 2. Fetch History (only if conversation actually exists)
         if self.conversationId! > 0 {
             fetchMessageHistory(conversationId: self.conversationId!)
+            // Mark as read when entering existing conversation
+            markAsRead(conversationId: self.conversationId!, userId: userId, notificationsManager: notificationsManager)
         } else {
             print("🆕 New conversation detected (ID 0). Skipping history fetch.")
         }
@@ -131,6 +134,27 @@ class ChatViewModel: ObservableObject
         
         // Request fresh counts as entering a chat often changes unread status
         notificationsManager?.requestUnreadCounts()
+    }
+
+    func markAsRead(conversationId: Int, userId: Int, notificationsManager: NotificationsManager? = nil) {
+        let requestBody = MarkReadRequest(ConversationId: "\(conversationId)", UserId: "\(userId)")
+        
+        Task {
+            do {
+                let response: MarkReadResponse = try await NetworkManager.shared.request(endpoint: .markRead, body: requestBody)
+                if response.success {
+                    print("✅ Messages marked as read for conversation \(conversationId)")
+                    // Refresh global counts to update tab badges
+                    await MainActor.run {
+                        notificationsManager?.requestUnreadCounts()
+                    }
+                } else {
+                    print("❌ Failed to mark as read: \(response.message)")
+                }
+            } catch {
+                print("❌ Mark as read API error: \(error.localizedDescription)")
+            }
+        }
     }
 
 
@@ -239,6 +263,8 @@ class ChatViewModel: ObservableObject
         // Append to UI list
         DispatchQueue.main.async {
             self.appendToGroups(chatMsg)
+            // Mark as read since user is actively viewing this chat
+            self.markAsRead(conversationId: receivedMessage.conversationId, userId: self.userId ?? 0)
         }
     }
     
@@ -272,6 +298,8 @@ class ChatViewModel: ObservableObject
                 )
                 DispatchQueue.main.async {
                     self.appendToGroups(chatMsg)
+                    // Mark as read since user is actively viewing this chat
+                    self.markAsRead(conversationId: chatMsg.conversationId, userId: self.userId ?? 0)
                 }
             }
         }

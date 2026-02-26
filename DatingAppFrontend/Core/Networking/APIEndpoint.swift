@@ -43,6 +43,7 @@ enum APIEndpoint {
     case getBlacklistedUsers
     case unblockUser
     case deleteNotification
+    case markRead
     
     nonisolated var path: String {
         switch self {
@@ -81,6 +82,7 @@ enum APIEndpoint {
         case .getBlacklistedUsers: return "/profile/blacklisted-users"
         case .unblockUser: return "/profile/unblock-profile"
         case .deleteNotification: return "/profile/delete-notification"
+        case .markRead: return "/profile/mark-read"
         }
     }
     
@@ -102,7 +104,7 @@ enum APIEndpoint {
     nonisolated var method: String {
         switch self {
         case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById, .getNotifications, .getProfileFromNotification, .getMatches, .getNotificationSettings, .getPrivacySettings, .getContactDetails, .deleteAccount, .fetchConversationsByGroup, .getBlacklistedUsers: return "GET"
-        case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture, .updateProfilePicture, .updateNotificationSetting, .updatePrivacySettings, .updateEmail, .blockProfile, .deleteMessage, .sendMessage, .unblockUser, .deleteNotification: return "POST"
+        case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture, .updateProfilePicture, .updateNotificationSetting, .updatePrivacySettings, .updateEmail, .blockProfile, .deleteMessage, .sendMessage, .unblockUser, .deleteNotification, .markRead: return "POST"
         }
     }
 }

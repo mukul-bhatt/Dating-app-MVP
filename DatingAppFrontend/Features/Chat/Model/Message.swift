@@ -23,9 +23,28 @@ struct SocketTypeEnvelope: Decodable, Sendable {
 struct SocketTypingPayload: Codable {
     let MessageType: String // "typing" or "typing_stop"
     let ConversationId: Int
+    let FromUserId: Int?
     let ReceiverId: Int
     let IsTyping: Bool
+
+    init(MessageType: String, ConversationId: Int, FromUserId: Int? = nil, ReceiverId: Int, IsTyping: Bool) {
+        self.MessageType = MessageType
+        self.ConversationId = ConversationId
+        self.FromUserId = FromUserId
+        self.ReceiverId = ReceiverId
+        self.IsTyping = IsTyping
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case MessageType
+        case ConversationId
+        case FromUserId
+        case ReceiverId = "RecieverId" // Handling backend typo
+        case IsTyping
+    }
 }
+
+
 
 struct SocketCountPayload: Codable {
     let type: String
@@ -198,4 +217,15 @@ struct SendMessageRequest: Codable {
 struct DeleteMessageRequest: Codable {
     let MessageIds: [Int]
     let ConversationId: String
+}
+
+struct MarkReadRequest: Codable {
+    let ConversationId: String
+    let UserId: String
+}
+
+struct MarkReadResponse: Codable {
+    let success: Bool
+    let status: String
+    let message: String
 }
