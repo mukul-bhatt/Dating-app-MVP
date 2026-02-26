@@ -28,7 +28,8 @@ class AuthViewModel: ObservableObject {
             
             // 2. ✅ LINK THE MANAGER (Add this line)
             await NetworkManager.shared.setTokenProvider(self)
-            print("✅ NetworkManager linked to AuthViewModel")
+            await ChatSocketManager.shared.setTokenProvider(self)
+            print("✅ NetworkManager and ChatSocketManager linked to AuthViewModel")
         }
     }
     

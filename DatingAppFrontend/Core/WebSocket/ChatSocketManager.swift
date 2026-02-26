@@ -22,11 +22,13 @@ class ChatSocketManager{
     let countEventSubject = PassthroughSubject<SocketCountPayload, Never>()
 
     
-    private var webSocketTask: URLSessionWebSocketTask?
-    
-    
     private var currentUserId: Int?
+    var tokenProvider: AuthViewModel? // Added token provider
     let session = URLSession(configuration: .default)
+
+    func setTokenProvider(_ provider: AuthViewModel) {
+        self.tokenProvider = provider
+    }
     
     func connect(userId: Int) {
         if webSocketTask?.state == .running && currentUserId == userId {
@@ -35,7 +37,9 @@ class ChatSocketManager{
         }
         
         self.currentUserId = userId
-        guard let url = URL(string: "wss://semiconcealed-alani-uncordial.ngrok-free.dev/ws?userId=\(userId)&token=") else{
+        
+        let token = tokenProvider?.authToken ?? ""
+        guard let url = URL(string: "wss://semiconcealed-alani-uncordial.ngrok-free.dev/ws?userId=\(userId)&token=\(token)") else {
             print("❌ Error constructing socket URL")
             return
         }
