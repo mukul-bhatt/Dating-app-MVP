@@ -29,6 +29,10 @@ struct ChatView: View {
     @State private var messageToDelete: ChatMessage? = nil
     @State private var isShowingDocumentPicker = false
     @State private var reportPath = NavigationPath()
+    // Multi-select
+    @State private var isSelectMode: Bool = false
+    @State private var selectedMessageIds: Set<Int> = []
+    @State private var bulkDeleteIds: [Int] = []
     @StateObject var discoverViewModel = DiscoverViewModel()
     @StateObject private var typingViewModel: TypingViewModel
 
@@ -69,20 +73,57 @@ struct ChatView: View {
                                                 
                                                 ForEach(group.messages) { message in
                                                     let isFromMe = message.toUserId == authViewModel.profileId
-                                                    MessageBubble(message: message, isFromMe: isFromMe)
-                                                        .id("\(message.id)")
-                                                        .contextMenu {
-                                                            if isFromMe {
-                                                                Button(role: .destructive) {
-                                                                    messageToDelete = message
+                                                    let isSelected = selectedMessageIds.contains(message.id)
+
+                                                    HStack(spacing: 10) {
+                                                        // Checkbox (only visible in select mode)
+                                                        if isSelectMode {
+                                                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                                                                .foregroundColor(isSelected ? AppTheme.foregroundPink : .gray.opacity(0.5))
+                                                                .font(.system(size: 22))
+                                                                .transition(.scale.combined(with: .opacity))
+                                                        }
+
+                                                        MessageBubble(message: message, isFromMe: isFromMe)
+                                                            .id("\(message.id)")
+                                                            .contextMenu {
+                                                                if isFromMe {
+                                                                    Button(role: .destructive) {
+                                                                        messageToDelete = message
+                                                                        withAnimation {
+                                                                            isShowingDeleteMessageConfirmation = true
+                                                                        }
+                                                                    } label: {
+                                                                        Label("Delete Message", systemImage: "trash")
+                                                                    }
+                                                                }
+                                                                Button {
                                                                     withAnimation {
-                                                                        isShowingDeleteMessageConfirmation = true
+                                                                        isSelectMode = true
+                                                                        selectedMessageIds.insert(message.id)
                                                                     }
                                                                 } label: {
-                                                                    Label("Delete Message", systemImage: "trash")
+                                                                    Label("Select Messages", systemImage: "checkmark.circle")
+                                                                }
+                                                            }
+                                                    }
+                                                    .contentShape(Rectangle())
+                                                    .onTapGesture {
+                                                        if isSelectMode {
+                                                            withAnimation(.spring(response: 0.25)) {
+                                                                if isSelected {
+                                                                    selectedMessageIds.remove(message.id)
+                                                                } else {
+                                                                    selectedMessageIds.insert(message.id)
                                                                 }
                                                             }
                                                         }
+                                                    }
+                                                    .background(
+                                                        isSelected
+                                                            ? AppTheme.foregroundPink.opacity(0.08)
+                                                            : Color.clear
+                                                    )
                                                 }
                                             }
                                         }
@@ -119,7 +160,9 @@ struct ChatView: View {
                 
                 
                 // MARK: - Input Field / Blocked State
-                if viewModel.isBlockedByMe {
+                if isSelectMode {
+                    multiSelectToolbar
+                } else if viewModel.isBlockedByMe {
                     blockedByMeView
                 } else if viewModel.isBlockedByThem {
                     blockedByThemView
@@ -220,12 +263,24 @@ struct ChatView: View {
                 )
             }
 
-            if isShowingDeleteMessageConfirmation, let msg = messageToDelete {
+            if isShowingDeleteMessageConfirmation {
                 DeleteMessageConfirmationView(
                     isPresented: $isShowingDeleteMessageConfirmation,
                     onDelete: {
+                        let ids: [Int] = bulkDeleteIds.isEmpty
+                            ? (messageToDelete.map { [$0.id] } ?? [])
+                            : bulkDeleteIds
                         Task {
-                            await viewModel.deleteMessages(messageIds: [msg.id])
+                            await viewModel.deleteMessages(messageIds: ids)
+                            await MainActor.run {
+                                if !bulkDeleteIds.isEmpty {
+                                    // Exit select mode after bulk delete
+                                    isSelectMode = false
+                                    selectedMessageIds = []
+                                    bulkDeleteIds = []
+                                }
+                                messageToDelete = nil
+                            }
                         }
                     }
                 )
@@ -398,6 +453,64 @@ struct ChatView: View {
         }
     }
     
+    // MARK: - Multi-Select Toolbar
+    
+    var multiSelectToolbar: some View {
+        VStack(spacing: 0) {
+            Divider()
+            HStack(spacing: 16) {
+                // Cancel
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isSelectMode = false
+                        selectedMessageIds = []
+                    }
+                }) {
+                    Text("Cancel")
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
+                        .background(Color.white)
+                        .cornerRadius(30)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 30)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                }
+
+                // Delete Selected
+                Button(action: {
+                    let ids = Array(selectedMessageIds)
+                    withAnimation {
+                        isShowingDeleteMessageConfirmation = true
+                        // Store IDs in messageToDelete via a dummy approach — we'll
+                        // pass directly using the confirmation closure capture below.
+                    }
+                    // We use a separate state to hold the bulk ids
+                    bulkDeleteIds = ids
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "trash")
+                        Text(selectedMessageIds.isEmpty ? "Delete" : "Delete (\(selectedMessageIds.count))")
+                    }
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(selectedMessageIds.isEmpty ? .gray : .white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 15)
+                    .background(selectedMessageIds.isEmpty ? Color.gray.opacity(0.15) : AppTheme.foregroundPink)
+                    .cornerRadius(30)
+                }
+                .disabled(selectedMessageIds.isEmpty)
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 20)
+            .padding(.top, 12)
+        }
+        .background(Color.white)
+    }
+
     // MARK: - Blocked States UI
     
     var blockedByMeView: some View {
