@@ -40,6 +40,8 @@ actor NetworkManager {
         var request = URLRequest(url: url)
         request.httpMethod = endpoint.method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        // Bypass NGrok tunnel reminder
+        request.setValue("true", forHTTPHeaderField: "ngrok-skip-browser-warning")
 //        print("🌐 PERFORMING \(request.httpMethod ?? "GET") REQUEST: \(url.absoluteString)")
         
         // 2. Attach Token Automatically
@@ -59,7 +61,9 @@ actor NetworkManager {
         
         // ---------------- ADD THIS DEBUG BLOCK ----------------
         if let jsonString = String(data: data, encoding: .utf8) {
-            print("🔴 ACTUAL SERVER RESPONSE: \(jsonString)")
+            print("🔴 ACTUAL SERVER RESPONSE (Code: \((response as? HTTPURLResponse)?.statusCode ?? 0)): \(jsonString)")
+        } else if data.isEmpty {
+            print("🔴 ACTUAL SERVER RESPONSE (Code: \((response as? HTTPURLResponse)?.statusCode ?? 0)): EMPTY BODY")
         }
         // ------------------------------------------------------
         
@@ -98,7 +102,12 @@ actor NetworkManager {
         // 6. Decode Success
 //          return try JSONDecoder().decode(T.self, from: data)
         do {
-            let finalResponse = try JSONDecoder().decode(T.self, from: data)
+            var decodingData = data
+            if data.isEmpty {
+                decodingData = "{}".data(using: .utf8) ?? data
+            }
+            
+            let finalResponse = try JSONDecoder().decode(T.self, from: decodingData)
             print("✅ DECODED SUCCESS: \(T.self)")
             return finalResponse
         } catch let error as DecodingError {
@@ -189,9 +198,73 @@ actor NetworkManager {
         }
         
         return try JSONDecoder().decode(T.self, from: data)
-//        let finalresponse = try JSONDecoder().decode(T.self, from: data)
-//        print("APi response from network manager:",response)
-//        return finalresponse
+    }
+    
+    /// Generic file upload: accepts raw Data with an explicit filename and MIME type.
+    func uploadFile<T: Decodable>(
+        endpoint: APIEndpoint,
+        parameters: [String: String] = [:],
+        fileData: Data,
+        fileName: String,
+        mimeType: String,
+        fieldName: String = "File"
+    ) async throws -> T {
+        guard var components = URLComponents(string: baseURL + endpoint.path) else {
+            throw URLError(.badURL)
+        }
+        if let queryItems = endpoint.queryItems {
+            components.queryItems = queryItems
+        }
+        guard let url = components.url else { throw URLError(.badURL) }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        let boundary = "Boundary-\(UUID().uuidString)"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        
+        if let token = await tokenProvider?.authToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        var body = Data()
+        
+        // Append text parameters
+        for (key, value) in parameters {
+            body.append(Data("--\(boundary)\r\n".utf8))
+            body.append(Data("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".utf8))
+            body.append(Data("\(value)\r\n".utf8))
+        }
+        
+        // Append the file
+        body.append(Data("--\(boundary)\r\n".utf8))
+        body.append(Data("Content-Disposition: form-data; name=\"\(fieldName)\"; filename=\"\(fileName)\"\r\n".utf8))
+        body.append(Data("Content-Type: \(mimeType)\r\n\r\n".utf8))
+        body.append(fileData)
+        body.append(Data("\r\n".utf8))
+        body.append(Data("--\(boundary)--\r\n".utf8))
+        
+        request.httpBody = body
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("🔴 uploadFile RESPONSE: \(jsonString)")
+        }
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        
+        if httpResponse.statusCode == 401 {
+            if let provider = tokenProvider {
+                try await provider.refreshAuthToken()
+                return try await self.uploadFile(endpoint: endpoint, parameters: parameters, fileData: fileData, fileName: fileName, mimeType: mimeType, fieldName: fieldName)
+            }
+            throw AuthNetworkError.unauthorized
+        }
+        
+        return try JSONDecoder().decode(T.self, from: data)
     }
     
 

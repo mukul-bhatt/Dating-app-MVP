@@ -55,57 +55,75 @@ class AuthViewModel: ObservableObject {
     // MARK: - Refresh token using refresh token ⭐
     // AuthViewModel.swift
     
+    private var refreshTask: Task<Void, Error>?
+    
     func refreshAuthToken() async throws {
-        // 1. Ensure both tokens exist before attempting a refresh
-        guard let currentToken = self.authToken,
-              let currentRefreshToken = self.refreshToken else {
-            await MainActor.run { logout() }
-            throw AuthNetworkError.unauthorized
+        // 1. Synchronize multiple refresh attempts
+        if let existingTask = refreshTask {
+             _ = try await existingTask.value
+             return
         }
         
-        let endpoint = "/auth/refresh-token"
-        guard let url = URL(string: baseUrl + endpoint) else {
-            throw URLError(.badURL)
-        }
-        
-        // 2. Prepare the request
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        // 3. Use the RefreshTokenApiBody model for the request body
-        let body = RefreshTokenApiBody(token: currentToken, refreshToken: currentRefreshToken)
-        request.httpBody = try JSONEncoder().encode(body)
-        
-        // 4. Perform the network call
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw URLError(.badServerResponse)
-        }
-        
-        // 5. Handle the response
-        if httpResponse.statusCode == 200 {
-            // Decode using your RefreshTokenResponse model
-            let refreshResponse = try JSONDecoder().decode(RefreshTokenResponse.self, from: data)
-            
-            await MainActor.run {
-                // Update the source of truth
-                self.authToken = refreshResponse.token
-                self.refreshToken = refreshResponse.refreshToken
-                self.isAuthenticated = true
-                
-                // Sync with local storage
-                UserDefaults.standard.set(refreshResponse.token, forKey: tokenKey)
-                UserDefaults.standard.set(refreshResponse.refreshToken, forKey: refreshTokenKey)
-                
-                print("✅ Token refreshed successfully")
+        let newTask = Task<Void, Error> {
+            // 2. Ensure both tokens exist before attempting a refresh
+            guard let currentToken = self.authToken,
+                  let currentRefreshToken = self.refreshToken else {
+                await MainActor.run { logout() }
+                throw AuthNetworkError.unauthorized
             }
-        } else {
-            // If refresh fails (e.g., 401 or 403), the refresh token itself is invalid
-            print("❌ Token refresh failed with status: \(httpResponse.statusCode)")
-            await MainActor.run { logout() }
-            throw AuthNetworkError.unauthorized
+            
+            let endpoint = "/auth/refresh-token"
+            guard let url = URL(string: baseUrl + endpoint) else {
+                throw URLError(.badURL)
+            }
+            
+            // 3. Prepare the request
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            // Bypass NGrok tunnel reminder (Crucial for refresh call to succeed)
+            request.setValue("true", forHTTPHeaderField: "ngrok-skip-browser-warning")
+            
+            // 4. Use the RefreshTokenApiBody model for the request body
+            let body = RefreshTokenApiBody(token: currentToken, refreshToken: currentRefreshToken)
+            request.httpBody = try JSONEncoder().encode(body)
+            
+            // 5. Perform the network call
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw URLError(.badServerResponse)
+            }
+            
+            // 6. Handle the response
+            if httpResponse.statusCode == 200 {
+                let refreshResponse = try JSONDecoder().decode(RefreshTokenResponse.self, from: data)
+                
+                await MainActor.run {
+                    self.authToken = refreshResponse.token
+                    self.refreshToken = refreshResponse.refreshToken
+                    self.isAuthenticated = true
+                    
+                    UserDefaults.standard.set(refreshResponse.token, forKey: tokenKey)
+                    UserDefaults.standard.set(refreshResponse.refreshToken, forKey: refreshTokenKey)
+                    
+                    print("✅ Token refreshed successfully")
+                }
+            } else {
+                print("❌ Token refresh failed with status: \(httpResponse.statusCode)")
+                await MainActor.run { logout() }
+                throw AuthNetworkError.unauthorized
+            }
+        }
+        
+        self.refreshTask = newTask
+        
+        do {
+            try await newTask.value
+            self.refreshTask = nil
+        } catch {
+            self.refreshTask = nil
+            throw error
         }
     }
     

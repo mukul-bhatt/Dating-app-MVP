@@ -7,6 +7,7 @@
 
 import SwiftUI
 import PhotosUI
+import UniformTypeIdentifiers
 
 struct ChatView: View {
     
@@ -24,6 +25,7 @@ struct ChatView: View {
     @State private var isShowingReport = false
     @State private var isShowingBlockPopup = false
     @State private var isShowingDeleteChatConfirmation = false
+    @State private var isShowingDocumentPicker = false
     @State private var reportPath = NavigationPath()
     @StateObject var discoverViewModel = DiscoverViewModel()
     @StateObject private var typingViewModel: TypingViewModel
@@ -140,6 +142,20 @@ struct ChatView: View {
                 // Clear focus
                 notificationsManager.activeConversationId = nil
                 notificationsManager.activeReceiverId = nil
+            }
+            .fileImporter(
+                isPresented: $isShowingDocumentPicker,
+                allowedContentTypes: [.pdf, .text, .data, .item],
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    guard let url = urls.first else { return }
+                    viewModel.selectedDocumentURL = url
+                    viewModel.selectedDocumentName = url.lastPathComponent
+                case .failure(let error):
+                    print("❌ Document pick error: \(error.localizedDescription)")
+                }
             }
             .fullScreenCover(isPresented: $isShowingReport) {
                 NavigationStack(path: $reportPath) {
@@ -274,11 +290,43 @@ struct ChatView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
             
+            // Document Preview
+            if let docName = viewModel.selectedDocumentName {
+                HStack(spacing: 10) {
+                    Image(systemName: "doc.fill")
+                        .foregroundColor(AppTheme.foregroundPink)
+                        .font(.title2)
+                    
+                    Text(docName)
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        viewModel.clearSelectedDocument()
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.gray)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(AppTheme.backgroundPink)
+                .cornerRadius(12)
+                .padding(.horizontal)
+                .padding(.bottom, 6)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            
             HStack {
                 HStack {
                     Button(action:{}) {
                         Image(systemName: "face.smiling")
                             .foregroundColor(.primary)
+                            .opacity(0)
                     }
                     
                     TextField("Type Something", text: $viewModel.messageFieldValue)
@@ -286,8 +334,14 @@ struct ChatView: View {
                     
                     Spacer()
                     
-                    Image(systemName: "paperclip")
-                        .rotationEffect(.degrees(-224))
+                    // Paperclip → Document Picker
+                    Button(action: {
+                        isShowingDocumentPicker = true
+                    }) {
+                        Image(systemName: "paperclip")
+                            .rotationEffect(.degrees(-224))
+                            .foregroundColor(.primary)
+                    }
                     
                     PhotosPicker(selection: $viewModel.selectedPhotoItem, matching: .images) {
                         Image(systemName: "camera")
@@ -300,7 +354,11 @@ struct ChatView: View {
                 .cornerRadius(25)
                 
                 Button(action: {
-                    viewModel.sendMessage()
+                    if viewModel.selectedDocumentURL != nil {
+                        viewModel.sendDocument()
+                    } else {
+                        viewModel.sendMessage()
+                    }
                 }) {
                     Image(systemName: "paperplane.fill")
                         .foregroundColor(.black.opacity(0.7))
@@ -588,6 +646,65 @@ struct ImageMessageBubble: View {
     }
 }
 
+struct DocumentMessageBubble: View {
+    let message: ChatMessage
+    let isFromMe: Bool
+    let time: String
+    
+    private var iconName: String {
+        let ext = (message.content as NSString).pathExtension.lowercased()
+        switch ext {
+        case "pdf": return "doc.richtext.fill"
+        case "doc", "docx": return "doc.text.fill"
+        case "xls", "xlsx": return "tablecells.fill"
+        case "txt": return "doc.plaintext.fill"
+        default: return "doc.fill"
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: iconName)
+                .font(.title2)
+                .foregroundColor(isFromMe ? .white : AppTheme.foregroundPink)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(message.content)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .lineLimit(2)
+                
+                HStack(spacing: 4) {
+                    Text(time)
+                        .font(.system(size: 10))
+                        .foregroundColor(isFromMe ? .white.opacity(0.7) : .primary.opacity(0.5))
+                    
+                    if isFromMe { statusIcon }
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(isFromMe ? AppTheme.foregroundPink : AppTheme.backgroundPink)
+        .foregroundColor(isFromMe ? .white : .primary)
+        .cornerRadius(15)
+        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+    }
+    
+    @ViewBuilder
+    private var statusIcon: some View {
+        if message.status == "sending" {
+            Image(systemName: "clock")
+                .font(.system(size: 8))
+                .foregroundColor(.white.opacity(0.7))
+        } else if message.status == "sent" || message.status == "delivered" {
+            Image(systemName: "checkmark")
+                .font(.system(size: 8))
+                .foregroundColor(.white.opacity(0.7))
+        }
+    }
+}
+
 struct MessageBubble: View {
     let message: ChatMessage
     let isFromMe: Bool
@@ -603,6 +720,8 @@ struct MessageBubble: View {
             
             if message.type == "image" {
                 ImageMessageBubble(message: message, isFromMe: isFromMe, time: timeString)
+            } else if message.type == "document" {
+                DocumentMessageBubble(message: message, isFromMe: isFromMe, time: timeString)
             } else {
                 TextMessageBubble(message: message, isFromMe: isFromMe, time: timeString)
             }

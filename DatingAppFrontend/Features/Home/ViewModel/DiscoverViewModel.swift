@@ -198,6 +198,11 @@ class DiscoverViewModel: ObservableObject {
         do {
             let response: dislikeResponse = try await NetworkManager.shared.request(endpoint: .dislikeProfile, body: sendDislike(toUserId: String(id)))
             print("Unlike Success: \(String(describing: response.message))")
+            await MainActor.run {
+                if let index = users.firstIndex(where: { $0.id == id }) {
+                    users[index].isLikedByMe = false
+                }
+            }
         } catch {
             print("Error in sending dislike Response: \(error)")
         }
@@ -211,6 +216,11 @@ class DiscoverViewModel: ObservableObject {
                 body: body
             )
             print("Like Success: \(response.message)")
+            await MainActor.run {
+                if let index = users.firstIndex(where: { $0.id == id }) {
+                    users[index].isLikedByMe = true
+                }
+            }
         } catch {
             print("Error in sending like Response: \(error)")
         }

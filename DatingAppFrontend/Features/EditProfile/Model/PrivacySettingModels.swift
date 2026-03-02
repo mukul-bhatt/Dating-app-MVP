@@ -16,6 +16,10 @@ struct PrivacySettingResponse: Codable {
     let success: Bool
 }
 
+struct DeleteAccountResponse: Codable {
+    let success: Bool
+}
+
 struct PrivacySettingFetchResponse: Codable {
     let success: Bool
     let data: [PrivacySettingItem]

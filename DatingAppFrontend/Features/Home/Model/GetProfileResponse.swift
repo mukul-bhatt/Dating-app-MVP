@@ -32,7 +32,7 @@ struct DiscoverProfile: Codable, Identifiable, Hashable {
     let displayLocation: String
     let matchPercent: String
     let interestsArray: [String]
-    let isLikedByMe: Bool
+    var isLikedByMe: Bool
     let sexualityText: String
     let pronounsText: String
     let religionText: String

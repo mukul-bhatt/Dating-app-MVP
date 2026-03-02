@@ -35,6 +35,10 @@ class ChatViewModel: ObservableObject
     }
     @Published var selectedImage: UIImage?
     
+    // Document Selection
+    @Published var selectedDocumentURL: URL? = nil
+    @Published var selectedDocumentName: String? = nil
+    
     // Track current session details
     private var userId: Int?
     private var conversationId: Int?
@@ -499,6 +503,95 @@ class ChatViewModel: ObservableObject
     func clearSelectedImage() {
         self.selectedPhotoItem = nil
         self.selectedImage = nil
+    }
+    
+    func clearSelectedDocument() {
+        self.selectedDocumentURL = nil
+        self.selectedDocumentName = nil
+    }
+    
+    func sendDocument() {
+        guard let docURL = selectedDocumentURL,
+              let userId = userId,
+              let conversationId = conversationId,
+              let receiverId = receiverId else {
+            print("❌ Cannot send document: Missing info")
+            return
+        }
+        
+        let fileName = selectedDocumentName ?? docURL.lastPathComponent
+        
+        // 1. Add optimistic local message bubble immediately
+        let tempId = Int.random(in: 100000...999999)
+        let chatMsg = ChatMessage(
+            id: tempId,
+            type: "document",
+            toUserId: userId,
+            conversationId: conversationId,
+            isRead: false,
+            readAt: "",
+            status: "sending",
+            content: fileName,
+            image: nil,
+            createdAt: ISO8601DateFormatter().string(from: Date())
+        )
+        appendToGroups(chatMsg)
+        
+        // Capture and clear immediately so UI is clean
+        let capturedURL = docURL
+        clearSelectedDocument()
+        
+        // 2. Upload via multipart REST
+        let parameters: [String: String] = [
+            "ConversationId": "\(conversationId)",
+            "MessageType": "Document",
+            "Content": fileName,
+            "ReceiverId": "\(receiverId)"
+        ]
+        
+        Task {
+            do {
+                // Security-scoped resource access for files picked from Files.app
+                let accessing = capturedURL.startAccessingSecurityScopedResource()
+                defer {
+                    if accessing { capturedURL.stopAccessingSecurityScopedResource() }
+                }
+                
+                guard let fileData = try? Data(contentsOf: capturedURL) else {
+                    print("❌ Failed to read document data")
+                    return
+                }
+                let mimeType = mimeType(for: capturedURL)
+                let response: SendMessageResponse = try await NetworkManager.shared.uploadFile(
+                    endpoint: .sendMessage,
+                    parameters: parameters,
+                    fileData: fileData,
+                    fileName: capturedURL.lastPathComponent,
+                    mimeType: mimeType,
+                    fieldName: "File"
+                )
+                if !response.success {
+                    print("❌ Document send failed: \(response.message)")
+                }
+            } catch {
+                print("❌ Failed to send document: \(error)")
+            }
+        }
+    }
+    
+    private func mimeType(for url: URL) -> String {
+        let ext = url.pathExtension.lowercased()
+        switch ext {
+        case "pdf":  return "application/pdf"
+        case "doc":  return "application/msword"
+        case "docx": return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        case "xls":  return "application/vnd.ms-excel"
+        case "xlsx": return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        case "txt":  return "text/plain"
+        case "png":  return "image/png"
+        case "jpg", "jpeg": return "image/jpeg"
+        default:     return "application/octet-stream"
+        }
     }
 }
 

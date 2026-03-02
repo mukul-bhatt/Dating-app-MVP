@@ -109,17 +109,6 @@ struct BlockListView: View {
                     }
                 }
             }
-            
-            // Overlay for unblocking spinner
-            if viewModel.isUnblocking {
-                ZStack {
-                    Color.black.opacity(0.2).ignoresSafeArea()
-                    ProgressView()
-                        .padding(20)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                }
-            }
         }
         .navigationBarHidden(true)
         .task {
@@ -170,15 +159,23 @@ struct BlockListView: View {
                                             }
                                         }
                                     }) {
-                                        Text("Unblock")
-                                            .font(.subheadline)
-                                            .foregroundColor(AppTheme.foregroundPink)
-                                            .frame(width: 120, height: 50)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 10)
-                                                    .stroke(AppTheme.foregroundPink.opacity(0.7), lineWidth: 1.5)
-                                            )
+                                        ZStack {
+                                            if viewModel.isUnblocking {
+                                                ProgressView()
+                                                    .tint(AppTheme.foregroundPink)
+                                            } else {
+                                                Text("Unblock")
+                                                    .font(.subheadline)
+                                                    .foregroundColor(AppTheme.foregroundPink)
+                                            }
+                                        }
+                                        .frame(width: 120, height: 50)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .stroke(AppTheme.foregroundPink.opacity(0.7), lineWidth: 1.5)
+                                        )
                                     }
+                                    .disabled(viewModel.isUnblocking)
                                     .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
                                 }
                             }

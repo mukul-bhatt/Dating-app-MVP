@@ -139,7 +139,7 @@ struct CustomTextField: View {
             HStack{
                 TextField(placeholder, text: $text)
                 if subScriptForHeight {
-                    Text("ft.inch/Cm").foregroundStyle(Color.white)
+                    Text("ft.inch/Cm").foregroundStyle(Color.secondary)
                 }
             }
                 .padding()
@@ -150,11 +150,17 @@ struct CustomTextField: View {
                         .stroke(Color.secondary, lineWidth: 1)
                 )
                 .onChange(of: text){ oldValue, newValue in
-                    if isNumericOnly{
-                        text = newValue.filter{$0.isWholeNumber}
+                    if isNumericOnly {
+                        // Allow digits and at most one decimal point
+                        let filtered = newValue.filter { $0.isWholeNumber || $0 == "." }
+                        let parts = filtered.split(separator: ".", omittingEmptySubsequences: false)
+                        if parts.count > 2 {
+                            // More than one decimal point, keep the previous valid version or just the first two parts
+                            text = oldValue
+                        } else {
+                            text = filtered
+                        }
                     }
-                    
-                  
                 }
             
             

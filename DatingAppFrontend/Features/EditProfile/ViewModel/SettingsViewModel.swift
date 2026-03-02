@@ -252,7 +252,7 @@ class SettingsViewModel: ObservableObject {
         print("🛠️ Initiating account deletion for reason: \(reason)")
         
         do {
-            let response: PrivacySettingResponse = try await NetworkManager.shared.request(
+            let response: DeleteAccountResponse = try await NetworkManager.shared.request(
                 endpoint: .deleteAccount
             )
             

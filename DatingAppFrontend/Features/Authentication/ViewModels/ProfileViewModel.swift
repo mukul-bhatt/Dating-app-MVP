@@ -116,22 +116,30 @@ class ProfileViewModel: ObservableObject{
     // MARK: - VALIDATION FOR YOUR HEIGHT
     // 1. A property just for the Boolean check
     var isValidHeight: Bool {
-        guard let heightInNumbers = Int(height) else { return false }
-        return heightInNumbers >= 140 && heightInNumbers <= 240
+        guard let heightVal = Double(height) else { return false }
+        // Accept either Feet (3.0 - 9.0) or CM (100 - 250)
+        let isFeet = heightVal >= 3.0 && heightVal <= 9.0
+        let isCm = heightVal >= 100.0 && heightVal <= 250.0
+        return isFeet || isCm
     }
     
     // 2. A separate property that CALCULATES the message on the fly
     var heightValidationMessage: String? {
         if height.isEmpty {
-            return "This field cannot be empty. Please enter your height in centimetres"
+            return "This field cannot be empty. Please enter your height (e.g., 5.8 or 175)"
         }
         
-        guard let heightInNumbers = Int(height) else {
-            return "Height must be Whole number"
+        guard let heightVal = Double(height) else {
+            return "Please enter a valid number"
         }
         
-        if heightInNumbers < 140 || heightInNumbers > 240 {
-            return "Height should be greater than 140cm and less than 240 cm"
+        // Validation range for Feet: 3.0 to 9.0
+        // Validation range for CM: 100.0 to 250.0
+        let isFeetRange = heightVal >= 3.0 && heightVal <= 9.0
+        let isCmRange = heightVal >= 100.0 && heightVal <= 250.0
+        
+        if !isFeetRange && !isCmRange {
+            return "Please enter a height between 3.0-9.0 ft or 100-250 cm"
         }
         
         return nil // No error

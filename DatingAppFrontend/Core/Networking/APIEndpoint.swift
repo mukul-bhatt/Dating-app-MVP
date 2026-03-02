@@ -103,8 +103,8 @@ enum APIEndpoint {
     
     nonisolated var method: String {
         switch self {
-        case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById, .getNotifications, .getProfileFromNotification, .getMatches, .getNotificationSettings, .getPrivacySettings, .getContactDetails, .deleteAccount, .fetchConversationsByGroup, .getBlacklistedUsers: return "GET"
-        case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture, .updateProfilePicture, .updateNotificationSetting, .updatePrivacySettings, .updateEmail, .blockProfile, .deleteMessage, .sendMessage, .unblockUser, .deleteNotification, .markRead: return "POST"
+        case .fetchProfile, .getAllProfiles, .search, .getInbox, .getMessages, .getMasterOptions, .getInterests, .getProfileById, .getNotifications, .getProfileFromNotification, .getMatches, .getNotificationSettings, .getPrivacySettings, .getContactDetails, .fetchConversationsByGroup, .getBlacklistedUsers: return "GET"
+        case .updateLocation, .login, .register, .verifyOtp, .likeProfile, .dislikeProfile, .reportProfile, .updateProfile, .uploadPicture, .updateProfilePicture, .updateNotificationSetting, .updatePrivacySettings, .updateEmail, .blockProfile, .deleteMessage, .sendMessage, .unblockUser, .deleteNotification, .markRead, .deleteAccount: return "POST"
         }
     }
 }
