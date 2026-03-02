@@ -8,5 +8,5 @@
 import Foundation
 
 struct NetworkConfig {
-    nonisolated static let baseURL = "https://unbiliously-strangulatory-braylee.ngrok-free.dev/api"
+    nonisolated static let baseURL = "https://helaine-secretarial-annemarie.ngrok-free.dev/api"
 }

@@ -27,7 +27,11 @@ import PhotosUI
                         }
                         
                         ForEach(viewModel.selectedImages.indices, id: \.self) { index in
-                            ImageCell(image: viewModel.selectedImages[index])
+                            ImageCell(image: viewModel.selectedImages[index]) {
+                                withAnimation {
+                                    viewModel.previewImageSource = .image(viewModel.selectedImages[index])
+                                }
+                            }
                         }
                     }
                 }
@@ -62,6 +66,7 @@ struct AddPictureButton: View {
 // Image cell
 struct ImageCell: View {
     let image: UIImage
+    var onTap: (() -> Void)? = nil
     
     var body: some View {
         Image(uiImage: image)
@@ -71,6 +76,9 @@ struct ImageCell: View {
             .frame(maxWidth: .infinity)
             .clipped()
             .cornerRadius(12)
+            .onTapGesture {
+                onTap?()
+            }
     }
 }
 

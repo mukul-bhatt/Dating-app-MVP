@@ -49,15 +49,40 @@ class NotificationsManager: ObservableObject {
             
             if response.success {
                 let historical = response.data.map { item in
-                    AppNotification(
+                    let senderName = item.withUserName ?? item.firstName ?? "User"
+                    let senderImageUrl = URL(string: item.profilePicture ?? item.profile)
+                    
+                    // Robust date parsing for historical notifications
+                    let formatter = DateFormatter()
+                    formatter.locale = .init(identifier: "en_US_POSIX")
+                    
+                    let formats = [
+                        "dd MMM yyyy, hh:mm a",
+                        "yyyy-MM-dd'T'HH:mm:ss.SSSSSSS'Z'",
+                        "yyyy-MM-dd'T'HH:mm:ss.SSSSSSS",
+                        "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                        "yyyy-MM-dd'T'HH:mm:ss",
+                        "HH:mm"
+                    ]
+                    
+                    var timestamp = Date()
+                    for format in formats {
+                        formatter.dateFormat = format
+                        if let date = formatter.date(from: item.createdAt) {
+                            timestamp = date
+                            break
+                        }
+                    }
+
+                    return AppNotification(
                         id: item.id,
                         senderId: item.senderUserId ?? 0,
-                        senderName: item.firstName,
+                        senderName: senderName,
                         body: item.notificationBody,
-                        senderImageUrl: URL(string: item.profile),
+                        senderImageUrl: senderImageUrl,
                         conversationId: item.conversationId,
                         targetUserId: item.withUserId ?? item.senderUserId ?? 0,
-                        timestamp: ISO8601DateFormatter().date(from: item.createdAt) ?? Date(),
+                        timestamp: timestamp,
                         notificationType: item.notificationType
                     )
                 }

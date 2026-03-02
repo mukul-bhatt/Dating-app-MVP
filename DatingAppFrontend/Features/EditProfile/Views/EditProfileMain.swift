@@ -43,6 +43,11 @@ struct EditProfileMain: View {
                                             .aspectRatio(contentMode: .fill)
                                             .frame(width: 180, height: 180)
                                             .cornerRadius(20)
+                                            .onTapGesture {
+                                                withAnimation {
+                                                    viewModel.previewImageSource = .url(viewModel.profilePicture)
+                                                }
+                                            }
                                     case .failure:
                                         Image(systemName: "person.circle.fill")
                                             .resizable()
@@ -119,6 +124,15 @@ struct EditProfileMain: View {
                 }
             }
           
+            if let source = viewModel.previewImageSource {
+                ImagePreviewOverlay(source: source) {
+                    withAnimation {
+                        viewModel.previewImageSource = nil
+                    }
+                }
+                .zIndex(200)
+            }
+
             if showLogoutView{
                 LogoutView(showLogoutView: $showLogoutView)
             }

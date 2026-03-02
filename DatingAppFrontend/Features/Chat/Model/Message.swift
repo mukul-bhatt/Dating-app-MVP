@@ -247,7 +247,7 @@ struct SendMessageRequest: Codable {
 }
 
 struct DeleteMessageRequest: Codable {
-    let MessageIds: [Int]
+    let MessageIds: [Int]?
     let ConversationId: String
 }
 

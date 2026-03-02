@@ -61,9 +61,12 @@ struct MatchView: View {
                 
                 // 5. Match Text
                 Text("You Matched with \(matchedUserName) 😍")
-                    .font(.title3)
-                    .fontWeight(.semibold)
+                    .font(.title2)
+                    .fontWeight(.bold)
                     .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 50)
                 
                 Spacer()
                 

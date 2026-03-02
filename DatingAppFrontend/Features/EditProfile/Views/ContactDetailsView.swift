@@ -210,7 +210,7 @@ struct ContactDetailsView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(settingsViewModel.isErrorToast ? Color.red : Color.green)
+                    .background(settingsViewModel.isErrorToast ? Color.red : AppTheme.foregroundPink)
                     .cornerRadius(25)
                     .shadow(radius: 4)
                     .padding(.bottom, 50)

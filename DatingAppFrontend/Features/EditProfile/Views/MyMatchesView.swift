@@ -156,7 +156,7 @@ struct MatchCard: View {
     var body: some View {
         VStack(spacing: 6) {
             // Profile Image
-            AsyncImage(url: URL(string: match.profilePicture ?? "")) { image in
+            AsyncImage(url: URL(string: match.profilePicture ?? match.latestProfileImage ?? match.profileImage ?? "")) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -176,19 +176,27 @@ struct MatchCard: View {
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(.black)
                 .lineLimit(1)
+                .frame(height: 20)
             
             // Tags (Derived from religion, sexuality, etc.)
             let tags = [match.religion, match.sexuality, match.gender].compactMap { $0 }.filter { !$0.isEmpty }
             
-            if !tags.isEmpty {
-                Text(tags.joined(separator: " • "))
-                    .font(.system(size: 10))
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .padding(.horizontal, 8)
-                    .frame(height: 30)
+            Group {
+                if !tags.isEmpty {
+                    Text(tags.joined(separator: " • "))
+                        .font(.system(size: 10))
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .padding(.horizontal, 8)
+                } else {
+                    // Empty space to maintain height consistency
+                    Color.clear
+                }
             }
+            .frame(height: 30)
+            
+            Spacer(minLength: 0)
             
             // Send Message Button
             Button(action: {
@@ -198,13 +206,14 @@ struct MatchCard: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding()
+                    .padding(.vertical, 12)
                     .background(AppTheme.foregroundPink)
                     .cornerRadius(8)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
         }
+        .frame(height: 250) // Fixed height for consistent cards
         .background(Color.white)
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)

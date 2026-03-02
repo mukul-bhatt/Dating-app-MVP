@@ -23,6 +23,7 @@ struct ChatView: View {
     
     @State private var isShowingReport = false
     @State private var isShowingBlockPopup = false
+    @State private var isShowingDeleteChatConfirmation = false
     @State private var reportPath = NavigationPath()
     @StateObject var discoverViewModel = DiscoverViewModel()
     @StateObject private var typingViewModel: TypingViewModel
@@ -176,6 +177,17 @@ struct ChatView: View {
                     }
                 )
             }
+
+            if isShowingDeleteChatConfirmation {
+                DeleteChatConfirmationView(
+                    isPresented: $isShowingDeleteChatConfirmation,
+                    onDelete: {
+                        Task {
+                            await viewModel.deleteChat()
+                        }
+                    }
+                )
+            }
         }
     }
     
@@ -216,6 +228,11 @@ struct ChatView: View {
                 }
                 Button("Report user") {
                     isShowingReport = true
+                }
+                Button("Delete chat") {
+                    withAnimation {
+                        isShowingDeleteChatConfirmation = true
+                    }
                 }
             } label: {
                 Image(systemName: "ellipsis")

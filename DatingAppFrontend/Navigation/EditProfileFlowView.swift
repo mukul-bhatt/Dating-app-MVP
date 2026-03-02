@@ -57,7 +57,7 @@ struct EditProfileFlowView: View {
                         case .deleteAccount:
                             DeleteAccountView()
                         case .blockList:
-                            BlockListView()
+                            BlockListView(path: $path)
                         case .matchProfile(let profile):
                             ProfileScreenView(path: $path, profile: profile, viewModel: DiscoverViewModel())
                         case .chat(let match):
@@ -65,7 +65,7 @@ struct EditProfileFlowView: View {
                                 conversationId: match.conversationId ?? 0,
                                 receiverId: match.matchedUserId,
                                 receiverName: match.fullName,
-                                receiverImageURL: URL(string: match.latestProfileImage ?? "")
+                                receiverImageURL: URL(string: match.profilePicture ?? match.latestProfileImage ?? match.profileImage ?? "")
                             )
                         }
                     }

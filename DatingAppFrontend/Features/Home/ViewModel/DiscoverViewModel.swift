@@ -27,7 +27,7 @@ class DiscoverViewModel: ObservableObject {
     // Filter Modal States
     @Published var isBlockingUser: Bool = false
     @Published var selection = 0
-    @Published var selectedGender: String = ""
+    @Published var selectedGender: String = "All"
     @Published var minAge: Double = 18
     @Published var maxAge: Double = 65
     @Published var minDistance: Double = 0
@@ -200,6 +200,19 @@ class DiscoverViewModel: ObservableObject {
             print("Unlike Success: \(String(describing: response.message))")
         } catch {
             print("Error in sending dislike Response: \(error)")
+        }
+    }
+
+    func likeProfile(id: Int) async {
+        do {
+            let body = sendLike(toUserId: id, action: "Like")
+            let response: likeResponse = try await NetworkManager.shared.request(
+                endpoint: .likeProfile,
+                body: body
+            )
+            print("Like Success: \(response.message)")
+        } catch {
+            print("Error in sending like Response: \(error)")
         }
     }
     

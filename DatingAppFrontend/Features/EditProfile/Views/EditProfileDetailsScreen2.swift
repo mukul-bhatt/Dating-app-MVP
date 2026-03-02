@@ -45,6 +45,15 @@ struct EditProfileDetailsScreen2: View {
                     await viewModel.loadSelectedImages()
                 }
             }
+            
+            if let source = viewModel.previewImageSource {
+                ImagePreviewOverlay(source: source) {
+                    withAnimation {
+                        viewModel.previewImageSource = nil
+                    }
+                }
+                .zIndex(100)
+            }
         }
     }
 }

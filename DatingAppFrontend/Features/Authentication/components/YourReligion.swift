@@ -15,8 +15,8 @@ import SwiftUI
         @ObservedObject var viewModel: ProfileViewModel
         
         var title: String
-        
         var isMultiSelect: Bool = false // Flag to switch modes
+        var titleFont: Font = .headline
         
         // Computed property to get the correct options array
         private var options: [LookUpOption] {
@@ -64,8 +64,8 @@ import SwiftUI
             // 4. Religion Section (Grid Layout)
             VStack(alignment: .leading, spacing: 10) {
                 Text(title)
-                    .font(.headline)
-                    .foregroundColor(.primary)
+                    .font(titleFont)
+                    .foregroundColor(titleFont == .headline ? .primary : .secondary)
                 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                     ForEach(options) { option in

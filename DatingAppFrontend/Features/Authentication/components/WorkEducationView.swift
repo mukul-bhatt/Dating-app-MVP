@@ -139,7 +139,7 @@ struct CustomTextField: View {
             HStack{
                 TextField(placeholder, text: $text)
                 if subScriptForHeight {
-                    Text("Cm").foregroundStyle(Color.white)
+                    Text("ft.inch/Cm").foregroundStyle(Color.white)
                 }
             }
                 .padding()

@@ -98,6 +98,9 @@ struct EditProfileDetailsScreen: View {
                     // Preferred Partner Sexuality
                     SexualitySection(viewModel: viewModel, title: "Preferred Partner's Sexuality", isMultiSelect: true, titleFont: .subheadline)
 
+                    // Preferred Partner Religion
+                    YourReligion(viewModel: viewModel, title: "Preferred Partner's Religion", isMultiSelect: true, titleFont: .subheadline)
+
                     // MARK: - Next / Save Button
 //                    Button(action: {
 //                        viewModel.hasAttemptedSubmit = true
@@ -124,6 +127,15 @@ struct EditProfileDetailsScreen: View {
                 }
                 .padding(.horizontal)
             }
+
+            if let source = viewModel.previewImageSource {
+                ImagePreviewOverlay(source: source) {
+                    withAnimation {
+                        viewModel.previewImageSource = nil
+                    }
+                }
+                .zIndex(100)
+            }
         }
         .onAppear{
             Task{
@@ -137,6 +149,10 @@ struct EditProfileDetailsScreen: View {
 
                 if viewModel.sexualityOptions.isEmpty {
                     await viewModel.loadSexualityOptions()
+                }
+
+                if viewModel.partnerReligionOptions.isEmpty {
+                    await viewModel.loadPartnerReligionOptions()
                 }
             }
             
@@ -167,6 +183,11 @@ struct EditProfileDetailsScreen: View {
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: 180, height: 180)
                                 .clipShape(RoundedRectangle(cornerRadius: 20))
+                                .onTapGesture {
+                                    withAnimation {
+                                        viewModel.previewImageSource = .image(selectedImage)
+                                    }
+                                }
                         } else if let url = URL(string: profilePictureURL) {
                             // Show existing profile image
                             AsyncImage(url: url) { phase in
@@ -180,6 +201,11 @@ struct EditProfileDetailsScreen: View {
                                         .aspectRatio(contentMode: .fill)
                                         .frame(width: 180, height: 180)
                                         .clipShape(RoundedRectangle(cornerRadius: 20))
+                                        .onTapGesture {
+                                            withAnimation {
+                                                viewModel.previewImageSource = .url(profilePictureURL)
+                                            }
+                                        }
                                 case .failure:
                                     Image(systemName: "person.circle.fill")
                                         .resizable()

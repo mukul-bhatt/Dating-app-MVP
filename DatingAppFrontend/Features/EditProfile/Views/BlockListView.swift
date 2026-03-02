@@ -9,6 +9,7 @@ import SwiftUI
 
 struct BlockListView: View {
     @Environment(\.dismiss) var dismiss
+    @Binding var path: NavigationPath
     @StateObject var viewModel = BlockListViewModel()
     
     // Grid layout
@@ -100,7 +101,7 @@ struct BlockListView: View {
                     } else {
                         LazyVGrid(columns: columns, spacing: 16) {
                             ForEach(viewModel.blacklistedUsers) { user in
-                                BlacklistedUserCard(user: user, viewModel: viewModel)
+                                BlacklistedUserCard(user: user, viewModel: viewModel, path: $path)
                             }
                         }
                         .padding(.horizontal)
@@ -201,11 +202,12 @@ struct BlockListView: View {
 struct BlacklistedUserCard: View {
     let user: BlacklistedUser
     @ObservedObject var viewModel: BlockListViewModel
+    @Binding var path: NavigationPath
     
     var body: some View {
         VStack(spacing: 6) {
             // Profile Image
-            AsyncImage(url: URL(string: user.profilePicture ?? user.latestProfileImage ?? "")) { image in
+            AsyncImage(url: URL(string: user.profilePicture ?? user.latestProfileImage ?? user.profileImage ?? "")) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -241,21 +243,76 @@ struct BlacklistedUserCard: View {
                 Spacer().frame(height: 30)
             }
             
-            // Unblock Button
-            Button(action: {
-                withAnimation {
-                    viewModel.userToUnblock = user
-                    viewModel.showUnblockAlert = true
+            // Buttons
+            HStack(spacing: 8) {
+                // Unblock Button
+                Button(action: {
+                    withAnimation {
+                        viewModel.userToUnblock = user
+                        viewModel.showUnblockAlert = true
+                    }
+                }) {
+                    Text("Unblock")
+                        .font(.callout)
+                        .fontWeight(.medium)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(AppTheme.foregroundPink)
+                        .cornerRadius(8)
                 }
-            }) {
-                Text("Unblock")
-                    .font(.callout)
-                    .fontWeight(.medium)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(AppTheme.foregroundPink)
-                    .cornerRadius(8)
+                
+                // Send Message Button
+                Button(action: {
+                    // Create a UserMatch object from BlacklistedUser for navigation
+                    let match = UserMatch(
+                        matchedUserId: user.blacklistedUserId,
+                        latestProfileImage: user.latestProfileImage,
+                        profilePicture: user.profilePicture,
+                        fullName: user.fullName,
+                        age: user.age,
+                        location: user.location,
+                        height: user.height,
+                        religion: user.religion,
+                        sexuality: user.sexuality,
+                        gender: user.gender,
+                        conversationId: user.conversationId,
+                        matchId: nil,
+                        matchUserId: nil,
+                        contactNumber: user.contactNumber,
+                        countryCode: user.countryCode,
+                        dateOfBirth: user.dateOfBirth,
+                        pronouns: user.pronouns,
+                        bio: user.bio,
+                        job: user.job,
+                        education: user.education,
+                        relationshipStatus: user.relationshipStatus,
+                        hope: user.hope,
+                        profileImage: user.profileImage,
+                        isVerify: user.isVerify,
+                        isOnline: user.isOnline,
+                        lastSeen: user.lastSeen,
+                        provider: user.provider,
+                        providerId: user.providerId,
+                        coverImage: user.coverImage,
+                        status: user.status,
+                        createdAt: user.createdAt,
+                        updatedAt: user.updatedAt,
+                        deletedAt: user.deletedAt
+                    )
+                    path.append(EditProfileRoutes.chat(match))
+                }) {
+                    Image(systemName: "bubble.left.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(AppTheme.foregroundPink)
+                        .frame(width: 44, height: 44)
+                        .background(AppTheme.foregroundPink.opacity(0.1))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(AppTheme.foregroundPink.opacity(0.3), lineWidth: 1)
+                        )
+                }
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
@@ -266,6 +323,6 @@ struct BlacklistedUserCard: View {
     }
 }
 
-#Preview {
-    BlockListView()
-}
+//#Preview {
+//    BlockListView()
+//}

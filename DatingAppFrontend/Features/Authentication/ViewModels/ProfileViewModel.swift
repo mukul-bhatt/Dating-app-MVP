@@ -10,6 +10,19 @@ import PhotosUI
 import Combine
 
 class ProfileViewModel: ObservableObject{
+    enum ImageSource: Identifiable {
+        case url(String)
+        case image(UIImage)
+        
+        var id: String {
+            switch self {
+            case .url(let url): return url
+            case .image(let image): return "\(image.hashValue)"
+            }
+        }
+    }
+    
+    @Published var previewImageSource: ImageSource? = nil
     @Published var hasAttemptedSubmit: Bool = false
     @Published var isImageUploading: Bool = false
     var authViewModel: AuthViewModel?

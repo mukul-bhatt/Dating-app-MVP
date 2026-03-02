@@ -215,7 +215,7 @@ class ChatViewModel: ObservableObject
                     endpoint: .sendMessage,
                     parameters: parameters,
                     images: imagesToUpload,
-                    imageFieldName: "FileName"
+                    imageFieldName: "File"
                 )
                 
                 if !response.success {
@@ -430,21 +430,30 @@ class ChatViewModel: ObservableObject
     }
 
     func deleteChat() async -> Bool {
-        guard let conversationId = self.conversationId else { return false }
+        print("🗑️ Attempting to delete chat for conversationId: \(String(describing: self.conversationId))")
+        guard let conversationId = self.conversationId else { 
+            print("❌ Cannot delete chat: conversationId is nil")
+            return false 
+        }
         
-        let body = DeleteMessageRequest(MessageIds: [], ConversationId: "\(conversationId)")
+        let body = DeleteMessageRequest(MessageIds: nil, ConversationId: "\(conversationId)")
+        print("📤 Sending delete request with body: \(body)")
         
         do {
             let response: BasicResponse = try await NetworkManager.shared.request(endpoint: .deleteMessage, body: body)
+            print("📥 Delete Chat API Response: \(response)")
             if response.success {
                 await MainActor.run {
                     self.groupedMessages = []
+                    print("✅ Local messages cleared after successful API deletion")
                 }
                 return true
+            } else {
+                print("⚠️ Delete Chat API returned success=false: \(response.message ?? "No message")")
             }
             return false
         } catch {
-            print("❌ Failed to delete chat: \(error)")
+            print("❌ Failed to delete chat with error: \(error.localizedDescription)")
             return false
         }
     }

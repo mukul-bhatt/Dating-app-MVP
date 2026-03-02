@@ -37,13 +37,19 @@ struct FeedView: View {
                 // Profile Details Area
                 ProfileDetailsView(path: $path, profile: profile)
                 
-                // Interests
-                InterestView(interests: profile.interestsArray)
+                // Profile Info Cards (formerly InterestView)
+                InterestView(profile: profile)
                 
                 // Action Buttons
-                ActionButtonsProfile(onDislike:{
-                   await viewModel.dislikeProfile(id:profile.id)
-                })
+                ActionButtonsProfile(
+                    onDislike: {
+                        await viewModel.dislikeProfile(id: profile.id)
+                    },
+                    onLike: {
+                        await viewModel.likeProfile(id: profile.id)
+                    },
+                    isLiked: profile.isLikedByMe
+                )
 
             }.padding()
             
@@ -85,22 +91,36 @@ struct FeedView: View {
 }
 
 struct InterestView: View {
-    let interests: [String]
+    let profile: DiscoverProfile
     var body: some View {
-        // Interests
-        HStack(spacing: 20){
+        HStack(spacing: 12){
             
-            ForEach(interests.prefix(3).indices, id: \.self){ index in
-                Text(interests[index])
-                    .font(.headline)
-                    .fontWeight(.light)
-                    .foregroundStyle(Color.primary.opacity(0.7))
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
-                    .background(Color.white.opacity(0.7))
-                    .clipShape(Capsule())
-            }
+            // 1. Religion
+            InfoCard(text: profile.religionText)
+            
+            // 2. Height
+            InfoCard(text: "\(profile.height) cm")
+            
+            // 3. Gender
+            InfoCard(text: profile.gender)
         }
+        .padding(.horizontal)
+    }
+}
+
+struct InfoCard: View {
+    let text: String
+    var body: some View {
+        Text(text)
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .foregroundStyle(Color.primary.opacity(0.7))
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(Color.white.opacity(0.7))
+            .clipShape(Capsule())
     }
 }
 

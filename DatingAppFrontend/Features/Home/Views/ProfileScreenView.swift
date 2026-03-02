@@ -50,11 +50,15 @@ struct ProfileScreenView: View {
                     Passions(passions: profile.interestsArray)
                     
                     // Action Buttons
-                    ActionButtonsProfile(onDislike: {
-                       await viewModel.dislikeProfile(id: profile.id)
-                    }, onMessage: {
-                        print("Closure for message")
-                    })
+                    ActionButtonsProfile(
+                        onDislike: {
+                            await viewModel.dislikeProfile(id: profile.id)
+                        },
+                        onLike: {
+                            await viewModel.likeProfile(id: profile.id)
+                        },
+                        isLiked: profile.isLikedByMe
+                    )
                     
                     // Footer
                     Footer(profile:profile ,path: $path)
@@ -131,9 +135,11 @@ struct PrimaryInformation: View {
         var bioSummary: String {
             // Collect all valid pieces of info
             let parts = [
+                profile.relationshipText,
                 profile.religionText,
+                profile.sexualityText,
                 "\(profile.height) cm",
-                profile.interestsArray.prefix(2).joined(separator: " • ")
+//                profile.interestsArray.prefix(2).joined(separator: " • ")
             ].filter { !$0.isEmpty && !$0.contains("0 cm") } // Remove empty or invalid data
 
             return parts.joined(separator: "  •  ")

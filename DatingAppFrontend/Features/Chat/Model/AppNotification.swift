@@ -35,20 +35,23 @@ struct NotificationItem: Codable, Identifiable {
     let notificationBody: String
     let senderUserId: Int?
     let withUserId: Int?
+    let withUserName: String?
     let conversationId: Int?
-    let firstName: String
+    let firstName: String?
     let lastName: String?
     let profile: String
+    let profilePicture: String?
     let status: String
     let createdAt: String
     let updatedAt: String
     let deletedAt: String
+    let unreadCount: Int?
 
     // CodingKeys handle the mismatch between JSON snake_case and Swift camelCase
     enum CodingKeys: String, CodingKey {
         case id, userId, notificationName, notificationType, notificationStatus
-        case notificationBody, senderUserId, withUserId, conversationId
-        case firstName, lastName, profile, status
+        case notificationBody, senderUserId, withUserId, withUserName, conversationId
+        case firstName, lastName, profile, profilePicture, status, unreadCount
         case createdAt = "created_At"
         case updatedAt = "updated_At"
         case deletedAt = "deleted_At"
