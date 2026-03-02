@@ -118,6 +118,7 @@ struct SocketReceivedMessage: Decodable, Sendable {
     let toUserId: Int
     let content: String
     let type: String
+    let image: String?
     let created_At: Date
 }
 
@@ -209,6 +210,7 @@ struct ChatMessage: Codable, Identifiable {
     let readAt: String
     let status: String
     let content: String
+    let image: String?
     let createdAt: String
     
     // Non-codable property for local preview
@@ -223,6 +225,7 @@ struct ChatMessage: Codable, Identifiable {
         case readAt
         case status
         case content
+        case image
         case createdAt = "created_At"
     }
 }

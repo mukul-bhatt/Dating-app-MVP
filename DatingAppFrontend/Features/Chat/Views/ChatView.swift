@@ -433,10 +433,165 @@ struct SayHiView: View {
 
 
 
+struct TextMessageBubble: View {
+    let message: ChatMessage
+    let isFromMe: Bool
+    let time: String
+    
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            Text(message.content)
+                .font(.body)
+            
+            HStack(spacing: 4) {
+                Text(time)
+                    .font(.system(size: 10))
+                    .foregroundColor(isFromMe ? .white.opacity(0.7) : .primary.opacity(0.5))
+                
+                if isFromMe {
+                    statusIcon
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(isFromMe ? AppTheme.foregroundPink : AppTheme.backgroundPink)
+        .foregroundColor(isFromMe ? .white : .primary)
+        .cornerRadius(15)
+    }
+    
+    @ViewBuilder
+    private var statusIcon: some View {
+        if message.status == "sending" {
+            Image(systemName: "clock")
+                .font(.system(size: 8))
+                .foregroundColor(.white.opacity(0.7))
+        } else if message.status == "sent" || message.status == "delivered" {
+            Image(systemName: "checkmark")
+                .font(.system(size: 8))
+                .foregroundColor(.white.opacity(0.7))
+        }
+    }
+}
+
+struct ImageMessageBubble: View {
+    let message: ChatMessage
+    let isFromMe: Bool
+    let time: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ZStack(alignment: .bottomTrailing) {
+                // Image
+                if let localImage = message.localImage {
+                    Image(uiImage: localImage)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 250, maxHeight: 300)
+                } else if let imageUrl = message.image ?? (message.content.hasPrefix("http") ? message.content : nil),
+                          let url = URL(string: imageUrl) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            ProgressView()
+                                .frame(width: 200, height: 200)
+                                .padding()
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: 250, maxHeight: 300)
+                        case .failure:
+                            VStack {
+                                Image(systemName: "photo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 40, height: 40)
+                                    .foregroundColor(.gray)
+                                Text("Failed to load")
+                                    .font(.caption2)
+                                    .foregroundColor(.gray)
+                            }
+                            .frame(width: 200, height: 200)
+                            .padding()
+                        @unknown default:
+                            EmptyView()
+                        }
+                    }
+                }
+                
+                // Timestamp Overlay
+                if !hasCaption {
+                    HStack(spacing: 4) {
+                        Text(time)
+                            .font(.system(size: 10))
+                            .foregroundColor(.white)
+                        
+                        if isFromMe {
+                            statusIcon
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.black.opacity(0.3))
+                    .cornerRadius(10)
+                    .padding(8)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 15))
+            
+            // Caption
+            if hasCaption {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(message.content)
+                        .font(.body)
+                    
+                    HStack {
+                        Spacer()
+                        HStack(spacing: 4) {
+                            Text(time)
+                                .font(.system(size: 10))
+                                .foregroundColor(isFromMe ? .white.opacity(0.7) : .primary.opacity(0.5))
+                            
+                            if isFromMe {
+                                statusIcon
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+                .padding(.bottom, 8)
+            }
+        }
+        .background(isFromMe ? AppTheme.foregroundPink : AppTheme.backgroundPink)
+        .foregroundColor(isFromMe ? .white : .primary)
+        .cornerRadius(15)
+        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+    }
+    
+    private var hasCaption: Bool {
+        !message.content.isEmpty && message.content != "Sent an image" && !message.content.hasPrefix("http")
+    }
+    
+    @ViewBuilder
+    private var statusIcon: some View {
+        if message.status == "sending" {
+            Image(systemName: "clock")
+                .font(.system(size: 8))
+                .foregroundColor(hasCaption ? (isFromMe ? .white.opacity(0.7) : .primary.opacity(0.5)) : .white)
+        } else if message.status == "sent" || message.status == "delivered" {
+            Image(systemName: "checkmark")
+                .font(.system(size: 8))
+                .foregroundColor(hasCaption ? (isFromMe ? .white.opacity(0.7) : .primary.opacity(0.5)) : .white)
+        }
+    }
+}
+
 struct MessageBubble: View {
     let message: ChatMessage
     let isFromMe: Bool
-    @StateObject private var helper = ChatViewModel() // For parsing dates
+    @StateObject private var helper = ChatViewModel()
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 0) {
@@ -444,99 +599,28 @@ struct MessageBubble: View {
                 Spacer(minLength: 60)
             }
 
-            VStack(alignment: .trailing, spacing: 4) {
-                if message.type == "image" {
-                    VStack(alignment: .leading, spacing: 8) {
-                        if let localImage = message.localImage {
-                            Image(uiImage: localImage)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: 250, maxHeight: 300)
-                                .cornerRadius(12)
-                        } else if let url = URL(string: message.content) {
-                            AsyncImage(url: url) { phase in
-                                switch phase {
-                                case .empty:
-                                    ProgressView()
-                                        .frame(width: 200, height: 200)
-                                case .success(let image):
-                                    image
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(maxWidth: 250, maxHeight: 300)
-                                        .cornerRadius(12)
-                                case .failure:
-                                    Image(systemName: "photo")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 100, height: 100)
-                                        .foregroundColor(.gray)
-                                @unknown default:
-                                    EmptyView()
-                                }
-                            }
-                        } else {
-                            Text(message.content)
-                                .font(.body)
-                        }
-                        
-                        // Caption
-                        if !message.content.isEmpty && message.content != "Sent an image" && URL(string: message.content) == nil {
-                            Text(message.content)
-                                .font(.body)
-                                .padding(.top, 4)
-                        }
-                    }
-                    
-                    HStack(spacing: 4) {
-                        Spacer(minLength: 0)
-                        timestampAndStatus
-                    }
-                    .padding(.top, 2)
-                    
-                } else {
-                    HStack(alignment: .bottom, spacing: 8) {
-                        Text(message.content)
-                            .font(.body)
-                        
-                        timestampAndStatus
-                    }
-                }
+            let timeString = formatTime(message.createdAt)
+            
+            if message.type == "image" {
+                ImageMessageBubble(message: message, isFromMe: isFromMe, time: timeString)
+            } else {
+                TextMessageBubble(message: message, isFromMe: isFromMe, time: timeString)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(isFromMe ? AppTheme.foregroundPink : AppTheme.backgroundPink)
-            .foregroundColor(isFromMe ? .white : .primary)
-            .cornerRadius(15)
-            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
 
             if !isFromMe {
                 Spacer(minLength: 60)
             }
         }
+        .padding(.vertical, 4)
     }
 
-    private var timestampAndStatus: some View {
-        HStack(spacing: 4) {
-            Text(helper.parseHistoricalDate(message.createdAt), style: .time)
-                .font(.system(size: 10))
-                .foregroundColor(isFromMe ? .white.opacity(0.5) : .primary.opacity(0.7))
-            
-            if isFromMe {
-                if message.status == "sending" {
-                    Image(systemName: "clock")
-                        .font(.system(size: 8))
-                        .foregroundColor(.white.opacity(0.5))
-                } else if message.status == "sent" || message.status == "delivered" {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 8))
-                        .foregroundColor(.white.opacity(0.5))
-                }
-            }
-        }
+    private func formatTime(_ dateString: String) -> String {
+        let date = helper.parseHistoricalDate(dateString)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter.string(from: date)
     }
 }
 
 //#Preview {
 //    ChatView(conversationId: 1222, receiverId: 6002, receiverName: "Nia Sharma", receiverImageURL: URL(string: "https://images.pexels.com/photos/2238433/pexels-photo-2238433.jpeg"))
-//}

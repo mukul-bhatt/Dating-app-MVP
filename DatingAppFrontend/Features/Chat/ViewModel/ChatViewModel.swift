@@ -89,6 +89,7 @@ class ChatViewModel: ObservableObject
                 readAt: "",
                 status: "sent",
                 content: firstMsg,
+                image: nil,
                 createdAt: ISO8601DateFormatter().string(from: Date())
             )
             self.appendToGroups(chatMsg)
@@ -186,6 +187,7 @@ class ChatViewModel: ObservableObject
             readAt: "",
             status: "sending",
             content: text.isEmpty ? (image != nil ? "Sent an image" : "") : text,
+            image: nil,
             createdAt: ISO8601DateFormatter().string(from: Date())
         )
         chatMsg.localImage = image
@@ -279,7 +281,8 @@ class ChatViewModel: ObservableObject
             isRead: false,
             readAt: "",
             status: "delivered",
-            content: receivedMessage.content,
+            content: receivedMessage.type == "image" ? (receivedMessage.image == nil ? "Sent an image" : receivedMessage.content) : receivedMessage.content,
+            image: receivedMessage.type == "image" ? (receivedMessage.image ?? receivedMessage.content) : nil,
             createdAt: ISO8601DateFormatter().string(from: receivedMessage.created_At)
         )
         
@@ -317,6 +320,7 @@ class ChatViewModel: ObservableObject
                     readAt: "",
                     status: "delivered",
                     content: notification.data.Message,
+                    image: nil,
                     createdAt: ISO8601DateFormatter().string(from: Date())
                 )
                 DispatchQueue.main.async {
