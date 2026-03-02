@@ -54,6 +54,12 @@ struct DiscoverView: View {
                 .presentationBackground(.white)
                 .presentationDragIndicator(.visible)
         }
+        .onAppear {
+            Task {
+                viewModel.currentIndex = 0
+                try? await viewModel.getUserProfiles()
+            }
+        }
     }
 }
 

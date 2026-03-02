@@ -23,6 +23,14 @@ struct ProfileScreenView: View {
     @Binding var path: NavigationPath
     let profile: DiscoverProfile
     @ObservedObject var viewModel: DiscoverViewModel
+    /// When non-nil (match notification flow), shows the message icon instead of the heart.
+    var onMessage: (() -> Void)? = nil
+    
+    /// Returns the like closure only when we are NOT in the match/message flow.
+    private var likeAction: (() async -> Void)? {
+        guard onMessage == nil else { return nil }
+        return { await viewModel.likeProfile(id: profile.id) }
+    }
     
     var body: some View {
         ZStack{
@@ -54,25 +62,21 @@ struct ProfileScreenView: View {
                         onDislike: {
                             await viewModel.dislikeProfile(id: profile.id)
                         },
-                        onLike: {
-                            await viewModel.likeProfile(id: profile.id)
-                        },
+                        onLike: likeAction,
+                        onMessage: onMessage,
                         isLiked: profile.isLikedByMe
                     )
                     
                     // Footer
                     Footer(profile:profile ,path: $path)
-                        
-//                    Spacer()
                 }
             }.padding(.horizontal)
             
            
         }
-        
-       
     }
 }
+
 
 struct Bio: View {
     let bio: String

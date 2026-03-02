@@ -203,7 +203,8 @@ struct MatchCard: View {
                 path.append(EditProfileRoutes.chat(match))
             }) {
                 Text("Send Message")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.callout)
+                    .fontWeight(.medium)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)

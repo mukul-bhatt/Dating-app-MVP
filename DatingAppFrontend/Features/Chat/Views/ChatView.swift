@@ -25,6 +25,8 @@ struct ChatView: View {
     @State private var isShowingReport = false
     @State private var isShowingBlockPopup = false
     @State private var isShowingDeleteChatConfirmation = false
+    @State private var isShowingDeleteMessageConfirmation = false
+    @State private var messageToDelete: ChatMessage? = nil
     @State private var isShowingDocumentPicker = false
     @State private var reportPath = NavigationPath()
     @StateObject var discoverViewModel = DiscoverViewModel()
@@ -66,8 +68,21 @@ struct ChatView: View {
                                                 DateHeaderView(date: group.dateGroup)
                                                 
                                                 ForEach(group.messages) { message in
-                                                    MessageBubble(message: message, isFromMe: message.toUserId == authViewModel.profileId)
+                                                    let isFromMe = message.toUserId == authViewModel.profileId
+                                                    MessageBubble(message: message, isFromMe: isFromMe)
                                                         .id("\(message.id)")
+                                                        .contextMenu {
+                                                            if isFromMe {
+                                                                Button(role: .destructive) {
+                                                                    messageToDelete = message
+                                                                    withAnimation {
+                                                                        isShowingDeleteMessageConfirmation = true
+                                                                    }
+                                                                } label: {
+                                                                    Label("Delete Message", systemImage: "trash")
+                                                                }
+                                                            }
+                                                        }
                                                 }
                                             }
                                         }
@@ -200,6 +215,17 @@ struct ChatView: View {
                     onDelete: {
                         Task {
                             await viewModel.deleteChat()
+                        }
+                    }
+                )
+            }
+
+            if isShowingDeleteMessageConfirmation, let msg = messageToDelete {
+                DeleteMessageConfirmationView(
+                    isPresented: $isShowingDeleteMessageConfirmation,
+                    onDelete: {
+                        Task {
+                            await viewModel.deleteMessages(messageIds: [msg.id])
                         }
                     }
                 )

@@ -466,6 +466,40 @@ class ChatViewModel: ObservableObject
         }
     }
 
+    func deleteMessages(messageIds: [Int]) async -> Bool {
+        guard let conversationId = self.conversationId else {
+            print("❌ Cannot delete messages: conversationId is nil")
+            return false
+        }
+
+        let body = DeleteMessageRequest(MessageIds: messageIds, ConversationId: "\(conversationId)")
+
+        do {
+            let response: BasicResponse = try await NetworkManager.shared.request(endpoint: .deleteMessage, body: body)
+            if response.success {
+                await MainActor.run {
+                    self.groupedMessages = self.groupedMessages.compactMap { group in
+                        let filtered = group.messages.filter { !messageIds.contains($0.id) }
+                        guard !filtered.isEmpty else { return nil }
+                        return DateGroup(
+                            dateGroup: group.dateGroup,
+                            messageDate: group.messageDate,
+                            messages: filtered
+                        )
+                    }
+                    print("✅ Deleted \(messageIds.count) message(s) locally")
+                }
+                return true
+            } else {
+                print("⚠️ Delete messages API returned success=false: \(response.message ?? "No message")")
+                return false
+            }
+        } catch {
+            print("❌ Failed to delete messages: \(error.localizedDescription)")
+            return false
+        }
+    }
+
     func parseHistoricalDate(_ dateString: String) -> Date {
         let formatter = DateFormatter()
         formatter.locale = .init(identifier: "en_US_POSIX")

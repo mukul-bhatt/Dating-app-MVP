@@ -70,9 +70,33 @@ struct NotificationsScreen: View {
                     await notificationsManager.fetchHistoricalNotifications()
                 }
             }
-            .navigationDestination(for: DiscoverProfile.self) { profile in
-                ProfileScreenView(path: $path, profile: profile, viewModel: discoverViewModel)
+            .navigationDestination(for: DiscoverRoute.self) { route in
+                switch route {
+                case .MatchedProfile(let profile, let conversationId):
+                    ProfileScreenView(
+                        path: $path,
+                        profile: profile,
+                        viewModel: discoverViewModel,
+                        onMessage: {
+                            let item = InboxItem(
+                                conversationId: conversationId,
+                                profileId: profile.id,
+                                userName: profile.fullName,
+                                firstName: "",
+                                lastName: "",
+                                lastMessage: "",
+                                lastMessageTime: "",
+                                profilePicture: profile.profilePicture ?? profile.profileImagesArray.first,
+                                isBlocked: false,
+                                unreadCount: 0
+                            )
+                            path.append(ChatRoute.chat(item))
+                        }
+                    )
                     .toolbar(.hidden, for: .tabBar)
+                default:
+                    EmptyView()
+                }
             }
             .navigationDestination(for: ChatRoute.self) { route in
                 switch route {
@@ -113,16 +137,15 @@ struct NotificationsScreen: View {
             }
         case "match":
             HStack(spacing: 11) {
-                // View Profile action
+                // View Profile action — pushes MatchedProfile route to carry conversationId
                 ActionButton(title: "View Profile 🫣") {
                     Task {
-                        // De-clutter: Call delete notification first
                         await notificationsManager.deleteNotification(notificationId: notification.id)
-                        
                         do {
                             let profileId = notification.targetUserId
                             let profile = try await notificationsManager.fetchProfileFromNotification(userId: profileId)
-                            path.append(profile)
+                            let conversationId = notification.conversationId ?? 0
+                            path.append(DiscoverRoute.MatchedProfile(profile: profile, conversationId: conversationId))
                         } catch {
                             print("❌ Failed to navigate to profile: \(error)")
                         }
