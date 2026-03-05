@@ -271,7 +271,7 @@ struct ChatView: View {
                             ? (messageToDelete.map { [$0.id] } ?? [])
                             : bulkDeleteIds
                         Task {
-                            await viewModel.deleteMessages(messageIds: ids)
+                            _ = await viewModel.deleteMessages(messageIds: ids)
                             await MainActor.run {
                                 if !bulkDeleteIds.isEmpty {
                                     // Exit select mode after bulk delete
@@ -288,6 +288,10 @@ struct ChatView: View {
         }
     }
     
+    private var isBlocked: Bool {
+        viewModel.isBlockedByMe || viewModel.isBlockedByThem
+    }
+
     // Header View with Profile Info
     var headerView: some View {
         HStack(spacing: 15) {
@@ -315,7 +319,9 @@ struct ChatView: View {
             Spacer()
             
             Image(systemName: "video.fill")
+                .opacity(isBlocked ? 0.35 : 1)
             Image(systemName: "phone.fill")
+                .opacity(isBlocked ? 0.35 : 1)
             
             Menu {
                 Button("Block user") {
@@ -334,7 +340,9 @@ struct ChatView: View {
             } label: {
                 Image(systemName: "ellipsis")
                     .rotationEffect(.degrees(90))
+                    .opacity(isBlocked ? 0.35 : 1)
             }
+            .disabled(isBlocked)
         }
         .padding()
         .foregroundColor(.white)
