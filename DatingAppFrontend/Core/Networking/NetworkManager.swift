@@ -160,7 +160,9 @@ actor NetworkManager {
         var body = Data()
         
         // Append Text Parameters
+        print("📦 [upload] Building multipart form:")
         for (key, value) in parameters {
+            print("   ↳ field '\(key)' = '\(value)'")
             body.append(Data("--\(boundary)\r\n".utf8))
             body.append(Data("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".utf8))
             body.append(Data("\(value)\r\n".utf8))
@@ -183,6 +185,10 @@ actor NetworkManager {
         
         // 4. Perform Request and Handle 401 (Reusing your logic)
         let (data, response) = try await URLSession.shared.data(for: request)
+        
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("🔴 [upload] Server response (Code: \((response as? HTTPURLResponse)?.statusCode ?? 0)): \(jsonString)")
+        }
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)

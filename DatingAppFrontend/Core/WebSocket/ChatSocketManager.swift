@@ -40,7 +40,7 @@ class ChatSocketManager{
         self.currentUserId = userId
         
         let token = tokenProvider?.authToken ?? ""
-        guard let url = URL(string: "ws://helaine-secretarial-annemarie.ngrok-free.dev/ws?userId=\(userId)&token=\(token)") else {
+        guard let url = URL(string: "wss://shaunte-beechy-countercurrently.ngrok-free.dev/ws?userId=\(userId)&token=\(token)") else {
             print("❌ Error constructing socket URL")
             return
         }

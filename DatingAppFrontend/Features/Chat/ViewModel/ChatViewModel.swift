@@ -94,6 +94,7 @@ class ChatViewModel: ObservableObject
                 status: "sent",
                 content: firstMsg,
                 image: nil,
+                caption: nil,
                 createdAt: ISO8601DateFormatter().string(from: Date())
             )
             self.appendToGroups(chatMsg)
@@ -192,6 +193,7 @@ class ChatViewModel: ObservableObject
             status: "sending",
             content: text.isEmpty ? (image != nil ? "Sent an image" : "") : text,
             image: nil,
+            caption: nil,
             createdAt: ISO8601DateFormatter().string(from: Date())
         )
         chatMsg.localImage = image
@@ -213,6 +215,7 @@ class ChatViewModel: ObservableObject
         ]
         
         let imagesToUpload = [originalSelectedImage].compactMap { $0 }
+        print("📤 Sending message — Content: '\(text)', hasImage: \(imagesToUpload.count > 0), params: \(parameters)")
         
         Task {
             do {
@@ -247,6 +250,12 @@ class ChatViewModel: ObservableObject
                 if response.success {
                     await MainActor.run {
                         print("📜 Loaded \(response.data.count) date groups")
+                        // Debug: log all image messages to see content vs image fields
+                        for group in response.data {
+                            for msg in group.messages where msg.type.lowercased() == "image" {
+                                print("🖼️ [History] id=\(msg.id) content='\(msg.content)' image='\(msg.image ?? "nil")'")
+                            }
+                        }
                         self.groupedMessages = response.data
                         self.isBlockedByMe = response.isBlocked
                         
@@ -277,16 +286,34 @@ class ChatViewModel: ObservableObject
             self.conversationId = receivedMessage.conversationId
         }
         
+        // For image messages: image URL is in receivedMessage.image (or content if no separate field).
+        // Caption text is in receivedMessage.content — but only if it doesn't look like a URL.
+        let imageUrl = receivedMessage.image ?? (receivedMessage.content.hasPrefix("http") ? receivedMessage.content : nil)
+        let captionText: String
+        if receivedMessage.type == "image" {
+            if receivedMessage.content.hasPrefix("http") {
+                // content IS the image URL — no separate caption was sent
+                captionText = "Sent an image"
+            } else {
+                // content is a real caption
+                captionText = receivedMessage.content.isEmpty ? "Sent an image" : receivedMessage.content
+            }
+        } else {
+            captionText = receivedMessage.content
+        }
+        print("📨 Incoming image msg — image: \(imageUrl ?? "nil"), caption: '\(captionText)'")
+        
         let chatMsg = ChatMessage(
             id: Int.random(in: 100000...999999),
             type: receivedMessage.type,
-            toUserId: receivedMessage.fromUserId, // Set to the sender
+            toUserId: receivedMessage.fromUserId,
             conversationId: receivedMessage.conversationId,
             isRead: false,
             readAt: "",
             status: "delivered",
-            content: receivedMessage.type == "image" ? (receivedMessage.image == nil ? "Sent an image" : receivedMessage.content) : receivedMessage.content,
-            image: receivedMessage.type == "image" ? (receivedMessage.image ?? receivedMessage.content) : nil,
+            content: captionText,
+            image: imageUrl,
+            caption: receivedMessage.caption,  // Pass through any separate caption field
             createdAt: ISO8601DateFormatter().string(from: receivedMessage.created_At)
         )
         
@@ -318,13 +345,14 @@ class ChatViewModel: ObservableObject
                 let chatMsg = ChatMessage(
                     id: Int.random(in: 100000...999999),
                     type: "text",
-                    toUserId: senderId, // Set to the sender
+                    toUserId: senderId,
                     conversationId: incomingConvId ?? self.conversationId ?? 0,
                     isRead: false,
                     readAt: "",
                     status: "delivered",
                     content: notification.data.Message,
                     image: nil,
+                    caption: nil,
                     createdAt: ISO8601DateFormatter().string(from: Date())
                 )
                 DispatchQueue.main.async {
@@ -567,6 +595,7 @@ class ChatViewModel: ObservableObject
             status: "sending",
             content: fileName,
             image: nil,
+            caption: nil,
             createdAt: ISO8601DateFormatter().string(from: Date())
         )
         appendToGroups(chatMsg)

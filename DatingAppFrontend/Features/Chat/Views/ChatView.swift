@@ -691,21 +691,23 @@ struct ImageMessageBubble: View {
                 if let localImage = message.localImage {
                     Image(uiImage: localImage)
                         .resizable()
-                        .scaledToFit()
-                        .frame(maxWidth: 250, maxHeight: 300)
+                        .scaledToFill()
+                        .frame(width: 250, height: 250)
+                        .clipped()
                 } else if let imageUrl = message.image ?? (message.content.hasPrefix("http") ? message.content : nil),
                           let url = URL(string: imageUrl) {
                     AsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
                             ProgressView()
-                                .frame(width: 200, height: 200)
-                                .padding()
+                                .frame(width: 250, height: 250)
+                                .background(Color.gray.opacity(0.1))
                         case .success(let image):
                             image
                                 .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: 250, maxHeight: 300)
+                                .scaledToFill()
+                                .frame(width: 250, height: 250)
+                                .clipped()
                         case .failure:
                             VStack {
                                 Image(systemName: "photo")
@@ -717,15 +719,15 @@ struct ImageMessageBubble: View {
                                     .font(.caption2)
                                     .foregroundColor(.gray)
                             }
-                            .frame(width: 200, height: 200)
-                            .padding()
+                            .frame(width: 250, height: 250)
+                            .background(Color.gray.opacity(0.1))
                         @unknown default:
                             EmptyView()
                         }
                     }
                 }
                 
-                // Timestamp Overlay
+                // Timestamp Overlay (for images without caption)
                 if !hasCaption {
                     HStack(spacing: 4) {
                         Text(time)
@@ -738,45 +740,57 @@ struct ImageMessageBubble: View {
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color.black.opacity(0.3))
+                    .background(Color.black.opacity(0.4))
                     .cornerRadius(10)
                     .padding(8)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 15))
             
-            // Caption
+            // Caption text area
             if hasCaption {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(message.content)
+                    Text(captionText ?? message.content)
                         .font(.body)
+                        .fixedSize(horizontal: false, vertical: true) // Wrap text safely within the 250 width
                     
-                    HStack {
-                        Spacer()
-                        HStack(spacing: 4) {
-                            Text(time)
-                                .font(.system(size: 10))
-                                .foregroundColor(isFromMe ? .white.opacity(0.7) : .primary.opacity(0.5))
-                            
-                            if isFromMe {
-                                statusIcon
-                            }
+                    HStack(spacing: 4) {
+                        Spacer() // Pushes timestamp to the far right of the 250w bubble
+                        Text(time)
+                            .font(.system(size: 10))
+                            .foregroundColor(isFromMe ? .white.opacity(0.7) : .primary.opacity(0.5))
+                        
+                        if isFromMe {
+                            statusIcon
                         }
                     }
                 }
                 .padding(.horizontal, 12)
-                .padding(.top, 8)
-                .padding(.bottom, 8)
+                .padding(.top, 5)
             }
         }
+        // Force the entire bubble (both image and caption area) to exactly 250 points wide
+        .frame(width: 250)
         .background(isFromMe ? AppTheme.foregroundPink : AppTheme.backgroundPink)
         .foregroundColor(isFromMe ? .white : .primary)
         .cornerRadius(15)
         .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
     
+    // The text shown under the image (caption).
+    // Check both 'caption' field and 'content' field.
+    // Content that is a URL or placeholder is not a real caption.
+    private var captionText: String? {
+        // Prefer dedicated caption field if present
+        if let cap = message.caption, !cap.isEmpty { return cap }
+        // Fall back to content if it doesn't look like a URL or placeholder
+        let c = message.content
+        if !c.isEmpty && c != "Sent an image" && !c.hasPrefix("http") { return c }
+        return nil
+    }
+    
     private var hasCaption: Bool {
-        !message.content.isEmpty && message.content != "Sent an image" && !message.content.hasPrefix("http")
+        captionText != nil && captionText != "null"
     }
     
     @ViewBuilder
@@ -809,6 +823,14 @@ struct DocumentMessageBubble: View {
         }
     }
     
+    // The server puts the uploaded file URL in message.image
+    private var documentURL: URL? {
+        if let urlString = message.image, let url = URL(string: urlString) { return url }
+        // Fallback: content might be the URL if image field is nil
+        if message.content.hasPrefix("http"), let url = URL(string: message.content) { return url }
+        return nil
+    }
+    
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: iconName)
@@ -828,6 +850,23 @@ struct DocumentMessageBubble: View {
                     
                     if isFromMe { statusIcon }
                 }
+            }
+            
+            Spacer()
+            
+            // Download / Open button
+            if let url = documentURL {
+                Button(action: {
+                    UIApplication.shared.open(url)
+                }) {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(isFromMe ? .white.opacity(0.85) : AppTheme.foregroundPink)
+                }
+            } else if message.status == "sending" {
+                ProgressView()
+                    .tint(isFromMe ? .white : AppTheme.foregroundPink)
+                    .scaleEffect(0.8)
             }
         }
         .padding(.horizontal, 14)
@@ -865,9 +904,9 @@ struct MessageBubble: View {
 
             let timeString = formatTime(message.createdAt)
             
-            if message.type == "image" {
+            if message.type.lowercased() == "image" {
                 ImageMessageBubble(message: message, isFromMe: isFromMe, time: timeString)
-            } else if message.type == "document" {
+            } else if message.type.lowercased() == "document" {
                 DocumentMessageBubble(message: message, isFromMe: isFromMe, time: timeString)
             } else {
                 TextMessageBubble(message: message, isFromMe: isFromMe, time: timeString)

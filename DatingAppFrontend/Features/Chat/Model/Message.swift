@@ -119,6 +119,7 @@ struct SocketReceivedMessage: Decodable, Sendable {
     let content: String
     let type: String
     let image: String?
+    let caption: String?   // Caption text for image messages
     let created_At: Date
 }
 
@@ -211,6 +212,7 @@ struct ChatMessage: Codable, Identifiable {
     let status: String
     let content: String
     let image: String?
+    let caption: String?   // Some APIs return caption in a separate field
     let createdAt: String
     
     // Non-codable property for local preview
@@ -226,6 +228,7 @@ struct ChatMessage: Codable, Identifiable {
         case status
         case content
         case image
+        case caption
         case createdAt = "created_At"
     }
 }
